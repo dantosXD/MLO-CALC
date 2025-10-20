@@ -1,0 +1,36 @@
+{
+    "name": "Loan Ranger - Mortgage Calculator",
+    "short_name": "Loan Ranger",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#263238",
+    "theme_color": "#607D8B",
+    "description": "Professional mortgage and real estate financial calculator for loan calculations, amortization schedules, and borrower qualifications.",
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "categories": ["finance", "productivity"],
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/207ds/Pictures/Screenshots/**)",
+      "mcp__zen__clink",
+      "Bash(flutter pub get:*)",
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:pub.dev)",
+      "Bash(where:*)",
+      "Bash(dart --version:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(flutter --version:*)",
+      "Bash(if [ -d \"C:/src/flutter\" ])",
+      "Bash(then echo \"Flutter found at C:/src/flutter\")",
+      "Bash(else echo \"No Flutter at C:/src/flutter\")",
+      "Bash(fi)",
+      "Bash(if [ -d \"$HOME/flutter\" ])",
+      "Bash(then echo \"Flutter found at $HOME/flutter\")",
+      "Bash(else echo \"No Flutter in home directory\")",
+      "Read(//c/Users/207ds/flutter/**)",
+      "Bash(/c/Users/207ds/flutter/bin/flutter:*)",
+      "Bash(if [ -d \"C:/Users/207ds/flutter\" ])",
+      "Bash(then echo \"Flutter found at C:/Users/207ds/flutter\")",
+      "Bash(else echo \"No Flutter at C:/Users/207ds/flutter\")",
+      "Bash(python -m http.server:*)",
+      "mcp__zen__codereview",
+      "Bash(if [ -d \"build\" ])",
+      "Bash(then rm -rf build)",
+      "Bash(flutter build:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter analyze)",
+      "Bash(flutter test)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

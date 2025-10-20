@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "dart": {
+      "command": "dart",
+      "args": [
+        "mcp-server"
+      ]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "experimental:mcp"
+      ]
+    }
+  },
+  "enabledTools": {
+    "dart": [
+      "connect_dart_tooling_daemon",
+      "get_runtime_errors",
+      "hot_reload",
+      "get_widget_tree",
+      "set_widget_selection_mode",
+      "get_active_location",
+      "pub_dev_search",
+      "dart_fix",
+      "dart_format",
+      "run_tests",
+      "create_project",
+      "pub",
+      "analyze_files",
+      "resolve_workspace_symbol",
+      "signature_help",
+      "hover",
+      "get_selected_widget"
+    ],
+    "firebase": []
+  }
+}
