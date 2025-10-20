@@ -33,14 +33,9 @@ android {
             // For production, replace with your own signing config.
             signingConfig = signingConfigs.getByName("debug")
 
-            // Enable code shrinking, obfuscation, and optimization
-            isMinifyEnabled = true
-            isShrinkResources = true
-
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            // Disable minification for better compatibility
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
         debug {
             applicationIdSuffix = ".debug"

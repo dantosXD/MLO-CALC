@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/calculator_provider.dart';
@@ -57,7 +58,7 @@ class CalculatorScreen extends StatelessWidget {
     else if (key == LogicalKeyboardKey.escape) {
       provider.clearAll();
     } else if (key == LogicalKeyboardKey.backspace || key == LogicalKeyboardKey.delete) {
-      provider.clear();
+      provider.backspace();
     }
   }
 
@@ -65,11 +66,13 @@ class CalculatorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final calculatorProvider = Provider.of<CalculatorProvider>(context);
 
-    return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
-      autofocus: true,
-      onKeyEvent: (event) => _handleKeyPress(event, calculatorProvider),
-      child: Container(
+    // Only use keyboard listener on desktop platforms
+    final bool isDesktop = kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+
+    final Widget calculatorUI = Container(
       color: const Color(0xFF2C3E50),
       child: Column(
         children: [
@@ -77,7 +80,7 @@ class CalculatorScreen extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(8.0),
               child: AnimatedDisplay(
                 key: const ValueKey('display'),
                 displayValue: calculatorProvider.displayValue,
@@ -94,7 +97,7 @@ class CalculatorScreen extends StatelessWidget {
           Expanded(
             flex: 5,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(6.0),
               child: Column(
                 children: [
                   // Row 1: Price, L/A, Term, Pmt, AC
@@ -197,8 +200,8 @@ class CalculatorScreen extends StatelessWidget {
                           foregroundColor: Colors.white,
                         ),
                         CalculatorButton(
-                          text: 'C',
-                          onPressed: () => calculatorProvider.clear(),
+                          text: '⌫',
+                          onPressed: () => calculatorProvider.backspace(),
                           backgroundColor: const Color(0xFF8B6A3A),
                           foregroundColor: Colors.white,
                         ),
@@ -342,7 +345,16 @@ class CalculatorScreen extends StatelessWidget {
           ),
         ],
       ),
-      ),
     );
+
+    // Wrap with KeyboardListener only on desktop
+    return isDesktop
+        ? KeyboardListener(
+            focusNode: FocusNode()..requestFocus(),
+            autofocus: true,
+            onKeyEvent: (event) => _handleKeyPress(event, calculatorProvider),
+            child: calculatorUI,
+          )
+        : calculatorUI;
   }
 }

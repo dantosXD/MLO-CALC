@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../providers/calculator_provider.dart';
@@ -17,6 +18,15 @@ class AnimatedDisplay extends StatelessWidget {
     this.isError = false,
   });
 
+  // Helper to conditionally apply animations (skip on Android)
+  Widget _conditionalAnimate(Widget child, {Duration? duration}) {
+    // Disable animations on Android to prevent crashes
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return child;
+    }
+    return child.animate().fadeIn(duration: duration ?? 300.ms);
+  }
+
   @override
   Widget build(BuildContext context) {
     final calculatorProvider = Provider.of<CalculatorProvider>(context);
@@ -31,37 +41,43 @@ class AnimatedDisplay extends StatelessWidget {
         boxShadow: isDark ? AppTheme.cardShadowDark : AppTheme.cardShadow,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Title with Icon
+            // Title
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.home_work,
-                  color: AppTheme.accentGold,
-                  size: 24,
-                ).animate().fadeIn(duration: 500.ms).scale(),
-                const SizedBox(width: 12),
-                Text(
-                  'LOAN RANGER',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2.5,
+                _conditionalAnimate(
+                  Icon(
+                    Icons.calculate_outlined,
+                    color: AppTheme.accentGold,
+                    size: 16,
                   ),
-                ).animate().fadeIn(duration: 600.ms).slideX(),
+                  duration: 500.ms,
+                ),
+                const SizedBox(width: 6),
+                _conditionalAnimate(
+                  Text(
+                    'MLO-Calc',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  duration: 600.ms,
+                ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
 
-            // Main Display Value with Animation
+            // Main Display Value
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
@@ -72,119 +88,85 @@ class AnimatedDisplay extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    _formatDisplayValue(displayValue),
-                    key: ValueKey<String>(displayValue),
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.bold,
-                      color: isError ? AppTheme.errorRed : AppTheme.accentGold,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      _formatDisplayValue(displayValue),
+                      key: ValueKey<String>(displayValue),
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: isError ? AppTheme.errorRed : AppTheme.accentGold,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
                     ),
-                  ).animate(key: ValueKey(displayValue))
-                      .fadeIn(duration: 300.ms)
-                      .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.0, 1.0)),
-                  const SizedBox(height: 8),
+                  ),
+                  const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppTheme.accentGold.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       subtitle ?? 'MONTHLY P&I',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 9,
                         color: AppTheme.accentGold,
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
+                        letterSpacing: 0.8,
                       ),
                     ),
                   ),
                 ],
               ),
-            ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0),
-            const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 6),
 
-            // Status Row 1: Core Loan Variables
+            // Status Grid - Compact
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatusItem(
+                _buildCompactStatusItem(
                   context,
-                  'LOAN',
+                  'L/A',
                   CurrencyFormatter.formatCompactCurrency(calculatorProvider.loanAmount),
                   calculatorProvider.loanAmount != null,
-                  Icons.attach_money,
                 ),
-                _buildStatusItem(
+                _buildCompactStatusItem(
                   context,
-                  'RATE',
-                  CurrencyFormatter.formatPercent(calculatorProvider.interestRate),
+                  'Rate',
+                  calculatorProvider.interestRate != null
+                    ? '${calculatorProvider.interestRate!.toStringAsFixed(2)}%'
+                    : '--',
                   calculatorProvider.interestRate != null,
-                  Icons.percent,
                 ),
-                _buildStatusItem(
+                _buildCompactStatusItem(
                   context,
-                  'TERM',
-                  CurrencyFormatter.formatYears(calculatorProvider.termYears),
+                  'Term',
+                  calculatorProvider.termYears != null
+                    ? '${calculatorProvider.termYears!.toInt()}y'
+                    : '--',
                   calculatorProvider.termYears != null,
-                  Icons.calendar_today,
                 ),
-                _buildStatusItem(
+                _buildCompactStatusItem(
                   context,
-                  'PMT',
+                  'Pmt',
                   CurrencyFormatter.formatCompactCurrency(calculatorProvider.payment),
                   calculatorProvider.payment != null,
-                  Icons.payments,
                 ),
               ],
-            ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
-            const SizedBox(height: 12),
-
-            // Status Row 2: PITI Variables
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatusItem(
-                  context,
-                  'PRICE',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.price),
-                  calculatorProvider.price != null,
-                  Icons.home,
-                ),
-                _buildStatusItem(
-                  context,
-                  'DOWN',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.downPayment),
-                  calculatorProvider.downPayment != null,
-                  Icons.account_balance_wallet,
-                ),
-                _buildStatusItem(
-                  context,
-                  'TAX',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.propertyTax),
-                  calculatorProvider.propertyTax != null,
-                  Icons.receipt_long,
-                ),
-                _buildStatusItem(
-                  context,
-                  'INS',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.homeInsurance),
-                  calculatorProvider.homeInsurance != null,
-                  Icons.security,
-                ),
-              ],
-            ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+            ),
           ],
         ),
       ),
@@ -200,19 +182,19 @@ class AnimatedDisplay extends StatelessWidget {
     return rawValue;
   }
 
-  Widget _buildStatusItem(
+  Widget _buildCompactStatusItem(
     BuildContext context,
     String label,
     String value,
     bool isSet,
-    IconData icon,
   ) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 1.5),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: isSet ? 0.15 : 0.05),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isSet
                 ? AppTheme.successGreen.withValues(alpha: 0.5)
@@ -223,35 +205,26 @@ class AnimatedDisplay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 12,
-                  color: isSet ? AppTheme.successGreen : Colors.white54,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isSet ? AppTheme.successGreen : Colors.white54,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
             Text(
-              value,
-              textAlign: TextAlign.center,
+              label,
               style: TextStyle(
-                fontSize: 12,
-                color: isSet ? Colors.white : Colors.white54,
-                fontWeight: FontWeight.bold,
+                fontSize: 8,
+                color: isSet ? AppTheme.successGreen : Colors.white54,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 1),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isSet ? Colors.white : Colors.white54,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],

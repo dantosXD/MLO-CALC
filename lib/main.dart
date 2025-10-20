@@ -39,7 +39,7 @@ class LoanRangerApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: 'Loan Ranger - Professional MLO Calculator',
+          title: 'MLO-Calc - Professional Mortgage Calculator',
           theme: AppTheme.lightTheme(),
           darkTheme: AppTheme.darkTheme(),
           themeMode: themeProvider.themeMode,
@@ -97,7 +97,7 @@ class _MainNavigatorState extends State<MainNavigator> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('LOAN RANGER'),
+        title: const Text('MLO-Calc'),
         centerTitle: true,
         actions: [
           IconButton(

@@ -85,10 +85,20 @@ class _CalculatorButtonState extends State<CalculatorButton>
                     children: [
                       Icon(widget.icon, size: 20),
                       const SizedBox(height: 4),
-                      Text(widget.text, style: const TextStyle(fontSize: 12)),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(widget.text, style: const TextStyle(fontSize: 12)),
+                      ),
                     ],
                   )
-                : Text(widget.text),
+                : FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.text,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                    ),
+                  ),
           ),
         ),
       ),

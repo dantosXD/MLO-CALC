@@ -166,14 +166,17 @@ class CalculatorProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void backspace() {
+    if (_displayValue.length > 1) {
+      _displayValue = _displayValue.substring(0, _displayValue.length - 1);
+    } else {
+      _displayValue = '0';
+    }
+    notifyListeners();
+  }
+
   void clear() {
     _displayValue = '0';
-    _loanAmount = null;
-    _interestRate = null;
-    _termYears = null;
-    _payment = null;
-    _firstOperand = null;
-    _operator = null;
     _shouldResetDisplay = false;
     notifyListeners();
   }
@@ -315,6 +318,7 @@ class CalculatorProvider with ChangeNotifier {
   // Financial Setters
   void setLoanAmount({double? value}) {
     _loanAmount = value ?? double.tryParse(_displayValue);
+    _payment = null; // Clear payment so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
@@ -323,6 +327,7 @@ class CalculatorProvider with ChangeNotifier {
 
   void setInterestRate() {
     _interestRate = double.tryParse(_displayValue);
+    _payment = null; // Clear payment so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
@@ -331,6 +336,7 @@ class CalculatorProvider with ChangeNotifier {
 
   void setTermYears() {
     _termYears = double.tryParse(_displayValue);
+    _payment = null; // Clear payment so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
@@ -344,6 +350,7 @@ class CalculatorProvider with ChangeNotifier {
       return;
     }
     _payment = double.tryParse(_displayValue);
+    _loanAmount = null; // Clear loan amount so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
