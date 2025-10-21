@@ -79,10 +79,10 @@ class AnimatedDisplay extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: Colors.white.withValues(alpha:0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.accentGold.withValues(alpha: 0.3),
+                  color: AppTheme.accentGold.withValues(alpha:0.3),
                   width: 1,
                 ),
               ),
@@ -103,7 +103,7 @@ class AnimatedDisplay extends StatelessWidget {
                         fontFeatures: const [FontFeature.tabularFigures()],
                         shadows: [
                           Shadow(
-                            color: Colors.black.withValues(alpha: 0.3),
+                            color: Colors.black.withValues(alpha:0.3),
                             offset: const Offset(0, 2),
                             blurRadius: 4,
                           ),
@@ -115,7 +115,7 @@ class AnimatedDisplay extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentGold.withValues(alpha: 0.2),
+                      color: AppTheme.accentGold.withValues(alpha:0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -193,12 +193,12 @@ class AnimatedDisplay extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: isSet ? 0.15 : 0.05),
+          color: Colors.white.withValues(alpha:isSet ? 0.15 : 0.05),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isSet
-                ? AppTheme.successGreen.withValues(alpha: 0.5)
-                : Colors.white.withValues(alpha: 0.1),
+                ? AppTheme.successGreen.withValues(alpha:0.5)
+                : Colors.white.withValues(alpha:0.1),
             width: 1,
           ),
         ),

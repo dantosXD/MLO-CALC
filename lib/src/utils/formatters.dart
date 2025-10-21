@@ -111,30 +111,14 @@ class CurrencyFormatter {
   }
 }
 
-class ValidationHelper {
-  /// Validate loan amount (reasonable range: $1,000 - $100,000,000)
-  static String? validateLoanAmount(double? value) {
-    if (value == null) return null;
-    if (value < 1000) return 'Loan amount too small (min: \$1,000)';
-    if (value > 100000000) return 'Loan amount too large (max: \$100M)';
-    return null;
-  }
-
-  /// Validate interest rate (reasonable range: 0.1% - 30%)
-  static String? validateInterestRate(double? value) {
-    if (value == null) return null;
-    if (value <= 0) return 'Interest rate must be positive';
-    if (value > 30) return 'Interest rate seems unusually high (>30%)';
-    return null;
-  }
-
-  /// Validate term (reasonable range: 1 - 50 years)
-  static String? validateTerm(double? value) {
-    if (value == null) return null;
-    if (value <= 0) return 'Term must be positive';
-    if (value > 50) return 'Term too long (max: 50 years)';
-    return null;
-  }
+/// Financial helper utilities for ratios and PMI calculations
+///
+/// DEPRECATED: For validation of financial inputs, use FinancialValidators from
+/// lib/src/validators/financial_validators.dart instead. The validation methods
+/// in this class are kept for backward compatibility but will be removed in future versions.
+class FinancialHelpers {
+  // Private constructor to prevent instantiation
+  FinancialHelpers._();
 
   /// Validate payment ratio (warn if payment > 50% of monthly income)
   static String? validatePaymentRatio(double payment, double monthlyIncome) {
@@ -158,5 +142,29 @@ class ValidationHelper {
   static double calculateLTV(double loanAmount, double propertyValue) {
     if (propertyValue <= 0) return 0;
     return (loanAmount / propertyValue) * 100;
+  }
+
+  /// Determine if PMI (Private Mortgage Insurance) is required
+  /// PMI typically required when LTV > 80%
+  static bool isPMIRequired(double loanAmount, double propertyValue) {
+    return FinancialHelpers.calculateLTV(loanAmount, propertyValue) > 80;
+  }
+
+  /// Estimate monthly PMI based on LTV ratio
+  /// Typical PMI rates: 0.5% - 1.5% annually depending on LTV
+  static double estimateMonthlyPMI(double loanAmount, double propertyValue) {
+    final ltv = FinancialHelpers.calculateLTV(loanAmount, propertyValue);
+    if (ltv <= 80) return 0;
+
+    double annualPMIRate;
+    if (ltv > 95) {
+      annualPMIRate = 0.015; // 1.5% for high LTV
+    } else if (ltv > 90) {
+      annualPMIRate = 0.01; // 1.0% for moderate-high LTV
+    } else {
+      annualPMIRate = 0.005; // 0.5% for low-moderate LTV
+    }
+
+    return (loanAmount * annualPMIRate) / 12;
   }
 }

@@ -1,0 +1,24 @@
+  /// Validates down payment (percentage or amount)
+  static ValidationResult validateDownPayment(double? downPayment, double? price) {
+    if (downPayment == null) {
+      return const ValidationResult.invalid('Down payment is required');
+    }
+    if (downPayment < 0) {
+      return const ValidationResult.invalid('Down payment cannot be negative');
+    }
+
+    // Heuristic: values under 100 are percentages, otherwise flat amounts
+    // But first check if it looks like a bad percentage (> 100 but < typical home price)
+    if (downPayment > 100 && downPayment < 10000) {
+      return const ValidationResult.invalid('Down payment percentage cannot exceed 100%');
+    }
+    
+    // If it's a flat amount (>= 10000)
+    if (downPayment >= 10000) {
+      if (price != null && downPayment >= price) {
+        return const ValidationResult.invalid('Down payment cannot equal or exceed price');
+      }
+    }
+    
+    return const ValidationResult.valid();
+  }

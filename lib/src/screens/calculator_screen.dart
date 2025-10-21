@@ -6,8 +6,27 @@ import '../providers/calculator_provider.dart';
 import '../widgets/calculator_button.dart';
 import '../widgets/animated_display.dart';
 
-class CalculatorScreen extends StatelessWidget {
+class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
+
+  @override
+  State<CalculatorScreen> createState() => _CalculatorScreenState();
+}
+
+class _CalculatorScreenState extends State<CalculatorScreen> {
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   void _handleKeyPress(KeyEvent event, CalculatorProvider provider) {
     if (event is! KeyDownEvent) return;
@@ -239,7 +258,6 @@ class CalculatorScreen extends StatelessWidget {
                         ),
                         CalculatorButton(
                           text: 'ⓘ',
-                          icon: Icons.help_outline,
                           onPressed: () {
                             // Show help or info
                           },
@@ -280,12 +298,11 @@ class CalculatorScreen extends StatelessWidget {
                         ),
                         CalculatorButton(
                           text: '🎙',
-                          icon: Icons.mic,
                           onPressed: () {
-                            // Voice input feature
+                            // Voice input feature - disabled for now
                           },
-                          backgroundColor: const Color(0xFF5DADE2),
-                          foregroundColor: Colors.white,
+                          backgroundColor: const Color(0xFF5DADE2).withValues(alpha: 0.5),
+                          foregroundColor: Colors.white54,
                         ),
                         CalculatorButton(
                           text: '+',
@@ -350,7 +367,7 @@ class CalculatorScreen extends StatelessWidget {
     // Wrap with KeyboardListener only on desktop
     return isDesktop
         ? KeyboardListener(
-            focusNode: FocusNode()..requestFocus(),
+            focusNode: _focusNode..requestFocus(),
             autofocus: true,
             onKeyEvent: (event) => _handleKeyPress(event, calculatorProvider),
             child: calculatorUI,
