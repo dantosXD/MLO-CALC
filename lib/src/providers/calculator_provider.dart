@@ -27,10 +27,13 @@ class AmortizationEntry {
 }
 
 class CalculatorProvider with ChangeNotifier {
+  final bool persistState;
   static const Object _noValue = Object();
 
-  CalculatorProvider() {
-    _loadState();
+  CalculatorProvider({this.persistState = true}) {
+    if (persistState) {
+      _loadState();
+    }
   }
 
   // Primary Loan Variables
@@ -49,8 +52,14 @@ class CalculatorProvider with ChangeNotifier {
   double? _monthlyExpenses; // Monthly amount (HOA, etc.)
 
   // Qualification Variables
-  QualifyingRatio _qualRatio1 = QualifyingRatio(housingRatio: 28, debtRatio: 36);
-  QualifyingRatio _qualRatio2 = QualifyingRatio(housingRatio: 29, debtRatio: 41);
+  QualifyingRatio _qualRatio1 = QualifyingRatio(
+    housingRatio: 28,
+    debtRatio: 36,
+  );
+  QualifyingRatio _qualRatio2 = QualifyingRatio(
+    housingRatio: 29,
+    debtRatio: 41,
+  );
   double? _annualIncome;
   double? _monthlyDebt;
 
@@ -207,6 +216,7 @@ class CalculatorProvider with ChangeNotifier {
 
   // State persistence
   Future<void> _loadState() async {
+    if (!persistState) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       _loanAmount = prefs.getDouble('loanAmount');
@@ -236,6 +246,7 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   Future<void> _saveState() async {
+    if (!persistState) return;
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -318,7 +329,6 @@ class CalculatorProvider with ChangeNotifier {
   // Financial Setters
   void setLoanAmount({double? value}) {
     _loanAmount = value ?? double.tryParse(_displayValue);
-    _payment = null; // Clear payment so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
@@ -327,7 +337,6 @@ class CalculatorProvider with ChangeNotifier {
 
   void setInterestRate() {
     _interestRate = double.tryParse(_displayValue);
-    _payment = null; // Clear payment so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
@@ -336,22 +345,37 @@ class CalculatorProvider with ChangeNotifier {
 
   void setTermYears() {
     _termYears = double.tryParse(_displayValue);
-    _payment = null; // Clear payment so it can be recalculated
     _shouldResetDisplay = true;
     calculate();
     _saveState();
     notifyListeners();
   }
 
-  void setPayment() {
+  void setPayment({double? value}) {
     // If payment is already calculated and we have PITI data, toggle display mode
-    if (_payment != null && _displayMode == 'pi' && (_propertyTax != null || _homeInsurance != null || _mortgageInsurance != null || _monthlyExpenses != null)) {
+    if (value == null &&
+        _payment != null &&
+        _displayMode == 'pi' &&
+        (_propertyTax != null ||
+            _homeInsurance != null ||
+            _mortgageInsurance != null ||
+            _monthlyExpenses != null)) {
       togglePitiDisplay();
       return;
     }
-    _payment = double.tryParse(_displayValue);
-    _loanAmount = null; // Clear loan amount so it can be recalculated
+
+    _payment = value ?? double.tryParse(_displayValue);
+    if (_payment == null) {
+      notifyListeners();
+      return;
+    }
+    _displayMode = 'pi';
     _shouldResetDisplay = true;
+
+    // When solving for loan amount we intentionally leave `_loanAmount` null.
+    // If a loan amount is already present (e.g., solving for term or rate),
+    // keep it so the appropriate branch in `calculate()` can run.
+
     calculate();
     _saveState();
     notifyListeners();
@@ -405,7 +429,7 @@ class CalculatorProvider with ChangeNotifier {
   // Qualification Setters
   void setAnnualIncome({Object? value = _noValue}) {
     if (!identical(value, _noValue)) {
-      _annualIncome = value as double?;
+      _annualIncome = (value as num?)?.toDouble();
       _shouldResetDisplay = false;
     } else {
       _annualIncome = double.tryParse(_displayValue);
@@ -417,7 +441,7 @@ class CalculatorProvider with ChangeNotifier {
 
   void setMonthlyDebt({Object? value = _noValue}) {
     if (!identical(value, _noValue)) {
-      _monthlyDebt = value as double?;
+      _monthlyDebt = (value as num?)?.toDouble();
       _shouldResetDisplay = false;
     } else {
       _monthlyDebt = double.tryParse(_displayValue);
@@ -428,12 +452,18 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void setQualRatio1(double housingRatio, double debtRatio) {
-    _qualRatio1 = QualifyingRatio(housingRatio: housingRatio, debtRatio: debtRatio);
+    _qualRatio1 = QualifyingRatio(
+      housingRatio: housingRatio,
+      debtRatio: debtRatio,
+    );
     notifyListeners();
   }
 
   void setQualRatio2(double housingRatio, double debtRatio) {
-    _qualRatio2 = QualifyingRatio(housingRatio: housingRatio, debtRatio: debtRatio);
+    _qualRatio2 = QualifyingRatio(
+      housingRatio: housingRatio,
+      debtRatio: debtRatio,
+    );
     notifyListeners();
   }
 
@@ -511,10 +541,7 @@ class CalculatorProvider with ChangeNotifier {
 
   // Financial Calculations
   void calculate() {
-    if (_loanAmount != null &&
-        _interestRate != null &&
-        _termYears != null &&
-        _payment == null) {
+    if (_loanAmount != null && _interestRate != null && _termYears != null) {
       _calculatePayment();
     } else if (_payment != null &&
         _interestRate != null &&
@@ -606,7 +633,8 @@ class CalculatorProvider with ChangeNotifier {
       final double f = p * r * factor - m * (factor - 1);
 
       // Calculate f'(r) - derivative
-      final double df = p * (factor + r * n * factor / (1 + r)) - m * n * factor / (1 + r);
+      final double df =
+          p * (factor + r * n * factor / (1 + r)) - m * n * factor / (1 + r);
 
       if (df.abs() < 0.0000001) {
         // Derivative too small, can't continue
@@ -664,13 +692,15 @@ class CalculatorProvider with ChangeNotifier {
 
       final double newBalance = currentBalance - principalPaid;
 
-      _amortizationData.add(AmortizationEntry(
-        month: month,
-        payment: principalPaid + interestPaid,
-        principal: principalPaid,
-        interest: interestPaid,
-        balance: newBalance > 0 ? newBalance : 0,
-      ));
+      _amortizationData.add(
+        AmortizationEntry(
+          month: month,
+          payment: principalPaid + interestPaid,
+          principal: principalPaid,
+          interest: interestPaid,
+          balance: newBalance > 0 ? newBalance : 0,
+        ),
+      );
 
       currentBalance = newBalance;
     }
@@ -716,7 +746,8 @@ class CalculatorProvider with ChangeNotifier {
       }
     }
 
-    final double r = _interestRate! / 100 / 26; // Bi-weekly rate (26 periods/year)
+    final double r =
+        _interestRate! / 100 / 26; // Bi-weekly rate (26 periods/year)
     final double biWeeklyPayment = _payment! / 2;
 
     // Calculate new term with bi-weekly payments
@@ -724,7 +755,8 @@ class CalculatorProvider with ChangeNotifier {
     int periods = 0;
     double totalInterest = 0;
 
-    while (currentBalance > 0 && periods < 1000) { // Max 1000 periods safety
+    while (currentBalance > 0 && periods < 1000) {
+      // Max 1000 periods safety
       final double interestPaid = currentBalance * r;
       final double principalPaid = biWeeklyPayment - interestPaid;
 
@@ -739,7 +771,8 @@ class CalculatorProvider with ChangeNotifier {
 
     // Calculate original total interest
     final int originalMonths = (_termYears! * 12).round();
-    final double originalTotalInterest = (_payment! * originalMonths) - _loanAmount!;
+    final double originalTotalInterest =
+        (_payment! * originalMonths) - _loanAmount!;
     final double interestSaved = originalTotalInterest - totalInterest;
 
     return {
@@ -763,7 +796,8 @@ class CalculatorProvider with ChangeNotifier {
     final double monthlyDebtPayment = _monthlyDebt ?? 0;
 
     // Calculate max PITI from front-end ratio (housing expense ratio)
-    final double maxPitiFromHousing = monthlyIncome * (ratio.housingRatio / 100);
+    final double maxPitiFromHousing =
+        monthlyIncome * (ratio.housingRatio / 100);
 
     // Calculate max PITI from back-end ratio (total debt ratio)
     final double maxTotalDebt = monthlyIncome * (ratio.debtRatio / 100);
@@ -776,7 +810,8 @@ class CalculatorProvider with ChangeNotifier {
     double monthlyPITIExpenses = 0;
     if (_propertyTax != null) monthlyPITIExpenses += _propertyTax! / 12;
     if (_homeInsurance != null) monthlyPITIExpenses += _homeInsurance! / 12;
-    if (_mortgageInsurance != null) monthlyPITIExpenses += _mortgageInsurance! / 12;
+    if (_mortgageInsurance != null)
+      monthlyPITIExpenses += _mortgageInsurance! / 12;
     if (_monthlyExpenses != null) monthlyPITIExpenses += _monthlyExpenses!;
 
     // Max P&I payment available
@@ -824,7 +859,8 @@ class CalculatorProvider with ChangeNotifier {
     final double totalPITI = pitiPayment;
 
     // Calculate minimum income from front-end ratio
-    final double minIncomeFromHousing = (totalPITI / (ratio.housingRatio / 100)) * 12;
+    final double minIncomeFromHousing =
+        (totalPITI / (ratio.housingRatio / 100)) * 12;
 
     // Calculate minimum income from back-end ratio
     final double totalDebt = totalPITI + monthlyDebtPayment;

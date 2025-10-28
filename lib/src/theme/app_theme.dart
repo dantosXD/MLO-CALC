@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'calculator_palette.dart';
+
 class AppTheme {
   // Professional Color Palette for Financial Software
   static const Color primaryNavy = Color(0xFF1A365D);
@@ -28,27 +30,30 @@ class AppTheme {
   static const Color actionButton = Color(0xFF10B981);
 
   static ThemeData lightTheme() {
+    final colorScheme = ColorScheme.light(
+      primary: primaryTeal,
+      secondary: accentGold,
+      tertiary: successGreen,
+      surface: surfaceLight,
+      error: errorRed,
+      onPrimary: textLight,
+      onSecondary: textPrimary,
+      onSurface: textPrimary,
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
-        primary: primaryTeal,
-        secondary: accentGold,
-        tertiary: successGreen,
-        surface: surfaceLight,
-        error: errorRed,
-        onPrimary: textLight,
-        onSecondary: textPrimary,
-        onSurface: textPrimary,
-      ),
+      colorScheme: colorScheme,
+      extensions: <ThemeExtension<dynamic>>[
+        CalculatorPalette.light(colorScheme),
+      ],
       scaffoldBackgroundColor: surfaceLight,
       cardTheme: CardThemeData(
         color: cardLight,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        shadowColor: Colors.black.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shadowColor: Colors.black.withOpacity(0.1),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: primaryNavy,
@@ -109,7 +114,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 2,
-          shadowColor: Colors.black.withValues(alpha: 0.2),
+          shadowColor: Colors.black.withOpacity(0.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -140,27 +145,30 @@ class AppTheme {
   }
 
   static ThemeData darkTheme() {
+    final colorScheme = ColorScheme.dark(
+      primary: primaryTeal,
+      secondary: accentGold,
+      tertiary: successGreen,
+      surface: surfaceDark,
+      error: errorRed,
+      onPrimary: textPrimary,
+      onSecondary: textLight,
+      onSurface: textLight,
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.dark(
-        primary: primaryTeal,
-        secondary: accentGold,
-        tertiary: successGreen,
-        surface: surfaceDark,
-        error: errorRed,
-        onPrimary: textPrimary,
-        onSecondary: textLight,
-        onSurface: textLight,
-      ),
+      colorScheme: colorScheme,
+      extensions: <ThemeExtension<dynamic>>[
+        CalculatorPalette.dark(colorScheme),
+      ],
       scaffoldBackgroundColor: surfaceDark,
       cardTheme: CardThemeData(
         color: cardDark,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        shadowColor: Colors.black.withValues(alpha: 0.3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shadowColor: Colors.black.withOpacity(0.3),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: primaryNavy,
@@ -221,7 +229,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 4,
-          shadowColor: Colors.black.withValues(alpha: 0.4),
+          shadowColor: Colors.black.withOpacity(0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -261,7 +269,7 @@ class AppTheme {
   // Box shadows for cards
   static List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.08),
+      color: Colors.black.withOpacity(0.08),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
@@ -269,7 +277,7 @@ class AppTheme {
 
   static List<BoxShadow> cardShadowDark = [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.2),
+      color: Colors.black.withOpacity(0.2),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),

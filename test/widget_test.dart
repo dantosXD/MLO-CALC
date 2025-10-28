@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loan_ranger/main.dart';
 import 'package:loan_ranger/src/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/screens/calculator_screen.dart';
 import 'package:loan_ranger/src/widgets/animated_display.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  // A helper function to wrap the app in providers for testing
+  final binding =
+      TestWidgetsFlutterBinding.ensureInitialized()
+          as TestWidgetsFlutterBinding;
+
+  setUp(() {
+    binding.window.physicalSizeTestValue = const Size(1200, 900);
+    binding.window.devicePixelRatioTestValue = 1.0;
+  });
+
+  tearDown(() {
+    binding.window.clearPhysicalSizeTestValue();
+    binding.window.clearDevicePixelRatioTestValue();
+  });
+
+  // A helper function to wrap the calculator screen in providers for testing
   Widget createTestableWidget() {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(create: (context) => CalculatorProvider()),
-      ],
-      child: const LoanRangerApp(),
+    return ChangeNotifierProvider(
+      create: (_) => CalculatorProvider(persistState: false),
+      child: const MaterialApp(home: Scaffold(body: CalculatorScreen())),
     );
   }
 
@@ -37,13 +47,15 @@ void main() {
     expect(getDisplayValue(tester), '0');
 
     // Verify that the main function buttons are present.
-    expect(find.text('L/A'), findsOneWidget);
-    expect(find.text('Int'), findsOneWidget);
-    expect(find.text('Term'), findsOneWidget);
+    expect(find.text('L/A'), findsWidgets);
+    expect(find.text('Int'), findsWidgets);
+    expect(find.text('Term'), findsWidgets);
     expect(find.text('='), findsOneWidget);
   });
 
-  testWidgets('Arithmetic operations test - Addition', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Addition', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
@@ -59,13 +71,15 @@ void main() {
     expect(getDisplayValue(tester), '8');
   });
 
-  testWidgets('Arithmetic operations test - Subtraction', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Subtraction', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('9'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('-'));
+    await tester.tap(find.text('−'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('4'));
     await tester.pumpAndSettle();
@@ -75,13 +89,15 @@ void main() {
     expect(getDisplayValue(tester), '5');
   });
 
-  testWidgets('Arithmetic operations test - Multiplication', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Multiplication', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('6'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('x'));
+    await tester.tap(find.text('×'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('7'));
     await tester.pumpAndSettle();
@@ -91,13 +107,15 @@ void main() {
     expect(getDisplayValue(tester), '42');
   });
 
-  testWidgets('Arithmetic operations test - Division', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Division', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('8'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('/'));
+    await tester.tap(find.text('÷'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('2'));
     await tester.pumpAndSettle();
@@ -107,7 +125,7 @@ void main() {
     expect(getDisplayValue(tester), '4');
   });
 
-   testWidgets('Chained arithmetic operations', (WidgetTester tester) async {
+  testWidgets('Chained arithmetic operations', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget());
     await tester.pumpAndSettle();
 
@@ -118,7 +136,7 @@ void main() {
     await tester.tap(find.text('1'));
     await tester.pumpAndSettle();
     // At this point, display is '1', but firstOperand is 9 and operator is +
-    await tester.tap(find.text('-')); // This should calculate 9+1=10 first
+    await tester.tap(find.text('−')); // This should calculate 9+1=10 first
     await tester.pumpAndSettle();
 
     // Display should reset to show the intermediate result, which is 10
@@ -138,7 +156,7 @@ void main() {
 
     await tester.tap(find.text('5'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('/'));
+    await tester.tap(find.text('÷'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('0'));
     await tester.pumpAndSettle();
@@ -159,7 +177,7 @@ void main() {
     await tester.tap(find.text('3'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('C'));
+    await tester.tap(find.text('AC'));
     await tester.pumpAndSettle();
 
     expect(getDisplayValue(tester), '0');

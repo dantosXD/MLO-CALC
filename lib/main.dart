@@ -95,44 +95,94 @@ class _MainNavigatorState extends State<MainNavigator> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MLO-Calc'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.themeMode == ThemeMode.light
-                  ? Icons.dark_mode_outlined
-                  : Icons.light_mode_outlined,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool useRail = constraints.maxWidth >= 900;
+        final bool extendRail = constraints.maxWidth >= 1200;
+        final railDestinations = _destinations
+            .map(
+              (destination) => NavigationRailDestination(
+                icon: destination.icon,
+                selectedIcon: destination.selectedIcon,
+                label: Text(destination.label),
+              ),
+            )
+            .toList();
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('MLO-Calc'),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  themeProvider.themeMode == ThemeMode.light
+                      ? Icons.dark_mode_outlined
+                      : Icons.light_mode_outlined,
+                ),
+                onPressed: () => themeProvider.toggleTheme(),
+                tooltip: 'Toggle theme',
+              ),
+              IconButton(
+                icon: const Icon(Icons.mic_outlined),
+                onPressed: () {
+                  _showNLPDialog(context);
+                },
+                tooltip: 'Voice/Text input',
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+          body: SafeArea(
+            child: Row(
+              children: [
+                if (useRail)
+                  NavigationRail(
+                    selectedIndex: _selectedIndex,
+                    extended: extendRail,
+                    labelType: extendRail
+                        ? NavigationRailLabelType.none
+                        : NavigationRailLabelType.selected,
+                    onDestinationSelected: (index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                    leading: const SizedBox(height: 12),
+                    destinations: railDestinations,
+                  ),
+                if (useRail) const VerticalDivider(width: 1),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(_selectedIndex),
+                      child: _screens[_selectedIndex],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            onPressed: () => themeProvider.toggleTheme(),
-            tooltip: 'Toggle theme',
           ),
-          IconButton(
-            icon: const Icon(Icons.mic_outlined),
-            onPressed: () {
-              // Show NLP input dialog
-              _showNLPDialog(context);
-            },
-            tooltip: 'Voice/Text input',
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SafeArea(
-        child: _screens[_selectedIndex],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        destinations: _destinations,
-        elevation: 8,
-      ),
+          bottomNavigationBar: useRail
+              ? null
+              : NavigationBar(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: (int index) {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                  },
+                  destinations: _destinations,
+                  elevation: 8,
+                ),
+        );
+      },
     );
   }
 
