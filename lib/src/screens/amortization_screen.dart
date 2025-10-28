@@ -26,26 +26,61 @@ class AmortizationScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _SummaryItem(
-                      label: 'Loan Amount',
-                      value: CurrencyFormatter.formatCurrency(calculatorProvider.loanAmount),
-                    ),
-                    _SummaryItem(
-                      label: 'Interest Rate',
-                      value: CurrencyFormatter.formatPercent(calculatorProvider.interestRate),
-                    ),
-                    _SummaryItem(
-                      label: 'Term',
-                      value: CurrencyFormatter.formatYears(calculatorProvider.termYears),
-                    ),
-                    _SummaryItem(
-                      label: 'Payment',
-                      value: CurrencyFormatter.formatCurrency(calculatorProvider.payment),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final summaryData = [
+                      (
+                        label: 'Loan Amount',
+                        value: CurrencyFormatter.formatCurrency(
+                          calculatorProvider.loanAmount,
+                        ),
+                      ),
+                      (
+                        label: 'Interest Rate',
+                        value: CurrencyFormatter.formatPercent(
+                          calculatorProvider.interestRate,
+                        ),
+                      ),
+                      (
+                        label: 'Term',
+                        value: CurrencyFormatter.formatYears(
+                          calculatorProvider.termYears,
+                        ),
+                      ),
+                      (
+                        label: 'Payment',
+                        value: CurrencyFormatter.formatCurrency(
+                          calculatorProvider.payment,
+                        ),
+                      ),
+                    ];
+
+                    final double maxWidth = constraints.maxWidth;
+                    const double minTileWidth = 180;
+                    final int columns = maxWidth ~/ minTileWidth;
+                    final int resolvedColumns = columns.clamp(1, summaryData.length);
+                    final double spacing = 16;
+                    final double tileWidth = resolvedColumns == 1
+                        ? maxWidth
+                        : (maxWidth - spacing * (resolvedColumns - 1)) /
+                            resolvedColumns;
+
+                    return Wrap(
+                      key: const Key('loan-summary-wrap'),
+                      spacing: spacing,
+                      runSpacing: 12,
+                      children: [
+                        for (final item in summaryData)
+                          SizedBox(
+                            width: tileWidth.clamp(160.0, maxWidth),
+                            child: _SummaryItem(
+                              label: item.label,
+                              value: item.value,
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
                 SizedBox(

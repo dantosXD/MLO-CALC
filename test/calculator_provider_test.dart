@@ -5,7 +5,7 @@ import 'dart:math';
 void main() {
   group('CalculatorProvider - Payment Calculation', () {
     test('Calculate monthly payment correctly', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
 
       // Set loan amount: $300,000
       provider.inputDigit('3');
@@ -36,7 +36,7 @@ void main() {
     });
 
     test('Calculate loan amount from payment', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
 
       // Set payment: $1,610.46
       provider.inputDigit('1');
@@ -62,7 +62,7 @@ void main() {
     });
 
     test('Calculate term from loan amount and payment', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
 
       // Set loan amount: $300,000
       provider.inputDigit('3');
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('Calculate interest rate from loan amount, payment, and term', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
 
       // Set loan amount: $300,000
       provider.inputDigit('3');
@@ -125,7 +125,7 @@ void main() {
 
   group('CalculatorProvider - Arithmetic Operations', () {
     test('Addition', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
       provider.inputDigit('5');
       provider.performOperation('+');
       provider.inputDigit('3');
@@ -134,7 +134,7 @@ void main() {
     });
 
     test('Subtraction', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
       provider.inputDigit('1');
       provider.inputDigit('0');
       provider.performOperation('-');
@@ -144,7 +144,7 @@ void main() {
     });
 
     test('Multiplication', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
       provider.inputDigit('6');
       provider.performOperation('x');
       provider.inputDigit('7');
@@ -153,7 +153,7 @@ void main() {
     });
 
     test('Division', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
       provider.inputDigit('1');
       provider.inputDigit('0');
       provider.performOperation('/');
@@ -163,7 +163,7 @@ void main() {
     });
 
     test('Division by zero shows error', () {
-      final provider = CalculatorProvider();
+      final provider = CalculatorProvider(persistState: false);
       provider.inputDigit('5');
       provider.performOperation('/');
       provider.inputDigit('0');
@@ -214,26 +214,29 @@ void main() {
       expect(provider.pitiPayment, closeTo(expectedPITI, 0.01));
     });
 
-    test('Auto-calculate loan amount from price and down payment percentage', () {
-      final provider = CalculatorProvider();
+    test(
+      'Auto-calculate loan amount from price and down payment percentage',
+      () {
+        final provider = CalculatorProvider();
 
-      // Set price: $400,000
-      provider.inputDigit('4');
-      provider.inputDigit('0');
-      provider.inputDigit('0');
-      provider.inputDigit('0');
-      provider.inputDigit('0');
-      provider.inputDigit('0');
-      provider.setPrice();
+        // Set price: $400,000
+        provider.inputDigit('4');
+        provider.inputDigit('0');
+        provider.inputDigit('0');
+        provider.inputDigit('0');
+        provider.inputDigit('0');
+        provider.inputDigit('0');
+        provider.setPrice();
 
-      // Set down payment: 20% (value < 100 treated as percentage)
-      provider.inputDigit('2');
-      provider.inputDigit('0');
-      provider.setDownPayment();
+        // Set down payment: 20% (value < 100 treated as percentage)
+        provider.inputDigit('2');
+        provider.inputDigit('0');
+        provider.setDownPayment();
 
-      // Expected loan amount: $400,000 - 20% = $320,000
-      expect(provider.loanAmount, closeTo(320000, 0.01));
-    });
+        // Expected loan amount: $400,000 - 20% = $320,000
+        expect(provider.loanAmount, closeTo(320000, 0.01));
+      },
+    );
 
     test('Auto-calculate loan amount from price and down payment amount', () {
       final provider = CalculatorProvider();
@@ -282,7 +285,10 @@ void main() {
       provider.generateAmortizationSchedule();
 
       expect(provider.amortizationData, isNotEmpty);
-      expect(provider.amortizationData.length, equals(60)); // 5 years * 12 months
+      expect(
+        provider.amortizationData.length,
+        equals(60),
+      ); // 5 years * 12 months
 
       // Check first payment
       final firstEntry = provider.amortizationData.first;

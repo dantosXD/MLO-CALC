@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../providers/calculator_provider.dart';
 import '../utils/formatters.dart';
-import '../theme/app_theme.dart';
+import '../theme/calculator_palette.dart';
 
 class AnimatedDisplay extends StatelessWidget {
   final String displayValue;
@@ -32,13 +32,33 @@ class AnimatedDisplay extends StatelessWidget {
     final calculatorProvider = Provider.of<CalculatorProvider>(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CalculatorPalette>();
+    final colorScheme = theme.colorScheme;
+    final gradient = palette?.backgroundGradient ??
+        LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.secondaryContainer,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+    final accent = colorScheme.secondary;
+    final accentOn = colorScheme.onSecondary;
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: isDark ? AppTheme.cardShadowDark : AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: palette?.keyShadow ??
+                Colors.black.withOpacity(isDark ? 0.35 : 0.12),
+            blurRadius: isDark ? 28 : 18,
+            offset: Offset(0, isDark ? 12 : 8),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -53,7 +73,7 @@ class AnimatedDisplay extends StatelessWidget {
                 _conditionalAnimate(
                   Icon(
                     Icons.calculate_outlined,
-                    color: AppTheme.accentGold,
+                    color: accentOn,
                     size: 16,
                   ),
                   duration: 500.ms,
@@ -64,7 +84,7 @@ class AnimatedDisplay extends StatelessWidget {
                     'MLO-Calc',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
+                      color: accentOn,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.2,
                     ),
@@ -79,10 +99,12 @@ class AnimatedDisplay extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha:0.15),
+                color: (palette?.displayBackground ??
+                        colorScheme.surfaceVariant)
+                    .withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.accentGold.withValues(alpha:0.3),
+                  color: accent.withOpacity(0.35),
                   width: 1,
                 ),
               ),
@@ -99,11 +121,11 @@ class AnimatedDisplay extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: isError ? AppTheme.errorRed : AppTheme.accentGold,
+                        color: isError ? colorScheme.error : accentOn,
                         fontFeatures: const [FontFeature.tabularFigures()],
                         shadows: [
                           Shadow(
-                            color: Colors.black.withValues(alpha:0.3),
+                            color: Colors.black.withOpacity(0.3),
                             offset: const Offset(0, 2),
                             blurRadius: 4,
                           ),
@@ -113,16 +135,17 @@ class AnimatedDisplay extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentGold.withValues(alpha:0.2),
+                      color: accent.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       subtitle ?? 'MONTHLY P&I',
                       style: TextStyle(
                         fontSize: 9,
-                        color: AppTheme.accentGold,
+                        color: accentOn,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.8,
                       ),
@@ -188,17 +211,21 @@ class AnimatedDisplay extends StatelessWidget {
     String value,
     bool isSet,
   ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final palette = theme.extension<CalculatorPalette>();
     return Expanded(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha:isSet ? 0.15 : 0.05),
+          color: (palette?.displayBackground ?? scheme.surfaceVariant)
+              .withOpacity(isSet ? 0.35 : 0.18),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isSet
-                ? AppTheme.successGreen.withValues(alpha:0.5)
-                : Colors.white.withValues(alpha:0.1),
+                ? scheme.tertiary.withOpacity(0.5)
+                : scheme.outlineVariant.withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -209,7 +236,7 @@ class AnimatedDisplay extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 8,
-                color: isSet ? AppTheme.successGreen : Colors.white54,
+                color: isSet ? scheme.tertiary : scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.3,
               ),
@@ -222,7 +249,9 @@ class AnimatedDisplay extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 10,
-                  color: isSet ? Colors.white : Colors.white54,
+                  color: isSet
+                      ? scheme.onSecondary
+                      : scheme.onSurface.withOpacity(0.6),
                   fontWeight: FontWeight.bold,
                 ),
               ),
