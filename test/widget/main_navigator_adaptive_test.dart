@@ -5,18 +5,16 @@ import 'package:loan_ranger/src/providers/calculator_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  final binding =
-      TestWidgetsFlutterBinding.ensureInitialized()
-          as TestWidgetsFlutterBinding;
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() {
-    binding.window.clearPhysicalSizeTestValue();
-    binding.window.clearDevicePixelRatioTestValue();
+    final binding = TestWidgetsFlutterBinding.instance;
+    binding.platformDispatcher.clearAllTestValues();
   });
 
   testWidgets('uses NavigationBar on compact layouts', (tester) async {
-    binding.window.physicalSizeTestValue = const Size(500, 900);
-    binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.physicalSize = const Size(500, 900);
+    tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
       MultiProvider(
@@ -37,8 +35,8 @@ void main() {
   });
 
   testWidgets('uses NavigationRail on wide layouts', (tester) async {
-    binding.window.physicalSizeTestValue = const Size(1400, 900);
-    binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
       MultiProvider(

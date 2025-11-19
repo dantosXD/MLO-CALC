@@ -54,7 +54,7 @@ class AnimatedDisplay extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: palette?.keyShadow ??
-                Colors.black.withOpacity(isDark ? 0.35 : 0.12),
+                Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
             blurRadius: isDark ? 28 : 18,
             offset: Offset(0, isDark ? 12 : 8),
           ),
@@ -100,11 +100,11 @@ class AnimatedDisplay extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: (palette?.displayBackground ??
-                        colorScheme.surfaceVariant)
-                    .withOpacity(0.2),
+                        colorScheme.surfaceContainerHighest)
+                    .withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: accent.withOpacity(0.35),
+                  color: accent.withValues(alpha: 0.35),
                   width: 1,
                 ),
               ),
@@ -125,7 +125,7 @@ class AnimatedDisplay extends StatelessWidget {
                         fontFeatures: const [FontFeature.tabularFigures()],
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             offset: const Offset(0, 2),
                             blurRadius: 4,
                           ),
@@ -138,7 +138,7 @@ class AnimatedDisplay extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.2),
+                      color: accent.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -219,13 +219,13 @@ class AnimatedDisplay extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         decoration: BoxDecoration(
-          color: (palette?.displayBackground ?? scheme.surfaceVariant)
-              .withOpacity(isSet ? 0.35 : 0.18),
+          color: (palette?.displayBackground ?? scheme.surfaceContainerHighest)
+              .withValues(alpha: isSet ? 0.35 : 0.18),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isSet
-                ? scheme.tertiary.withOpacity(0.5)
-                : scheme.outlineVariant.withOpacity(0.2),
+                ? scheme.tertiary.withValues(alpha: 0.5)
+                : scheme.outlineVariant.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -251,7 +251,7 @@ class AnimatedDisplay extends StatelessWidget {
                   fontSize: 10,
                   color: isSet
                       ? scheme.onSecondary
-                      : scheme.onSurface.withOpacity(0.6),
+                      : scheme.onSurface.withValues(alpha: 0.6),
                   fontWeight: FontWeight.bold,
                 ),
               ),

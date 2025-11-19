@@ -6,18 +6,16 @@ import 'package:loan_ranger/src/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  final binding =
-      TestWidgetsFlutterBinding.ensureInitialized()
-          as TestWidgetsFlutterBinding;
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() {
-    binding.window.clearPhysicalSizeTestValue();
-    binding.window.clearDevicePixelRatioTestValue();
+    final binding = TestWidgetsFlutterBinding.instance;
+    binding.platformDispatcher.clearAllTestValues();
   });
 
   testWidgets('summary tiles wrap on narrow screens', (tester) async {
-    binding.window.physicalSizeTestValue = const Size(360, 800);
-    binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
       MultiProvider(
@@ -46,8 +44,8 @@ void main() {
   testWidgets('summary tiles stay on a single row on wide screens', (
     tester,
   ) async {
-    binding.window.physicalSizeTestValue = const Size(1280, 800);
-    binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
       MultiProvider(

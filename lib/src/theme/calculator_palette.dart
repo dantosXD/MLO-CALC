@@ -54,7 +54,7 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
     return CalculatorPalette(
       backgroundGradient: LinearGradient(
         colors: [
-          Color.alphaBlend(scheme.primary.withOpacity(0.04), scheme.surface),
+          Color.alphaBlend(scheme.primary.withValues(alpha: 0.04), scheme.surface),
           scheme.surface,
         ],
         begin: Alignment.topLeft,
@@ -62,16 +62,16 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
       ),
       surface: scheme.surface,
       displayBackground: Color.alphaBlend(
-        scheme.primary.withOpacity(0.05),
+        scheme.primary.withValues(alpha: 0.05),
         scheme.surface,
       ),
       displayForeground: scheme.onSurface,
       displaySecondary: scheme.onSurfaceVariant,
-      keyShadow: Colors.black.withOpacity(0.08),
+      keyShadow: Colors.black.withValues(alpha: 0.08),
       keyOutline: scheme.outlineVariant,
       primaryKey: scheme.primaryContainer,
       onPrimaryKey: scheme.onPrimaryContainer,
-      secondaryKey: scheme.surfaceVariant,
+      secondaryKey: scheme.surfaceContainerHighest,
       onSecondaryKey: scheme.onSurfaceVariant,
       accentKey: scheme.secondaryContainer,
       onAccentKey: scheme.onSecondaryContainer,
@@ -86,7 +86,7 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
     return CalculatorPalette(
       backgroundGradient: LinearGradient(
         colors: [
-          Color.alphaBlend(scheme.primary.withOpacity(0.12), scheme.surface),
+          Color.alphaBlend(scheme.primary.withValues(alpha: 0.12), scheme.surface),
           scheme.surfaceContainerHighest,
         ],
         begin: Alignment.topCenter,
@@ -94,16 +94,16 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
       ),
       surface: scheme.surfaceContainerHighest,
       displayBackground: Color.alphaBlend(
-        scheme.primary.withOpacity(0.18),
+        scheme.primary.withValues(alpha: 0.18),
         scheme.surfaceContainerHighest,
       ),
       displayForeground: scheme.onSurface,
       displaySecondary: scheme.onSurfaceVariant,
-      keyShadow: Colors.black.withOpacity(0.35),
+      keyShadow: Colors.black.withValues(alpha: 0.35),
       keyOutline: scheme.outlineVariant,
       primaryKey: scheme.primaryContainer,
       onPrimaryKey: scheme.onPrimaryContainer,
-      secondaryKey: scheme.surfaceVariant,
+      secondaryKey: scheme.surfaceContainerHighest,
       onSecondaryKey: scheme.onSurfaceVariant,
       accentKey: scheme.secondaryContainer,
       onAccentKey: scheme.onSecondaryContainer,
@@ -213,7 +213,6 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
       case CalculatorButtonVariant.utility:
         return (background: utilityKey, foreground: onUtilityKey);
       case CalculatorButtonVariant.primary:
-      default:
         return (background: primaryKey, foreground: onPrimaryKey);
     }
   }
