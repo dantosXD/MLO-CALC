@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/calculation_history.dart';
+import '../services/nlp_calculator_service.dart';
 
 // Model classes for structured data
 class QualifyingRatio {
@@ -26,6 +28,8 @@ class AmortizationEntry {
   });
 }
 
+enum _ManualVar { loanAmount, interestRate, termYears, payment }
+
 class CalculatorProvider with ChangeNotifier {
   static const Object _noValue = Object();
 
@@ -49,8 +53,14 @@ class CalculatorProvider with ChangeNotifier {
   double? _monthlyExpenses; // Monthly amount (HOA, etc.)
 
   // Qualification Variables
-  QualifyingRatio _qualRatio1 = QualifyingRatio(housingRatio: 28, debtRatio: 36);
-  QualifyingRatio _qualRatio2 = QualifyingRatio(housingRatio: 29, debtRatio: 41);
+  QualifyingRatio _qualRatio1 = QualifyingRatio(
+    housingRatio: 28,
+    debtRatio: 36,
+  );
+  QualifyingRatio _qualRatio2 = QualifyingRatio(
+    housingRatio: 29,
+    debtRatio: 41,
+  );
   double? _annualIncome;
   double? _monthlyDebt;
 
@@ -63,6 +73,24 @@ class CalculatorProvider with ChangeNotifier {
 
   // Advanced features
   double? _futureValue;
+  final CalculationHistory _history = CalculationHistory();
+
+  final Set<_ManualVar> _manualVariables = <_ManualVar>{};
+  final List<_ManualVar> _manualInputOrder = <_ManualVar>[];
+
+  void _registerManualInput(_ManualVar variable) {
+    _manualVariables.add(variable);
+    _manualInputOrder.remove(variable);
+    _manualInputOrder.add(variable);
+    if (_manualInputOrder.length > 3) {
+      _manualInputOrder.removeAt(0);
+    }
+  }
+
+  void _unregisterManualInput(_ManualVar variable) {
+    _manualVariables.remove(variable);
+    _manualInputOrder.remove(variable);
+  }
   // Placeholder for future features
   // double? _loanFees;
   // double? _armRateChange;
@@ -94,6 +122,7 @@ class CalculatorProvider with ChangeNotifier {
   String get displayMode => _displayMode;
   List<AmortizationEntry> get amortizationData => _amortizationData;
   double? get futureValue => _futureValue;
+  CalculationHistory get history => _history;
 
   // Computed values
   double get pitiPayment {
@@ -104,6 +133,12 @@ class CalculatorProvider with ChangeNotifier {
     if (_mortgageInsurance != null) piti += _mortgageInsurance! / 12;
     if (_monthlyExpenses != null) piti += _monthlyExpenses!;
     return piti;
+  }
+
+  double get interestOnlyPayment {
+    if (_loanAmount == null || _interestRate == null) return 0;
+    final double r = _interestRate! / 100 / 12;
+    return _loanAmount! * r;
   }
 
   // Toggle between P&I and PITI display
@@ -135,8 +170,282 @@ class CalculatorProvider with ChangeNotifier {
     }
 
     _loanAmount = _price! - downPaymentAmount;
+    _unregisterManualInput(_ManualVar.loanAmount);
     _displayValue = _loanAmount!.toStringAsFixed(2);
     calculate();
+  }
+
+  // Financial Setters
+  void setLoanAmount({double? value}) {
+    final double? parsedValue = value ?? double.tryParse(_displayValue);
+    if (parsedValue == null) {
+      _loanAmount = null;
+      _unregisterManualInput(_ManualVar.loanAmount);
+    } else {
+      _loanAmount = parsedValue;
+      _registerManualInput(_ManualVar.loanAmount);
+    }
+    if (!_manualVariables.contains(_ManualVar.payment)) {
+      _payment = null;
+      _unregisterManualInput(_ManualVar.payment);
+    }
+    _shouldResetDisplay = true;
+    calculate();
+    _saveState();
+    notifyListeners();
+  }
+
+  void setInterestRate() {
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue == null) {
+      _interestRate = null;
+      _unregisterManualInput(_ManualVar.interestRate);
+    } else {
+      _interestRate = parsedValue;
+      _registerManualInput(_ManualVar.interestRate);
+    }
+    if (!_manualVariables.contains(_ManualVar.payment)) {
+      _payment = null;
+      _unregisterManualInput(_ManualVar.payment);
+    }
+    _shouldResetDisplay = true;
+    calculate();
+    _saveState();
+    notifyListeners();
+  }
+
+  void setTermYears() {
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue == null) {
+      _termYears = null;
+      _unregisterManualInput(_ManualVar.termYears);
+    } else {
+      _termYears = parsedValue;
+      _registerManualInput(_ManualVar.termYears);
+    }
+    if (!_manualVariables.contains(_ManualVar.payment)) {
+      _payment = null;
+      _unregisterManualInput(_ManualVar.payment);
+    }
+    _shouldResetDisplay = true;
+    calculate();
+    _saveState();
+    notifyListeners();
+  }
+
+  void setPayment() {
+    if (_payment != null && !_manualVariables.contains(_ManualVar.payment)) {
+      final bool hasPiti =
+          (_propertyTax != null ||
+          _homeInsurance != null ||
+          _mortgageInsurance != null ||
+          _monthlyExpenses != null);
+      if (_displayMode == 'pi') {
+        if (hasPiti) {
+          togglePitiDisplay();
+          return;
+        } else if (_loanAmount != null && _interestRate != null) {
+          _displayMode = 'io';
+          _displayValue = interestOnlyPayment.toStringAsFixed(2);
+          notifyListeners();
+          return;
+        }
+      } else if (_displayMode == 'piti') {
+        if (_loanAmount != null && _interestRate != null) {
+          _displayMode = 'io';
+          _displayValue = interestOnlyPayment.toStringAsFixed(2);
+          notifyListeners();
+          return;
+        } else {
+          _displayMode = 'pi';
+          _displayValue = _payment!.toStringAsFixed(2);
+          notifyListeners();
+          return;
+        }
+      } else if (_displayMode == 'io') {
+        _displayMode = 'pi';
+        _displayValue = _payment!.toStringAsFixed(2);
+        notifyListeners();
+        return;
+      }
+    }
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue == null) {
+      _payment = null;
+      _unregisterManualInput(_ManualVar.payment);
+    } else {
+      _payment = parsedValue;
+      _registerManualInput(_ManualVar.payment);
+      _displayMode = 'pi';
+    }
+    if (!_manualVariables.contains(_ManualVar.loanAmount)) {
+      _loanAmount = null;
+      _unregisterManualInput(_ManualVar.loanAmount);
+    }
+    _shouldResetDisplay = true;
+    calculate();
+    _saveState();
+    notifyListeners();
+  }
+
+  // PITI Setters
+  void setPrice() {
+    _price = double.tryParse(_displayValue);
+    _shouldResetDisplay = true;
+    _calculateLoanAmountFromPrice();
+    _saveState();
+    notifyListeners();
+  }
+
+  void setDownPayment() {
+    _downPayment = double.tryParse(_displayValue);
+    _shouldResetDisplay = true;
+    _calculateLoanAmountFromPrice();
+    _saveState();
+    notifyListeners();
+  }
+
+  void setPropertyTax() {
+    _propertyTax = double.tryParse(_displayValue);
+    _shouldResetDisplay = true;
+    _saveState();
+    notifyListeners();
+  }
+
+  void setHomeInsurance() {
+    _homeInsurance = double.tryParse(_displayValue);
+    _shouldResetDisplay = true;
+    _saveState();
+    notifyListeners();
+  }
+
+  void setMortgageInsurance() {
+    _mortgageInsurance = double.tryParse(_displayValue);
+    _shouldResetDisplay = true;
+    _saveState();
+    notifyListeners();
+  }
+
+  void setMonthlyExpenses() {
+    _monthlyExpenses = double.tryParse(_displayValue);
+    _shouldResetDisplay = true;
+    _saveState();
+    notifyListeners();
+  }
+
+  // Qualification Setters
+  void setAnnualIncome({Object? value = _noValue}) {
+    if (!identical(value, _noValue)) {
+      _annualIncome = value as double?;
+      _shouldResetDisplay = false;
+    } else {
+      _annualIncome = double.tryParse(_displayValue);
+      _shouldResetDisplay = true;
+    }
+    _saveState();
+    notifyListeners();
+  }
+
+  void setMonthlyDebt({Object? value = _noValue}) {
+    if (!identical(value, _noValue)) {
+      _monthlyDebt = value as double?;
+      _shouldResetDisplay = false;
+    } else {
+      _monthlyDebt = double.tryParse(_displayValue);
+      _shouldResetDisplay = true;
+    }
+    _saveState();
+    notifyListeners();
+  }
+
+  void setQualRatio1(double housingRatio, double debtRatio) {
+    _qualRatio1 = QualifyingRatio(
+      housingRatio: housingRatio,
+      debtRatio: debtRatio,
+    );
+    notifyListeners();
+  }
+
+  void setQualRatio2(double housingRatio, double debtRatio) {
+    _qualRatio2 = QualifyingRatio(
+      housingRatio: housingRatio,
+      debtRatio: debtRatio,
+    );
+    notifyListeners();
+  }
+
+  // Arithmetic Operations
+  void performOperation(String op) {
+    // When an arithmetic operation starts, clear financial context.
+    _loanAmount = null;
+    _interestRate = null;
+    _termYears = null;
+    _payment = null;
+    _manualVariables.clear();
+    _manualInputOrder.clear();
+
+    // Handle chained operations like 5 * 2 +
+    if (_operator != null && !_shouldResetDisplay) {
+      calculateResult();
+    }
+
+    _firstOperand = double.tryParse(_displayValue);
+    _operator = op;
+    _shouldResetDisplay = true;
+  }
+
+  void calculateResult() {
+    if (_operator == null || _firstOperand == null) {
+      return;
+    }
+
+    final double secondOperand = double.tryParse(_displayValue) ?? 0;
+    double result = 0;
+
+    switch (_operator) {
+      case '+':
+        result = _firstOperand! + secondOperand;
+        break;
+      case '-':
+        result = _firstOperand! - secondOperand;
+        break;
+      case 'x':
+        result = _firstOperand! * secondOperand;
+        break;
+      case '/':
+        if (secondOperand != 0) {
+          result = _firstOperand! / secondOperand;
+        } else {
+          _displayValue = 'Error';
+          _resetArithmeticState();
+          notifyListeners();
+          return;
+        }
+        break;
+    }
+
+    _displayValue = _formatResult(result);
+    _resetArithmeticState();
+    _shouldResetDisplay = true;
+    notifyListeners();
+  }
+
+  String _formatResult(double result) {
+    // If the result is an integer, display it without decimals.
+    if (result.truncateToDouble() == result) {
+      return result.toInt().toString();
+    } else {
+      // Otherwise, format to a reasonable number of decimal places.
+      return result
+          .toStringAsFixed(4)
+          .replaceAll(RegExp(r'0*$'), '')
+          .replaceAll(RegExp(r'\.$'), '');
+    }
+  }
+
+  void _resetArithmeticState() {
+    _operator = null;
+    _firstOperand = null;
   }
 
   void inputDigit(String digit) {
@@ -201,8 +510,208 @@ class CalculatorProvider with ChangeNotifier {
     _displayMode = 'pi';
     _amortizationData = [];
     _futureValue = null;
+    _manualVariables.clear();
+    _manualInputOrder.clear();
     _saveState();
     notifyListeners();
+  }
+
+  /// Apply a parsed Gemini request into calculator state and run the requested action.
+  Future<String> applyNlpRequest(CalculationRequest request) async {
+    void assignLoanAmount(double? value) {
+      _loanAmount = value;
+      if (value == null) {
+        _unregisterManualInput(_ManualVar.loanAmount);
+      } else {
+        _registerManualInput(_ManualVar.loanAmount);
+      }
+    }
+
+    void assignInterestRate(double? value) {
+      _interestRate = value;
+      if (value == null) {
+        _unregisterManualInput(_ManualVar.interestRate);
+      } else {
+        _registerManualInput(_ManualVar.interestRate);
+      }
+    }
+
+    void assignTermYears(double? value) {
+      _termYears = value;
+      if (value == null) {
+        _unregisterManualInput(_ManualVar.termYears);
+      } else {
+        _registerManualInput(_ManualVar.termYears);
+      }
+    }
+
+    void assignPayment(double? value) {
+      _payment = value;
+      if (value == null) {
+        _unregisterManualInput(_ManualVar.payment);
+      } else {
+        _registerManualInput(_ManualVar.payment);
+      }
+    }
+
+    String message = request.explanation;
+
+    switch (request.action) {
+      case 'calculate_payment':
+        assignLoanAmount(request.loanAmount);
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        assignPayment(null);
+        calculate();
+        message = (_payment != null)
+            ? 'Payment: ${_payment!.toStringAsFixed(2)}'
+            : 'Need loan amount, interest rate, and term to calculate payment.';
+        break;
+      case 'calculate_loan_amount':
+        assignPayment(request.payment);
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        assignLoanAmount(null);
+        calculate();
+        message = (_loanAmount != null)
+            ? 'Loan amount: ${_loanAmount!.toStringAsFixed(2)}'
+            : 'Need payment, interest rate, and term to calculate loan amount.';
+        break;
+      case 'calculate_term':
+        assignLoanAmount(request.loanAmount);
+        assignInterestRate(request.interestRate);
+        assignPayment(request.payment);
+        assignTermYears(null);
+        calculate();
+        message = (_termYears != null)
+            ? 'Term: ${_termYears!.toStringAsFixed(2)} years'
+            : 'Need loan amount, rate, and payment to calculate term.';
+        break;
+      case 'calculate_interest_rate':
+        assignLoanAmount(request.loanAmount);
+        assignPayment(request.payment);
+        assignTermYears(request.termYears);
+        assignInterestRate(null);
+        calculate();
+        message = (_interestRate != null)
+            ? 'Interest rate: ${_interestRate!.toStringAsFixed(3)}%'
+            : 'Need loan amount, payment, and term to calculate interest rate.';
+        break;
+      case 'calculate_max_qualifying_loan':
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        _annualIncome = request.annualIncome;
+        _monthlyDebt = request.monthlyDebt;
+        _propertyTax = request.propertyTax;
+        _homeInsurance = request.homeInsurance;
+        _mortgageInsurance = request.mortgageInsurance;
+        _monthlyExpenses = request.monthlyExpenses;
+        assignPayment(null);
+        assignLoanAmount(null);
+        if (_interestRate != null &&
+            _termYears != null &&
+            _annualIncome != null) {
+          calculateMaxQualifyingLoan();
+          message = (_loanAmount != null)
+              ? 'Max loan: ${_loanAmount!.toStringAsFixed(2)}'
+              : 'Unable to calculate max qualifying loan with provided info.';
+        } else {
+          message =
+              'Need income, rate, and term to calculate max qualifying loan.';
+        }
+        break;
+      case 'calculate_min_income':
+        assignLoanAmount(request.loanAmount);
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        _propertyTax = request.propertyTax;
+        _homeInsurance = request.homeInsurance;
+        _mortgageInsurance = request.mortgageInsurance;
+        _monthlyExpenses = request.monthlyExpenses;
+        _monthlyDebt = request.monthlyDebt;
+        if (_loanAmount != null &&
+            _interestRate != null &&
+            _termYears != null) {
+          calculateMinimumIncome();
+          message = (_annualIncome != null)
+              ? 'Required income: ${_annualIncome!.toStringAsFixed(2)}'
+              : 'Unable to calculate minimum income.';
+        } else {
+          message =
+              'Need loan amount, rate, and term to calculate minimum income.';
+        }
+        break;
+      case 'generate_amortization':
+        assignLoanAmount(request.loanAmount);
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        if (_loanAmount != null &&
+            _interestRate != null &&
+            _termYears != null) {
+          if (_payment == null) _calculatePayment();
+          generateAmortizationSchedule();
+          message = 'Generated amortization schedule.';
+        } else {
+          message = 'Need loan amount, rate, and term to build schedule.';
+        }
+        break;
+      case 'calculate_biweekly':
+        assignLoanAmount(request.loanAmount);
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        if (_loanAmount != null &&
+            _interestRate != null &&
+            _termYears != null) {
+          if (_payment == null) _calculatePayment();
+          final result = calculateBiWeeklyConversion();
+          if (result.isNotEmpty) {
+            message =
+                'Bi-weekly payment: ${result['biWeeklyPayment']?.toStringAsFixed(2)}, new term: ${result['newTermYears']?.toStringAsFixed(2)} yrs, interest saved: ${result['interestSaved']?.toStringAsFixed(2)}';
+          } else {
+            message = 'Unable to calculate bi-weekly conversion.';
+          }
+        } else {
+          message =
+              'Need loan amount, rate, and term to compare bi-weekly payments.';
+        }
+        break;
+      default:
+        // Fallback: just set whatever values we can and recalc.
+        assignLoanAmount(request.loanAmount);
+        assignInterestRate(request.interestRate);
+        assignTermYears(request.termYears);
+        assignPayment(request.payment);
+        if (request.propertyTax != null) {
+          _propertyTax = request.propertyTax;
+        }
+        if (request.homeInsurance != null) {
+          _homeInsurance = request.homeInsurance;
+        }
+        if (request.mortgageInsurance != null) {
+          _mortgageInsurance = request.mortgageInsurance;
+        }
+        if (request.monthlyExpenses != null) {
+          _monthlyExpenses = request.monthlyExpenses;
+        }
+        if (request.annualIncome != null) {
+          _annualIncome = request.annualIncome;
+        }
+        if (request.monthlyDebt != null) {
+          _monthlyDebt = request.monthlyDebt;
+        }
+        if (request.price != null) {
+          _price = request.price;
+        }
+        if (request.downPayment != null) {
+          _downPayment = request.downPayment;
+        }
+        calculate();
+        message = request.explanation;
+    }
+
+    await _saveState();
+    notifyListeners();
+    return message;
   }
 
   // State persistence
@@ -221,6 +730,11 @@ class CalculatorProvider with ChangeNotifier {
       _monthlyExpenses = prefs.getDouble('monthlyExpenses');
       _annualIncome = prefs.getDouble('annualIncome');
       _monthlyDebt = prefs.getDouble('monthlyDebt');
+
+      final historyJson = prefs.getString('calculationHistory');
+      if (historyJson != null && historyJson.isNotEmpty) {
+        _history.fromJsonString(historyJson);
+      }
 
       // Update display if we have a payment
       if (_payment != null) {
@@ -310,207 +824,60 @@ class CalculatorProvider with ChangeNotifier {
       } else {
         await prefs.remove('monthlyDebt');
       }
+
+      await prefs.setString('calculationHistory', _history.toJsonString());
     } catch (e) {
       // Ignore errors during save
     }
   }
 
-  // Financial Setters
-  void setLoanAmount({double? value}) {
-    _loanAmount = value ?? double.tryParse(_displayValue);
-    _payment = null; // Clear payment so it can be recalculated
-    _shouldResetDisplay = true;
-    calculate();
-    _saveState();
-    notifyListeners();
-  }
-
-  void setInterestRate() {
-    _interestRate = double.tryParse(_displayValue);
-    _payment = null; // Clear payment so it can be recalculated
-    _shouldResetDisplay = true;
-    calculate();
-    _saveState();
-    notifyListeners();
-  }
-
-  void setTermYears() {
-    _termYears = double.tryParse(_displayValue);
-    _payment = null; // Clear payment so it can be recalculated
-    _shouldResetDisplay = true;
-    calculate();
-    _saveState();
-    notifyListeners();
-  }
-
-  void setPayment() {
-    // If payment is already calculated and we have PITI data, toggle display mode
-    if (_payment != null && _displayMode == 'pi' && (_propertyTax != null || _homeInsurance != null || _mortgageInsurance != null || _monthlyExpenses != null)) {
-      togglePitiDisplay();
-      return;
-    }
-    _payment = double.tryParse(_displayValue);
-    _loanAmount = null; // Clear loan amount so it can be recalculated
-    _shouldResetDisplay = true;
-    calculate();
-    _saveState();
-    notifyListeners();
-  }
-
-  // PITI Setters
-  void setPrice() {
-    _price = double.tryParse(_displayValue);
-    _shouldResetDisplay = true;
-    _calculateLoanAmountFromPrice();
-    _saveState();
-    notifyListeners();
-  }
-
-  void setDownPayment() {
-    _downPayment = double.tryParse(_displayValue);
-    _shouldResetDisplay = true;
-    _calculateLoanAmountFromPrice();
-    _saveState();
-    notifyListeners();
-  }
-
-  void setPropertyTax() {
-    _propertyTax = double.tryParse(_displayValue);
-    _shouldResetDisplay = true;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setHomeInsurance() {
-    _homeInsurance = double.tryParse(_displayValue);
-    _shouldResetDisplay = true;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setMortgageInsurance() {
-    _mortgageInsurance = double.tryParse(_displayValue);
-    _shouldResetDisplay = true;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setMonthlyExpenses() {
-    _monthlyExpenses = double.tryParse(_displayValue);
-    _shouldResetDisplay = true;
-    _saveState();
-    notifyListeners();
-  }
-
-  // Qualification Setters
-  void setAnnualIncome({Object? value = _noValue}) {
-    if (!identical(value, _noValue)) {
-      _annualIncome = value as double?;
-      _shouldResetDisplay = false;
-    } else {
-      _annualIncome = double.tryParse(_displayValue);
-      _shouldResetDisplay = true;
-    }
-    _saveState();
-    notifyListeners();
-  }
-
-  void setMonthlyDebt({Object? value = _noValue}) {
-    if (!identical(value, _noValue)) {
-      _monthlyDebt = value as double?;
-      _shouldResetDisplay = false;
-    } else {
-      _monthlyDebt = double.tryParse(_displayValue);
-      _shouldResetDisplay = true;
-    }
-    _saveState();
-    notifyListeners();
-  }
-
-  void setQualRatio1(double housingRatio, double debtRatio) {
-    _qualRatio1 = QualifyingRatio(housingRatio: housingRatio, debtRatio: debtRatio);
-    notifyListeners();
-  }
-
-  void setQualRatio2(double housingRatio, double debtRatio) {
-    _qualRatio2 = QualifyingRatio(housingRatio: housingRatio, debtRatio: debtRatio);
-    notifyListeners();
-  }
-
-  // Arithmetic Operations
-  void performOperation(String op) {
-    // When an arithmetic operation starts, clear financial context.
-    _loanAmount = null;
-    _interestRate = null;
-    _termYears = null;
-    _payment = null;
-
-    // Handle chained operations like 5 * 2 +
-    if (_operator != null && !_shouldResetDisplay) {
-      calculateResult();
-    }
-
-    _firstOperand = double.tryParse(_displayValue);
-    _operator = op;
-    _shouldResetDisplay = true;
-  }
-
-  void calculateResult() {
-    if (_operator == null || _firstOperand == null) {
-      return;
-    }
-
-    final double secondOperand = double.tryParse(_displayValue) ?? 0;
-    double result = 0;
-
-    switch (_operator) {
-      case '+':
-        result = _firstOperand! + secondOperand;
-        break;
-      case '-':
-        result = _firstOperand! - secondOperand;
-        break;
-      case 'x':
-        result = _firstOperand! * secondOperand;
-        break;
-      case '/':
-        if (secondOperand != 0) {
-          result = _firstOperand! / secondOperand;
-        } else {
-          _displayValue = 'Error';
-          _resetArithmeticState();
-          notifyListeners();
-          return;
-        }
-        break;
-    }
-
-    _displayValue = _formatResult(result);
-    _resetArithmeticState();
-    _shouldResetDisplay = true;
-    notifyListeners();
-  }
-
-  String _formatResult(double result) {
-    // If the result is an integer, display it without decimals.
-    if (result.truncateToDouble() == result) {
-      return result.toInt().toString();
-    } else {
-      // Otherwise, format to a reasonable number of decimal places.
-      return result
-          .toStringAsFixed(4)
-          .replaceAll(RegExp(r'0*$'), '')
-          .replaceAll(RegExp(r'\.$'), '');
-    }
-  }
-
-  void _resetArithmeticState() {
-    _operator = null;
-    _firstOperand = null;
-  }
-
   // Financial Calculations
   void calculate() {
+    if (_manualInputOrder.length == 3) {
+      final Set<_ManualVar> provided = _manualInputOrder.toSet();
+      _ManualVar? target;
+      for (final _ManualVar candidate in _ManualVar.values) {
+        if (!provided.contains(candidate)) {
+          target = candidate;
+          break;
+        }
+      }
+      if (target != null) {
+        switch (target) {
+          case _ManualVar.payment:
+            if (_loanAmount != null &&
+                _interestRate != null &&
+                _termYears != null) {
+              _calculatePayment();
+              return;
+            }
+            break;
+          case _ManualVar.loanAmount:
+            if (_payment != null &&
+                _interestRate != null &&
+                _termYears != null) {
+              _calculateLoanAmount();
+              return;
+            }
+            break;
+          case _ManualVar.interestRate:
+            if (_loanAmount != null && _payment != null && _termYears != null) {
+              _calculateInterestRate();
+              return;
+            }
+            break;
+          case _ManualVar.termYears:
+            if (_loanAmount != null &&
+                _interestRate != null &&
+                _payment != null) {
+              _calculateTerm();
+              return;
+            }
+            break;
+        }
+      }
+    }
+
     if (_loanAmount != null &&
         _interestRate != null &&
         _termYears != null &&
@@ -543,7 +910,23 @@ class CalculatorProvider with ChangeNotifier {
       return;
     }
     _payment = _loanAmount! * (r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
+    _unregisterManualInput(_ManualVar.payment);
+    _displayMode = 'pi';
     _displayValue = _payment!.toStringAsFixed(2);
+    _history.addEntry(
+      CalculationEntry.fromLoanCalculation(
+        type: 'payment',
+        loanAmount: _loanAmount,
+        interestRate: _interestRate,
+        termYears: _termYears,
+        payment: _payment,
+        propertyTax: _propertyTax,
+        homeInsurance: _homeInsurance,
+        mortgageInsurance: _mortgageInsurance,
+        monthlyExpenses: _monthlyExpenses,
+      ),
+    );
+    _saveState();
     notifyListeners();
   }
 
@@ -556,7 +939,22 @@ class CalculatorProvider with ChangeNotifier {
       return;
     }
     _loanAmount = _payment! * (pow(1 + r, n) - 1) / (r * pow(1 + r, n));
+    _unregisterManualInput(_ManualVar.loanAmount);
     _displayValue = _loanAmount!.toStringAsFixed(2);
+    _history.addEntry(
+      CalculationEntry.fromLoanCalculation(
+        type: 'loan_amount',
+        loanAmount: _loanAmount,
+        interestRate: _interestRate,
+        termYears: _termYears,
+        payment: _payment,
+        propertyTax: _propertyTax,
+        homeInsurance: _homeInsurance,
+        mortgageInsurance: _mortgageInsurance,
+        monthlyExpenses: _monthlyExpenses,
+      ),
+    );
+    _saveState();
     notifyListeners();
   }
 
@@ -569,25 +967,37 @@ class CalculatorProvider with ChangeNotifier {
     } else {
       final double n = -log(1 - (p * r) / m) / log(1 + r);
       _termYears = n / 12;
+      _unregisterManualInput(_ManualVar.termYears);
       _displayValue = _termYears!.toStringAsFixed(2);
+      _history.addEntry(
+        CalculationEntry.fromLoanCalculation(
+          type: 'term',
+          loanAmount: _loanAmount,
+          interestRate: _interestRate,
+          termYears: _termYears,
+          payment: _payment,
+          propertyTax: _propertyTax,
+          homeInsurance: _homeInsurance,
+          mortgageInsurance: _mortgageInsurance,
+          monthlyExpenses: _monthlyExpenses,
+        ),
+      );
+      _saveState();
     }
     notifyListeners();
   }
 
-  // Calculate Interest Rate using Newton's method
   void _calculateInterestRate() {
     final double p = _loanAmount!;
     final double m = _payment!;
     final double n = _termYears! * 12;
 
-    // Validate inputs
     if (m <= 0 || p <= 0 || n <= 0) {
       _displayValue = 'Error';
       notifyListeners();
       return;
     }
 
-    // Initial guess (annual rate as percentage)
     double rate = 5.0;
     const double tolerance = 0.0001;
     const int maxIterations = 100;
@@ -596,29 +1006,24 @@ class CalculatorProvider with ChangeNotifier {
       final double r = rate / 100 / 12; // Monthly rate
 
       if (r <= -1) {
-        // Invalid rate
         rate = 0.1;
         continue;
       }
 
-      // Calculate f(r) = P*r*(1+r)^n - M*((1+r)^n - 1)
       final double factor = pow(1 + r, n).toDouble();
       final double f = p * r * factor - m * (factor - 1);
 
-      // Calculate f'(r) - derivative
-      final double df = p * (factor + r * n * factor / (1 + r)) - m * n * factor / (1 + r);
+      final double df =
+          p * (factor + r * n * factor / (1 + r)) - m * n * factor / (1 + r);
 
       if (df.abs() < 0.0000001) {
-        // Derivative too small, can't continue
         break;
       }
 
-      // Newton's method: r_new = r_old - f(r)/f'(r)
       final double rateChange = f / df;
       final double newMonthlyRate = r - rateChange;
       final double newAnnualRate = newMonthlyRate * 12 * 100;
 
-      // Check convergence
       if ((newAnnualRate - rate).abs() < tolerance) {
         rate = newAnnualRate;
         break;
@@ -626,17 +1031,31 @@ class CalculatorProvider with ChangeNotifier {
 
       rate = newAnnualRate;
 
-      // Safety checks
       if (rate < 0) rate = 0.1;
       if (rate > 100) rate = 50;
     }
 
     _interestRate = rate;
+    _unregisterManualInput(_ManualVar.interestRate);
     _displayValue = _interestRate!.toStringAsFixed(3);
+    _history.addEntry(
+      CalculationEntry.fromLoanCalculation(
+        type: 'interest_rate',
+        loanAmount: _loanAmount,
+        interestRate: _interestRate,
+        termYears: _termYears,
+        payment: _payment,
+        propertyTax: _propertyTax,
+        homeInsurance: _homeInsurance,
+        mortgageInsurance: _mortgageInsurance,
+        monthlyExpenses: _monthlyExpenses,
+      ),
+    );
+    _saveState();
     notifyListeners();
   }
 
-  // Generate amortization schedule
+  // Schedule and conversions
   void generateAmortizationSchedule() {
     if (_loanAmount == null || _interestRate == null || _termYears == null) {
       return;
@@ -657,20 +1076,21 @@ class CalculatorProvider with ChangeNotifier {
       final double interestPaid = currentBalance * r;
       double principalPaid = monthlyPayment - interestPaid;
 
-      // Adjust final payment to clear remaining balance
       if (month == n) {
         principalPaid = currentBalance;
       }
 
       final double newBalance = currentBalance - principalPaid;
 
-      _amortizationData.add(AmortizationEntry(
-        month: month,
-        payment: principalPaid + interestPaid,
-        principal: principalPaid,
-        interest: interestPaid,
-        balance: newBalance > 0 ? newBalance : 0,
-      ));
+      _amortizationData.add(
+        AmortizationEntry(
+          month: month,
+          payment: principalPaid + interestPaid,
+          principal: principalPaid,
+          interest: interestPaid,
+          balance: newBalance > 0 ? newBalance : 0,
+        ),
+      );
 
       currentBalance = newBalance;
     }
@@ -678,7 +1098,6 @@ class CalculatorProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Calculate remaining balance (balloon payment) after specified years
   double calculateRemainingBalance(double years) {
     if (_loanAmount == null || _interestRate == null || _termYears == null) {
       return 0;
@@ -703,7 +1122,6 @@ class CalculatorProvider with ChangeNotifier {
     return currentBalance > 0 ? currentBalance : 0;
   }
 
-  // Calculate bi-weekly payment conversion
   Map<String, double> calculateBiWeeklyConversion() {
     if (_loanAmount == null || _interestRate == null || _termYears == null) {
       return {};
@@ -716,15 +1134,16 @@ class CalculatorProvider with ChangeNotifier {
       }
     }
 
-    final double r = _interestRate! / 100 / 26; // Bi-weekly rate (26 periods/year)
+    final double r =
+        _interestRate! / 100 / 26; // Bi-weekly rate (26 periods/year)
     final double biWeeklyPayment = _payment! / 2;
 
-    // Calculate new term with bi-weekly payments
     double currentBalance = _loanAmount!;
     int periods = 0;
     double totalInterest = 0;
 
-    while (currentBalance > 0 && periods < 1000) { // Max 1000 periods safety
+    while (currentBalance > 0 && periods < 1000) {
+      // Max 1000 periods safety
       final double interestPaid = currentBalance * r;
       final double principalPaid = biWeeklyPayment - interestPaid;
 
@@ -737,9 +1156,9 @@ class CalculatorProvider with ChangeNotifier {
 
     final double newTermYears = periods / 26;
 
-    // Calculate original total interest
     final int originalMonths = (_termYears! * 12).round();
-    final double originalTotalInterest = (_payment! * originalMonths) - _loanAmount!;
+    final double originalTotalInterest =
+        (_payment! * originalMonths) - _loanAmount!;
     final double interestSaved = originalTotalInterest - totalInterest;
 
     return {
@@ -750,20 +1169,15 @@ class CalculatorProvider with ChangeNotifier {
     };
   }
 
-  // Calculate maximum qualifying loan amount
   void calculateMaxQualifyingLoan({bool useRatio1 = true}) {
-    if (_annualIncome == null || _interestRate == null || _termYears == null) {
-      _displayValue = 'Need Income, Rate, Term';
-      notifyListeners();
-      return;
-    }
-
+    // ...
     final QualifyingRatio ratio = useRatio1 ? _qualRatio1 : _qualRatio2;
     final double monthlyIncome = _annualIncome! / 12;
     final double monthlyDebtPayment = _monthlyDebt ?? 0;
 
     // Calculate max PITI from front-end ratio (housing expense ratio)
-    final double maxPitiFromHousing = monthlyIncome * (ratio.housingRatio / 100);
+    final double maxPitiFromHousing =
+        monthlyIncome * (ratio.housingRatio / 100);
 
     // Calculate max PITI from back-end ratio (total debt ratio)
     final double maxTotalDebt = monthlyIncome * (ratio.debtRatio / 100);
@@ -776,7 +1190,9 @@ class CalculatorProvider with ChangeNotifier {
     double monthlyPITIExpenses = 0;
     if (_propertyTax != null) monthlyPITIExpenses += _propertyTax! / 12;
     if (_homeInsurance != null) monthlyPITIExpenses += _homeInsurance! / 12;
-    if (_mortgageInsurance != null) monthlyPITIExpenses += _mortgageInsurance! / 12;
+    if (_mortgageInsurance != null) {
+      monthlyPITIExpenses += _mortgageInsurance! / 12;
+    }
     if (_monthlyExpenses != null) monthlyPITIExpenses += _monthlyExpenses!;
 
     // Max P&I payment available
@@ -800,8 +1216,68 @@ class CalculatorProvider with ChangeNotifier {
 
     _loanAmount = maxPI * (pow(1 + r, n) - 1) / (r * pow(1 + r, n));
     _payment = maxPI;
+    _unregisterManualInput(_ManualVar.loanAmount);
+    _unregisterManualInput(_ManualVar.payment);
+    _displayMode = 'pi';
     _displayValue = _loanAmount!.toStringAsFixed(2);
+    _history.addEntry(
+      CalculationEntry.fromQualification(
+        annualIncome: _annualIncome!,
+        monthlyDebt: _monthlyDebt ?? 0,
+        interestRate: _interestRate!,
+        termYears: _termYears!,
+        maxLoanAmount: _loanAmount!,
+      ),
+    );
+    _saveState();
     notifyListeners();
+  }
+
+  void applyHistoryEntry(CalculationEntry entry) {
+    try {
+      final inputs = entry.inputs;
+      final results = entry.results;
+      _loanAmount = _toDouble(inputs['loanAmount']);
+      _interestRate = _toDouble(inputs['interestRate']);
+      _termYears = _toDouble(inputs['termYears']);
+      _payment = _toDouble(results['payment']);
+      _propertyTax = _toDouble(inputs['propertyTax']);
+      _homeInsurance = _toDouble(inputs['homeInsurance']);
+      _mortgageInsurance = _toDouble(inputs['mortgageInsurance']);
+      _monthlyExpenses = _toDouble(inputs['monthlyExpenses']);
+      _displayMode = 'pi';
+      if (_payment != null) {
+        _displayValue = _payment!.toStringAsFixed(2);
+      } else if (_loanAmount != null) {
+        _displayValue = _loanAmount!.toStringAsFixed(2);
+      } else {
+        _displayValue = '0';
+      }
+      _manualVariables.clear();
+      _manualInputOrder.clear();
+      _saveState();
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  void removeHistoryEntry(String id) {
+    _history.removeEntry(id);
+    _saveState();
+    notifyListeners();
+  }
+
+  void clearHistory() {
+    _history.clearAll();
+    _saveState();
+    notifyListeners();
+  }
+
+  double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is double) return v;
+    if (v is int) return v.toDouble();
+    if (v is String) return double.tryParse(v);
+    return null;
   }
 
   // Calculate minimum income required for loan
@@ -824,7 +1300,8 @@ class CalculatorProvider with ChangeNotifier {
     final double totalPITI = pitiPayment;
 
     // Calculate minimum income from front-end ratio
-    final double minIncomeFromHousing = (totalPITI / (ratio.housingRatio / 100)) * 12;
+    final double minIncomeFromHousing =
+        (totalPITI / (ratio.housingRatio / 100)) * 12;
 
     // Calculate minimum income from back-end ratio
     final double totalDebt = totalPITI + monthlyDebtPayment;

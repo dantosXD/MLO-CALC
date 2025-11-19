@@ -10,7 +10,10 @@ class NLPCalculatorService {
   /// Users should set their API key via environment variable or settings
   Future<void> initialize(String apiKey) async {
     try {
-      _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: apiKey);
+      _model = GenerativeModel(
+        model: 'gemini-1.5-flash',
+        apiKey: apiKey,
+      );
       _isInitialized = true;
     } catch (e) {
       developer.log(
@@ -27,13 +30,10 @@ class NLPCalculatorService {
   /// Process natural language query and extract loan parameters
   Future<CalculationRequest> processQuery(String query) async {
     if (!_isInitialized || _model == null) {
-      throw Exception(
-        'NLP service not initialized. Please set your Gemini API key.',
-      );
+      throw Exception('NLP service not initialized. Please set your Gemini API key.');
     }
 
-    final prompt =
-        '''
+    final prompt = '''
 You are a mortgage calculator assistant. Parse the following natural language query and extract loan parameters.
 
 Query: "$query"
@@ -49,8 +49,6 @@ Extract and return ONLY a JSON object with these fields (use null for missing va
   "downPayment": number or null,
   "propertyTax": number or null (annual),
   "homeInsurance": number or null (annual),
-  "mortgageInsurance": number or null (annual),
-  "monthlyExpenses": number or null (monthly HOA/fees),
   "annualIncome": number or null,
   "monthlyDebt": number or null,
   "explanation": "Brief explanation of what will be calculated"
@@ -107,8 +105,6 @@ class CalculationRequest {
   final double? downPayment;
   final double? propertyTax;
   final double? homeInsurance;
-  final double? mortgageInsurance;
-  final double? monthlyExpenses;
   final double? annualIncome;
   final double? monthlyDebt;
   final String explanation;
@@ -123,8 +119,6 @@ class CalculationRequest {
     this.downPayment,
     this.propertyTax,
     this.homeInsurance,
-    this.mortgageInsurance,
-    this.monthlyExpenses,
     this.annualIncome,
     this.monthlyDebt,
     required this.explanation,
@@ -141,8 +135,6 @@ class CalculationRequest {
       downPayment: _toDouble(json['downPayment']),
       propertyTax: _toDouble(json['propertyTax']),
       homeInsurance: _toDouble(json['homeInsurance']),
-      mortgageInsurance: _toDouble(json['mortgageInsurance']),
-      monthlyExpenses: _toDouble(json['monthlyExpenses']),
       annualIncome: _toDouble(json['annualIncome']),
       monthlyDebt: _toDouble(json['monthlyDebt']),
       explanation: json['explanation'] ?? 'Calculation requested',
@@ -168,8 +160,6 @@ class CalculationRequest {
       'downPayment': downPayment,
       'propertyTax': propertyTax,
       'homeInsurance': homeInsurance,
-      'mortgageInsurance': mortgageInsurance,
-      'monthlyExpenses': monthlyExpenses,
       'annualIncome': annualIncome,
       'monthlyDebt': monthlyDebt,
       'explanation': explanation,
@@ -181,3 +171,4 @@ class CalculationRequest {
     return 'CalculationRequest(action: $action, explanation: $explanation)';
   }
 }
+

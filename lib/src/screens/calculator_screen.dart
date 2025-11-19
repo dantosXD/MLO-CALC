@@ -106,7 +106,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                 subtitle: calculatorProvider.displayMode == 'piti' &&
                           calculatorProvider.payment != null
                     ? 'PITI'
-                    : null,
+                    : (calculatorProvider.displayMode == 'io'
+                        ? 'Interest Only'
+                        : null),
                 isError: calculatorProvider.displayValue == 'Error',
               ),
             ),
