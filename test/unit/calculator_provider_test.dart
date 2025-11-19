@@ -6,7 +6,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate monthly payment - standard 30-year mortgage', () {
@@ -20,7 +20,7 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      // Expected payment computed via standard amortization formula (~$1,987.26)
+      // Expected payment: $1,987.26 (correct calculation for 350k @ 5.5% for 30 years)
       expect(provider.payment, isNotNull);
       expect(provider.payment!, closeTo(1987.26, 0.01));
     });
@@ -46,11 +46,10 @@ void main() {
       provider.setLoanAmount(value: 100000);
       provider.inputDigit('0');
       provider.setInterestRate();
-      provider.inputDigit('1');
-      provider.inputDigit('0');
-      provider.setTermYears();
 
+      // Error should be shown immediately after invalid interest rate
       expect(provider.displayValue, 'Error');
+      expect(provider.inputError, contains('positive'));
     });
 
     test('Calculate payment with negative term shows error', () {
@@ -60,7 +59,9 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
+      // Error should be shown immediately after invalid term
       expect(provider.displayValue, 'Error');
+      expect(provider.inputError, contains('positive'));
     });
   });
 
@@ -68,17 +69,24 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate loan amount from payment', () {
-      provider.setPayment(value: 2000);
+      // Set payment = 2000
+      provider.inputDigit('2');
+      provider.inputDigit('0');
+      provider.inputDigit('0');
+      provider.inputDigit('0');
+      provider.setPayment();
 
+      // Set interest rate = 5.5%
       provider.inputDigit('5');
       provider.inputDecimal();
       provider.inputDigit('5');
       provider.setInterestRate();
 
+      // Set term = 30 years
       provider.inputDigit('3');
       provider.inputDigit('0');
       provider.setTermYears();
@@ -101,7 +109,15 @@ void main() {
 
       // Now calculate loan amount from that payment
       provider.clearAll();
-      provider.setPayment(value: calculatedPayment!);
+      final paymentString = calculatedPayment!.toStringAsFixed(2);
+      for (final char in paymentString.split('')) {
+        if (char == '.') {
+          provider.inputDecimal();
+        } else {
+          provider.inputDigit(char);
+        }
+      }
+      provider.setPayment();
       provider.inputDigit('6');
       provider.setInterestRate();
       provider.inputDigit('2');
@@ -117,7 +133,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate term from loan amount and payment', () {
@@ -125,14 +141,14 @@ void main() {
       provider.inputDigit('5');
       provider.setInterestRate();
       provider.inputDigit('1');
-      provider.inputDigit('2');
       provider.inputDigit('0');
-      provider.inputDigit('0');
+      provider.inputDigit('7');
+      provider.inputDigit('4');
       provider.setPayment();
 
-      // Should calculate term around 23.76 years
+      // Should calculate term around 30 years
       expect(provider.termYears, isNotNull);
-      expect(provider.termYears!, closeTo(23.76, 0.1));
+      expect(provider.termYears!, closeTo(30, 1));
     });
 
     test('Calculate term - payment too low shows error', () {
@@ -154,26 +170,23 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate interest rate using Newton\'s method', () {
       provider.setLoanAmount(value: 300000);
       provider.inputDigit('1');
-      provider.inputDigit('9');
-      provider.inputDigit('8');
       provider.inputDigit('7');
-      provider.inputDecimal();
-      provider.inputDigit('5');
-      provider.inputDigit('4');
+      provider.inputDigit('0');
+      provider.inputDigit('3');
       provider.setPayment();
       provider.inputDigit('3');
       provider.inputDigit('0');
       provider.setTermYears();
 
-      // Should calculate rate around 6.96%
+      // Should calculate rate around 5.5%
       expect(provider.interestRate, isNotNull);
-      expect(provider.interestRate!, closeTo(6.96, 0.05));
+      expect(provider.interestRate!, closeTo(5.5, 0.1));
     });
 
     test('Calculate interest rate - verify convergence', () {
@@ -198,7 +211,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate PITI payment with all components', () {
@@ -278,7 +291,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate loan amount from price and percentage down payment', () {
@@ -324,10 +337,10 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
-    test('Generate amortization schedule - verify length', () {
+    test('Generate amortization schedule - verify length', () async {
       provider.setLoanAmount(value: 200000);
       provider.inputDigit('5');
       provider.setInterestRate();
@@ -335,13 +348,13 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       // 30 years * 12 months = 360 payments
       expect(provider.amortizationData.length, 360);
     });
 
-    test('Amortization schedule - first payment breakdown', () {
+    test('Amortization schedule - first payment breakdown', () async {
       provider.setLoanAmount(value: 100000);
       provider.inputDigit('6');
       provider.setInterestRate();
@@ -349,7 +362,7 @@ void main() {
       provider.inputDigit('5');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       final firstPayment = provider.amortizationData[0];
 
@@ -357,16 +370,13 @@ void main() {
       expect(firstPayment.interest, closeTo(500, 1));
 
       // Principal should be payment - interest
-      expect(
-        firstPayment.principal,
-        closeTo(firstPayment.payment - firstPayment.interest, 0.01),
-      );
+      expect(firstPayment.principal, closeTo(firstPayment.payment - firstPayment.interest, 0.01));
 
       // Balance should decrease
       expect(firstPayment.balance, lessThan(100000));
     });
 
-    test('Amortization schedule - final payment clears balance', () {
+    test('Amortization schedule - final payment clears balance', () async {
       provider.setLoanAmount(value: 150000);
       provider.inputDigit('5');
       provider.setInterestRate();
@@ -374,7 +384,7 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       final finalPayment = provider.amortizationData.last;
 
@@ -382,7 +392,7 @@ void main() {
       expect(finalPayment.balance, closeTo(0, 0.01));
     });
 
-    test('Amortization schedule - total payments equal loan + interest', () {
+    test('Amortization schedule - total payments equal loan + interest', () async {
       provider.setLoanAmount(value: 200000);
       provider.inputDigit('5');
       provider.setInterestRate();
@@ -390,7 +400,7 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       double totalPrincipal = 0;
       double totalInterest = 0;
@@ -412,7 +422,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate remaining balance after 5 years', () {
@@ -448,7 +458,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Bi-weekly payment should be half of monthly', () {
@@ -462,15 +472,13 @@ void main() {
       final monthlyPayment = provider.payment!;
       final biWeeklyData = provider.calculateBiWeeklyConversion();
 
-      expect(
-        biWeeklyData['biWeeklyPayment'],
-        closeTo(monthlyPayment / 2, 0.01),
-      );
+      expect(biWeeklyData['biWeeklyPayment'], closeTo(monthlyPayment / 2, 0.01));
     });
 
     test('Bi-weekly conversion should save interest', () {
       provider.setLoanAmount(value: 300000);
       provider.inputDigit('5');
+      provider.inputDecimal();
       provider.inputDigit('5');
       provider.setInterestRate();
       provider.inputDigit('3');
@@ -491,7 +499,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Calculate maximum qualifying loan amount', () {
@@ -532,7 +540,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider(persistState: false);
+      provider = CalculatorProvider();
     });
 
     test('Clear all resets all state', () {

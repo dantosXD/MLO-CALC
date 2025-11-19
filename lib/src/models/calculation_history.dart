@@ -191,6 +191,82 @@ class CalculationEntry {
       notes: notes ?? this.notes,
     );
   }
+
+  /// Get loan amount for comparison (from inputs or results)
+  double? get loanAmount {
+    return (inputs['loanAmount'] ?? results['loanAmount']) as double?;
+  }
+
+  /// Get interest rate for comparison
+  double? get interestRate {
+    return (inputs['interestRate'] ?? results['interestRate']) as double?;
+  }
+
+  /// Get term in years for comparison
+  double? get termYears {
+    final term = (inputs['termYears'] ?? results['termYears']);
+    return term != null ? (term as num).toDouble() : null;
+  }
+
+  /// Get monthly payment for comparison
+  double? get monthlyPayment {
+    return (inputs['payment'] ?? results['payment']) as double?;
+  }
+
+  /// Calculate total amount paid over loan life
+  double? get totalPaid {
+    final payment = monthlyPayment;
+    final term = termYears;
+    if (payment == null || term == null) return null;
+    return payment * term * 12;
+  }
+
+  /// Calculate total interest paid
+  double? get totalInterest {
+    final total = totalPaid;
+    final loan = loanAmount;
+    if (total == null || loan == null) return null;
+    return total - loan;
+  }
+
+  /// Calculate total principal (same as loan amount)
+  double? get totalPrincipal => loanAmount;
+
+  /// Calculate interest-to-principal ratio
+  double? get interestToPrincipalRatio {
+    final interest = totalInterest;
+    final principal = totalPrincipal;
+    if (interest == null || principal == null || principal == 0) return null;
+    return interest / principal;
+  }
+
+  /// Get PITI components
+  double? get propertyTax => inputs['propertyTax'] as double?;
+  double? get homeInsurance => inputs['homeInsurance'] as double?;
+  double? get mortgageInsurance => inputs['mortgageInsurance'] as double?;
+  double? get monthlyExpenses => inputs['monthlyExpenses'] as double?;
+
+  /// Calculate total monthly PITI payment
+  double? get pitiPayment {
+    final payment = monthlyPayment;
+    if (payment == null) return null;
+
+    final piti = payment +
+        ((propertyTax ?? 0) / 12) +
+        ((homeInsurance ?? 0) / 12) +
+        ((mortgageInsurance ?? 0) / 12) +
+        (monthlyExpenses ?? 0);
+
+    return piti;
+  }
+
+  /// Check if this calculation is comparable (has required loan fields)
+  bool get isComparable {
+    return loanAmount != null &&
+        interestRate != null &&
+        termYears != null &&
+        monthlyPayment != null;
+  }
 }
 
 /// Manages calculation history storage and retrieval

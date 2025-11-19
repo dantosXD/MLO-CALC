@@ -124,6 +124,11 @@ class _MainNavigatorState extends State<MainNavigator> {
                 tooltip: 'Toggle theme',
               ),
               IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => _showApiKeySheet(context),
+                tooltip: 'Settings',
+              ),
+              IconButton(
                 icon: const Icon(Icons.mic_outlined),
                 onPressed: () {
                   _showNLPDialog(context);
@@ -186,76 +191,90 @@ class _MainNavigatorState extends State<MainNavigator> {
     );
   }
 
-  void _showNLPDialog(BuildContext context) {
-    showDialog(
+  void _showApiKeySheet(BuildContext context) {
+    final settings = context.read<NlpSettingsProvider>();
+    final controller = TextEditingController(text: settings.apiKey ?? '');
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Natural Language Input'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Ask me to calculate anything! Examples:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              '• "Calculate payment for \$350,000 at 5.5% for 30 years"\n'
-              '• "What\'s my max loan with \$100,000 income?"\n'
-              '• "Show amortization schedule"',
-              style: TextStyle(fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(
-                hintText: 'Type your question here...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
+      isScrollControlled: true,
+      builder: (context) {
+        final navigator = Navigator.of(context);
+        final messenger = ScaffoldMessenger.of(context);
+
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Gemini API Key',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
-              maxLines: 3,
-              onSubmitted: (value) {
-                Navigator.pop(context);
-                _processNLPQuery(context, value);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Voice input would go here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Voice input feature coming soon!'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'API Key',
+                  hintText: 'Enter your Gemini API key',
+                  border: OutlineInputBorder(),
                 ),
-              );
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.mic, size: 18),
-                SizedBox(width: 4),
-                Text('Voice'),
-              ],
-            ),
+                autofocus: true,
+                obscureText: true,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      await settings.setApiKey(controller.text);
+                      if (!mounted) return;
+                      navigator.pop();
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('API key saved')),
+                      );
+                    },
+                    icon: const Icon(Icons.save_outlined),
+                    label: const Text('Save'),
+                  ),
+                  const SizedBox(width: 12),
+                  TextButton(
+                    onPressed: () async {
+                      controller.clear();
+                      await settings.setApiKey(null);
+                      if (!mounted) return;
+                      navigator.pop();
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('API key cleared')),
+                      );
+                    },
+                    child: const Text('Clear'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your key is stored locally on this device using Shared Preferences.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  void _processNLPQuery(BuildContext context, String query) {
-    // TODO: Integrate with NLP service
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Processing: $query'),
-        duration: const Duration(seconds: 2),
-      ),
+  void _showNLPDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) =>
+          NlpDialog(nlpService: _nlpService, speechToText: _speechToText),
     );
   }
 }

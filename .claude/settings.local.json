@@ -43,7 +43,9 @@
       "Bash(cat:*)",
       "Bash(flutter test:*)",
       "Bash(python:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "mcp__zen__chat",
+      "mcp__zen__consensus"
     ],
     "deny": [],
     "ask": []
