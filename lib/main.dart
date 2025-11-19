@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/providers/comparison_provider.dart';
+import 'package:loan_ranger/src/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'src/services/nlp_calculator_service.dart';
+import 'src/widgets/nlp_dialog.dart';
 
-import 'src/screens/calculator_screen.dart';
 import 'src/screens/amortization_screen.dart';
-import 'src/screens/qualification_screen.dart';
 import 'src/screens/analysis_screen.dart';
+import 'src/screens/calculator_screen.dart';
+import 'src/screens/history_screen.dart';
+import 'src/screens/qualification_screen.dart';
 
 void main() {
   runApp(
@@ -14,6 +20,8 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => CalculatorProvider()),
+        ChangeNotifierProvider(create: (context) => ComparisonProvider()),
+        ChangeNotifierProvider(create: (context) => NlpSettingsProvider()),
       ],
       child: const LoanRangerApp(),
     ),
@@ -26,7 +34,9 @@ class ThemeProvider with ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
 
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    _themeMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
+        : ThemeMode.light;
     notifyListeners();
   }
 }
@@ -60,12 +70,15 @@ class MainNavigator extends StatefulWidget {
 
 class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
+  final NLPCalculatorService _nlpService = NLPCalculatorService();
+  final stt.SpeechToText _speechToText = stt.SpeechToText();
 
   final List<Widget> _screens = const [
     CalculatorScreen(),
     AmortizationScreen(),
     QualificationScreen(),
     AnalysisScreen(),
+    HistoryScreen(),
   ];
 
   final List<NavigationDestination> _destinations = const [
@@ -88,6 +101,11 @@ class _MainNavigatorState extends State<MainNavigator> {
       icon: Icon(Icons.analytics_outlined),
       selectedIcon: Icon(Icons.analytics),
       label: 'Analysis',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.history_outlined),
+      selectedIcon: Icon(Icons.history),
+      label: 'History',
     ),
   ];
 

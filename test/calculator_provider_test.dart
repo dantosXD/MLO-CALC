@@ -5,7 +5,7 @@ import 'dart:math';
 void main() {
   group('CalculatorProvider - Payment Calculation', () {
     test('Calculate monthly payment correctly', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
 
       // Set loan amount: $300,000
       provider.inputDigit('3');
@@ -36,7 +36,7 @@ void main() {
     });
 
     test('Calculate loan amount from payment', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
 
       // Set payment: $1,610.46
       provider.inputDigit('1');
@@ -62,7 +62,7 @@ void main() {
     });
 
     test('Calculate term from loan amount and payment', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
 
       // Set loan amount: $300,000
       provider.inputDigit('3');
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('Calculate interest rate from loan amount, payment, and term', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
 
       // Set loan amount: $300,000
       provider.inputDigit('3');
@@ -125,7 +125,7 @@ void main() {
 
   group('CalculatorProvider - Arithmetic Operations', () {
     test('Addition', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
       provider.inputDigit('5');
       provider.performOperation('+');
       provider.inputDigit('3');
@@ -134,7 +134,7 @@ void main() {
     });
 
     test('Subtraction', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
       provider.inputDigit('1');
       provider.inputDigit('0');
       provider.performOperation('-');
@@ -144,7 +144,7 @@ void main() {
     });
 
     test('Multiplication', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
       provider.inputDigit('6');
       provider.performOperation('x');
       provider.inputDigit('7');
@@ -153,7 +153,7 @@ void main() {
     });
 
     test('Division', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
       provider.inputDigit('1');
       provider.inputDigit('0');
       provider.performOperation('/');
@@ -163,7 +163,7 @@ void main() {
     });
 
     test('Division by zero shows error', () {
-      final provider = CalculatorProvider(persistState: false);
+      final provider = CalculatorProvider();
       provider.inputDigit('5');
       provider.performOperation('/');
       provider.inputDigit('0');

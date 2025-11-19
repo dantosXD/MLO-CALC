@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
-import 'package:loan_ranger/src/theme/calculator_palette.dart';
 import 'package:loan_ranger/src/widgets/calculator_button.dart';
 
 void main() {
-  testWidgets('CalculatorButton applies variant colors from palette', (tester) async {
+  testWidgets('CalculatorButton applies custom colors', (tester) async {
+    const testBackgroundColor = Colors.red;
+    const testForegroundColor = Colors.white;
+
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme(),
@@ -14,7 +16,8 @@ void main() {
             children: [
               CalculatorButton(
                 text: 'AC',
-                variant: CalculatorButtonVariant.destructive,
+                backgroundColor: testBackgroundColor,
+                foregroundColor: testForegroundColor,
                 onPressed: noop,
               ),
             ],
@@ -24,15 +27,12 @@ void main() {
     );
 
     final elevatedButton = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
-    final context = tester.element(find.byType(ElevatedButton));
-    final palette = Theme.of(context).extension<CalculatorPalette>()!;
-    final expected = palette.colorsForVariant(CalculatorButtonVariant.destructive);
 
     final background = elevatedButton.style?.backgroundColor?.resolve({});
     final foreground = elevatedButton.style?.foregroundColor?.resolve({});
 
-    expect(background, expected.background);
-    expect(foreground, expected.foreground);
+    expect(background, testBackgroundColor);
+    expect(foreground, testForegroundColor);
   });
 }
 

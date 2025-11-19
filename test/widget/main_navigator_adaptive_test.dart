@@ -23,7 +23,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(
-            create: (_) => CalculatorProvider(persistState: false),
+            create: (_) => CalculatorProvider(),
           ),
         ],
         child: const MaterialApp(home: MainNavigator()),
@@ -45,7 +45,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(
-            create: (_) => CalculatorProvider(persistState: false),
+            create: (_) => CalculatorProvider(),
           ),
         ],
         child: const MaterialApp(home: MainNavigator()),

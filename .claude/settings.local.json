@@ -45,7 +45,12 @@
       "Bash(python:*)",
       "Bash(git checkout:*)",
       "mcp__zen__chat",
-      "mcp__zen__consensus"
+      "mcp__zen__consensus",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "Bash(powershell -Command \"(Get-Content calculator_provider_test.dart) -replace ''CalculatorProvider\\(persistState: false\\)'', ''CalculatorProvider()'' | Set-Content calculator_provider_test.dart\")"
     ],
     "deny": [],
     "ask": []

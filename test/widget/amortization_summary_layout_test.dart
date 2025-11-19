@@ -23,7 +23,7 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider(
-            create: (_) => CalculatorProvider(persistState: false),
+            create: (_) => CalculatorProvider(),
           ),
         ],
         child: MaterialApp(
@@ -53,7 +53,7 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider(
-            create: (_) => CalculatorProvider(persistState: false),
+            create: (_) => CalculatorProvider(),
           ),
         ],
         child: MaterialApp(
