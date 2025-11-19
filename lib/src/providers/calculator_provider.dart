@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/calculation_history.dart';
 import '../services/nlp_calculator_service.dart';
+import '../utils/advanced_calculations.dart';
+import '../validators/financial_validators.dart';
 
 // Model classes for structured data
 class QualifyingRatio {
@@ -70,10 +73,19 @@ class CalculatorProvider with ChangeNotifier {
   bool _shouldResetDisplay = false;
   String _displayMode = 'pi'; // 'pi' or 'piti'
   List<AmortizationEntry> _amortizationData = [];
+  bool _isComputingAmortization = false;
+  String? _inputError;
 
   // Advanced features
   double? _futureValue;
   final CalculationHistory _history = CalculationHistory();
+  Timer? _saveTimer;
+
+  @override
+  void dispose() {
+    _saveTimer?.cancel();
+    super.dispose();
+  }
 
   final Set<_ManualVar> _manualVariables = <_ManualVar>{};
   final List<_ManualVar> _manualInputOrder = <_ManualVar>[];
@@ -121,8 +133,10 @@ class CalculatorProvider with ChangeNotifier {
   // Getters - Operational
   String get displayMode => _displayMode;
   List<AmortizationEntry> get amortizationData => _amortizationData;
+  bool get isComputingAmortization => _isComputingAmortization;
   double? get futureValue => _futureValue;
   CalculationHistory get history => _history;
+  String? get inputError => _inputError;
 
   // Computed values
   double get pitiPayment {
@@ -178,6 +192,17 @@ class CalculatorProvider with ChangeNotifier {
   // Financial Setters
   void setLoanAmount({double? value}) {
     final double? parsedValue = value ?? double.tryParse(_displayValue);
+    
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validateLoanAmount(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
     if (parsedValue == null) {
       _loanAmount = null;
       _unregisterManualInput(_ManualVar.loanAmount);
@@ -197,6 +222,19 @@ class CalculatorProvider with ChangeNotifier {
 
   void setInterestRate() {
     final double? parsedValue = double.tryParse(_displayValue);
+
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validateInterestRate(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        _displayValue = 'Error';
+        _shouldResetDisplay = true;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
     if (parsedValue == null) {
       _interestRate = null;
       _unregisterManualInput(_ManualVar.interestRate);
@@ -216,6 +254,19 @@ class CalculatorProvider with ChangeNotifier {
 
   void setTermYears() {
     final double? parsedValue = double.tryParse(_displayValue);
+
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validateTermYears(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        _displayValue = 'Error';
+        _shouldResetDisplay = true;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
     if (parsedValue == null) {
       _termYears = null;
       _unregisterManualInput(_ManualVar.termYears);
@@ -270,6 +321,17 @@ class CalculatorProvider with ChangeNotifier {
       }
     }
     final double? parsedValue = double.tryParse(_displayValue);
+
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validatePayment(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
     if (parsedValue == null) {
       _payment = null;
       _unregisterManualInput(_ManualVar.payment);
@@ -290,7 +352,18 @@ class CalculatorProvider with ChangeNotifier {
 
   // PITI Setters
   void setPrice() {
-    _price = double.tryParse(_displayValue);
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validatePrice(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _price = parsedValue;
     _shouldResetDisplay = true;
     _calculateLoanAmountFromPrice();
     _saveState();
@@ -298,7 +371,18 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void setDownPayment() {
-    _downPayment = double.tryParse(_displayValue);
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validateDownPayment(parsedValue, _price);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _downPayment = parsedValue;
     _shouldResetDisplay = true;
     _calculateLoanAmountFromPrice();
     _saveState();
@@ -306,28 +390,70 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void setPropertyTax() {
-    _propertyTax = double.tryParse(_displayValue);
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validatePropertyTax(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _propertyTax = parsedValue;
     _shouldResetDisplay = true;
     _saveState();
     notifyListeners();
   }
 
   void setHomeInsurance() {
-    _homeInsurance = double.tryParse(_displayValue);
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validateInsurance(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _homeInsurance = parsedValue;
     _shouldResetDisplay = true;
     _saveState();
     notifyListeners();
   }
 
   void setMortgageInsurance() {
-    _mortgageInsurance = double.tryParse(_displayValue);
+    final double? parsedValue = double.tryParse(_displayValue);
+    // No specific validator for MI, assume same as insurance
+    if (parsedValue != null && parsedValue < 0) {
+       _inputError = "Mortgage Insurance cannot be negative";
+        notifyListeners();
+        return;
+    }
+    _inputError = null;
+
+    _mortgageInsurance = parsedValue;
     _shouldResetDisplay = true;
     _saveState();
     notifyListeners();
   }
 
   void setMonthlyExpenses() {
-    _monthlyExpenses = double.tryParse(_displayValue);
+    final double? parsedValue = double.tryParse(_displayValue);
+    if (parsedValue != null) {
+      final validation = FinancialValidators.validateMonthlyExpenses(parsedValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _monthlyExpenses = parsedValue;
     _shouldResetDisplay = true;
     _saveState();
     notifyListeners();
@@ -335,25 +461,65 @@ class CalculatorProvider with ChangeNotifier {
 
   // Qualification Setters
   void setAnnualIncome({Object? value = _noValue}) {
+    double? incomeValue;
+    bool shouldReset;
+
     if (!identical(value, _noValue)) {
-      _annualIncome = value as double?;
-      _shouldResetDisplay = false;
+      if (value is num) {
+        incomeValue = value.toDouble();
+      } else {
+        incomeValue = value as double?;
+      }
+      shouldReset = false;
     } else {
-      _annualIncome = double.tryParse(_displayValue);
-      _shouldResetDisplay = true;
+      incomeValue = double.tryParse(_displayValue);
+      shouldReset = true;
     }
+
+    if (incomeValue != null) {
+      final validation = FinancialValidators.validateAnnualIncome(incomeValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _annualIncome = incomeValue;
+    _shouldResetDisplay = shouldReset;
     _saveState();
     notifyListeners();
   }
 
   void setMonthlyDebt({Object? value = _noValue}) {
+    double? debtValue;
+    bool shouldReset;
+
     if (!identical(value, _noValue)) {
-      _monthlyDebt = value as double?;
-      _shouldResetDisplay = false;
+      if (value is num) {
+        debtValue = value.toDouble();
+      } else {
+        debtValue = value as double?;
+      }
+      shouldReset = false;
     } else {
-      _monthlyDebt = double.tryParse(_displayValue);
-      _shouldResetDisplay = true;
+      debtValue = double.tryParse(_displayValue);
+      shouldReset = true;
     }
+
+    if (debtValue != null) {
+      final validation = FinancialValidators.validateMonthlyDebt(debtValue);
+      if (!validation.isValid) {
+        _inputError = validation.errorMessage;
+        notifyListeners();
+        return;
+      }
+    }
+    _inputError = null;
+
+    _monthlyDebt = debtValue;
+    _shouldResetDisplay = shouldReset;
     _saveState();
     notifyListeners();
   }
@@ -510,6 +676,7 @@ class CalculatorProvider with ChangeNotifier {
     _displayMode = 'pi';
     _amortizationData = [];
     _futureValue = null;
+    _inputError = null;
     _manualVariables.clear();
     _manualInputOrder.clear();
     _saveState();
@@ -518,38 +685,31 @@ class CalculatorProvider with ChangeNotifier {
 
   /// Apply a parsed Gemini request into calculator state and run the requested action.
   Future<String> applyNlpRequest(CalculationRequest request) async {
+    // Only update if value is provided (allows for context preservation)
     void assignLoanAmount(double? value) {
-      _loanAmount = value;
-      if (value == null) {
-        _unregisterManualInput(_ManualVar.loanAmount);
-      } else {
+      if (value != null) {
+        _loanAmount = value;
         _registerManualInput(_ManualVar.loanAmount);
       }
     }
 
     void assignInterestRate(double? value) {
-      _interestRate = value;
-      if (value == null) {
-        _unregisterManualInput(_ManualVar.interestRate);
-      } else {
+      if (value != null) {
+        _interestRate = value;
         _registerManualInput(_ManualVar.interestRate);
       }
     }
 
     void assignTermYears(double? value) {
-      _termYears = value;
-      if (value == null) {
-        _unregisterManualInput(_ManualVar.termYears);
-      } else {
+      if (value != null) {
+        _termYears = value;
         _registerManualInput(_ManualVar.termYears);
       }
     }
 
     void assignPayment(double? value) {
-      _payment = value;
-      if (value == null) {
-        _unregisterManualInput(_ManualVar.payment);
-      } else {
+      if (value != null) {
+        _payment = value;
         _registerManualInput(_ManualVar.payment);
       }
     }
@@ -561,7 +721,11 @@ class CalculatorProvider with ChangeNotifier {
         assignLoanAmount(request.loanAmount);
         assignInterestRate(request.interestRate);
         assignTermYears(request.termYears);
-        assignPayment(null);
+        
+        // Clear target to force calculation
+        _payment = null;
+        _unregisterManualInput(_ManualVar.payment);
+        
         calculate();
         message = (_payment != null)
             ? 'Payment: ${_payment!.toStringAsFixed(2)}'
@@ -571,7 +735,10 @@ class CalculatorProvider with ChangeNotifier {
         assignPayment(request.payment);
         assignInterestRate(request.interestRate);
         assignTermYears(request.termYears);
-        assignLoanAmount(null);
+        
+        _loanAmount = null;
+        _unregisterManualInput(_ManualVar.loanAmount);
+        
         calculate();
         message = (_loanAmount != null)
             ? 'Loan amount: ${_loanAmount!.toStringAsFixed(2)}'
@@ -581,7 +748,10 @@ class CalculatorProvider with ChangeNotifier {
         assignLoanAmount(request.loanAmount);
         assignInterestRate(request.interestRate);
         assignPayment(request.payment);
-        assignTermYears(null);
+        
+        _termYears = null;
+        _unregisterManualInput(_ManualVar.termYears);
+        
         calculate();
         message = (_termYears != null)
             ? 'Term: ${_termYears!.toStringAsFixed(2)} years'
@@ -591,7 +761,10 @@ class CalculatorProvider with ChangeNotifier {
         assignLoanAmount(request.loanAmount);
         assignPayment(request.payment);
         assignTermYears(request.termYears);
-        assignInterestRate(null);
+        
+        _interestRate = null;
+        _unregisterManualInput(_ManualVar.interestRate);
+        
         calculate();
         message = (_interestRate != null)
             ? 'Interest rate: ${_interestRate!.toStringAsFixed(3)}%'
@@ -600,14 +773,16 @@ class CalculatorProvider with ChangeNotifier {
       case 'calculate_max_qualifying_loan':
         assignInterestRate(request.interestRate);
         assignTermYears(request.termYears);
-        _annualIncome = request.annualIncome;
-        _monthlyDebt = request.monthlyDebt;
-        _propertyTax = request.propertyTax;
-        _homeInsurance = request.homeInsurance;
-        _mortgageInsurance = request.mortgageInsurance;
-        _monthlyExpenses = request.monthlyExpenses;
-        assignPayment(null);
-        assignLoanAmount(null);
+        if (request.annualIncome != null) _annualIncome = request.annualIncome;
+        if (request.monthlyDebt != null) _monthlyDebt = request.monthlyDebt;
+        if (request.propertyTax != null) _propertyTax = request.propertyTax;
+        if (request.homeInsurance != null) _homeInsurance = request.homeInsurance;
+        if (request.mortgageInsurance != null) _mortgageInsurance = request.mortgageInsurance;
+        if (request.monthlyExpenses != null) _monthlyExpenses = request.monthlyExpenses;
+        
+        _payment = null;
+        _loanAmount = null; // Target
+        
         if (_interestRate != null &&
             _termYears != null &&
             _annualIncome != null) {
@@ -624,11 +799,12 @@ class CalculatorProvider with ChangeNotifier {
         assignLoanAmount(request.loanAmount);
         assignInterestRate(request.interestRate);
         assignTermYears(request.termYears);
-        _propertyTax = request.propertyTax;
-        _homeInsurance = request.homeInsurance;
-        _mortgageInsurance = request.mortgageInsurance;
-        _monthlyExpenses = request.monthlyExpenses;
-        _monthlyDebt = request.monthlyDebt;
+        if (request.propertyTax != null) _propertyTax = request.propertyTax;
+        if (request.homeInsurance != null) _homeInsurance = request.homeInsurance;
+        if (request.mortgageInsurance != null) _mortgageInsurance = request.mortgageInsurance;
+        if (request.monthlyExpenses != null) _monthlyExpenses = request.monthlyExpenses;
+        if (request.monthlyDebt != null) _monthlyDebt = request.monthlyDebt;
+        
         if (_loanAmount != null &&
             _interestRate != null &&
             _termYears != null) {
@@ -750,85 +926,88 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   Future<void> _saveState() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 1000), () async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
 
-      if (_loanAmount != null) {
-        await prefs.setDouble('loanAmount', _loanAmount!);
-      } else {
-        await prefs.remove('loanAmount');
+        if (_loanAmount != null) {
+          await prefs.setDouble('loanAmount', _loanAmount!);
+        } else {
+          await prefs.remove('loanAmount');
+        }
+
+        if (_interestRate != null) {
+          await prefs.setDouble('interestRate', _interestRate!);
+        } else {
+          await prefs.remove('interestRate');
+        }
+
+        if (_termYears != null) {
+          await prefs.setDouble('termYears', _termYears!);
+        } else {
+          await prefs.remove('termYears');
+        }
+
+        if (_payment != null) {
+          await prefs.setDouble('payment', _payment!);
+        } else {
+          await prefs.remove('payment');
+        }
+
+        if (_price != null) {
+          await prefs.setDouble('price', _price!);
+        } else {
+          await prefs.remove('price');
+        }
+
+        if (_downPayment != null) {
+          await prefs.setDouble('downPayment', _downPayment!);
+        } else {
+          await prefs.remove('downPayment');
+        }
+
+        if (_propertyTax != null) {
+          await prefs.setDouble('propertyTax', _propertyTax!);
+        } else {
+          await prefs.remove('propertyTax');
+        }
+
+        if (_homeInsurance != null) {
+          await prefs.setDouble('homeInsurance', _homeInsurance!);
+        } else {
+          await prefs.remove('homeInsurance');
+        }
+
+        if (_mortgageInsurance != null) {
+          await prefs.setDouble('mortgageInsurance', _mortgageInsurance!);
+        } else {
+          await prefs.remove('mortgageInsurance');
+        }
+
+        if (_monthlyExpenses != null) {
+          await prefs.setDouble('monthlyExpenses', _monthlyExpenses!);
+        } else {
+          await prefs.remove('monthlyExpenses');
+        }
+
+        if (_annualIncome != null) {
+          await prefs.setDouble('annualIncome', _annualIncome!);
+        } else {
+          await prefs.remove('annualIncome');
+        }
+
+        if (_monthlyDebt != null) {
+          await prefs.setDouble('monthlyDebt', _monthlyDebt!);
+        } else {
+          await prefs.remove('monthlyDebt');
+        }
+
+        await prefs.setString('calculationHistory', _history.toJsonString());
+      } catch (e) {
+        // Ignore errors during save
       }
-
-      if (_interestRate != null) {
-        await prefs.setDouble('interestRate', _interestRate!);
-      } else {
-        await prefs.remove('interestRate');
-      }
-
-      if (_termYears != null) {
-        await prefs.setDouble('termYears', _termYears!);
-      } else {
-        await prefs.remove('termYears');
-      }
-
-      if (_payment != null) {
-        await prefs.setDouble('payment', _payment!);
-      } else {
-        await prefs.remove('payment');
-      }
-
-      if (_price != null) {
-        await prefs.setDouble('price', _price!);
-      } else {
-        await prefs.remove('price');
-      }
-
-      if (_downPayment != null) {
-        await prefs.setDouble('downPayment', _downPayment!);
-      } else {
-        await prefs.remove('downPayment');
-      }
-
-      if (_propertyTax != null) {
-        await prefs.setDouble('propertyTax', _propertyTax!);
-      } else {
-        await prefs.remove('propertyTax');
-      }
-
-      if (_homeInsurance != null) {
-        await prefs.setDouble('homeInsurance', _homeInsurance!);
-      } else {
-        await prefs.remove('homeInsurance');
-      }
-
-      if (_mortgageInsurance != null) {
-        await prefs.setDouble('mortgageInsurance', _mortgageInsurance!);
-      } else {
-        await prefs.remove('mortgageInsurance');
-      }
-
-      if (_monthlyExpenses != null) {
-        await prefs.setDouble('monthlyExpenses', _monthlyExpenses!);
-      } else {
-        await prefs.remove('monthlyExpenses');
-      }
-
-      if (_annualIncome != null) {
-        await prefs.setDouble('annualIncome', _annualIncome!);
-      } else {
-        await prefs.remove('annualIncome');
-      }
-
-      if (_monthlyDebt != null) {
-        await prefs.setDouble('monthlyDebt', _monthlyDebt!);
-      } else {
-        await prefs.remove('monthlyDebt');
-      }
-
-      await prefs.setString('calculationHistory', _history.toJsonString());
-    } catch (e) {
-      // Ignore errors during save
-    }
+    });
   }
 
   // Financial Calculations
@@ -902,14 +1081,23 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void _calculatePayment() {
-    final double r = _interestRate! / 100 / 12;
-    final double n = _termYears! * 12;
-    if (r <= 0 || n <= 0) {
+    if (_loanAmount == null || _interestRate == null || _termYears == null) {
+      return;
+    }
+
+    final result = LoanMath.calculatePayment(
+      loanAmount: _loanAmount!,
+      interestRate: _interestRate!,
+      termYears: _termYears!,
+    );
+
+    if (result <= 0) {
       _displayValue = 'Error';
       notifyListeners();
       return;
     }
-    _payment = _loanAmount! * (r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
+
+    _payment = result;
     _unregisterManualInput(_ManualVar.payment);
     _displayMode = 'pi';
     _displayValue = _payment!.toStringAsFixed(2);
@@ -931,14 +1119,23 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void _calculateLoanAmount() {
-    final double r = _interestRate! / 100 / 12;
-    final double n = _termYears! * 12;
-    if (r <= 0 || n <= 0) {
+    if (_payment == null || _interestRate == null || _termYears == null) {
+      return;
+    }
+
+    final result = LoanMath.calculateLoanAmount(
+      payment: _payment!,
+      interestRate: _interestRate!,
+      termYears: _termYears!,
+    );
+
+    if (result <= 0) {
       _displayValue = 'Error';
       notifyListeners();
       return;
     }
-    _loanAmount = _payment! * (pow(1 + r, n) - 1) / (r * pow(1 + r, n));
+
+    _loanAmount = result;
     _unregisterManualInput(_ManualVar.loanAmount);
     _displayValue = _loanAmount!.toStringAsFixed(2);
     _history.addEntry(
@@ -959,14 +1156,20 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void _calculateTerm() {
-    final double r = _interestRate! / 100 / 12;
-    final double p = _loanAmount!;
-    final double m = _payment!;
-    if (m <= 0 || r <= 0 || p * r >= m) {
+    if (_loanAmount == null || _payment == null || _interestRate == null) {
+      return;
+    }
+
+    final result = LoanMath.calculateTerm(
+      loanAmount: _loanAmount!,
+      payment: _payment!,
+      interestRate: _interestRate!,
+    );
+
+    if (result <= 0) {
       _displayValue = 'Error';
     } else {
-      final double n = -log(1 - (p * r) / m) / log(1 + r);
-      _termYears = n / 12;
+      _termYears = result;
       _unregisterManualInput(_ManualVar.termYears);
       _displayValue = _termYears!.toStringAsFixed(2);
       _history.addEntry(
@@ -988,54 +1191,23 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   void _calculateInterestRate() {
-    final double p = _loanAmount!;
-    final double m = _payment!;
-    final double n = _termYears! * 12;
+    if (_loanAmount == null || _payment == null || _termYears == null) {
+      return;
+    }
 
-    if (m <= 0 || p <= 0 || n <= 0) {
+    final result = LoanMath.calculateInterestRate(
+      loanAmount: _loanAmount!,
+      payment: _payment!,
+      termYears: _termYears!,
+    );
+
+    if (result <= 0) {
       _displayValue = 'Error';
       notifyListeners();
       return;
     }
 
-    double rate = 5.0;
-    const double tolerance = 0.0001;
-    const int maxIterations = 100;
-
-    for (int i = 0; i < maxIterations; i++) {
-      final double r = rate / 100 / 12; // Monthly rate
-
-      if (r <= -1) {
-        rate = 0.1;
-        continue;
-      }
-
-      final double factor = pow(1 + r, n).toDouble();
-      final double f = p * r * factor - m * (factor - 1);
-
-      final double df =
-          p * (factor + r * n * factor / (1 + r)) - m * n * factor / (1 + r);
-
-      if (df.abs() < 0.0000001) {
-        break;
-      }
-
-      final double rateChange = f / df;
-      final double newMonthlyRate = r - rateChange;
-      final double newAnnualRate = newMonthlyRate * 12 * 100;
-
-      if ((newAnnualRate - rate).abs() < tolerance) {
-        rate = newAnnualRate;
-        break;
-      }
-
-      rate = newAnnualRate;
-
-      if (rate < 0) rate = 0.1;
-      if (rate > 100) rate = 50;
-    }
-
-    _interestRate = rate;
+    _interestRate = result;
     _unregisterManualInput(_ManualVar.interestRate);
     _displayValue = _interestRate!.toStringAsFixed(3);
     _history.addEntry(
@@ -1056,46 +1228,63 @@ class CalculatorProvider with ChangeNotifier {
   }
 
   // Schedule and conversions
-  void generateAmortizationSchedule() {
+  Future<void> generateAmortizationSchedule() async {
     if (_loanAmount == null || _interestRate == null || _termYears == null) {
       return;
     }
 
-    _amortizationData = [];
-    final double r = _interestRate! / 100 / 12;
-    final int n = (_termYears! * 12).round();
+    _isComputingAmortization = true;
+    notifyListeners();
 
-    if (_payment == null) {
-      _calculatePayment();
-    }
+    // Yield to allow UI to show loading indicator
+    await Future.delayed(const Duration(milliseconds: 50));
 
-    double currentBalance = _loanAmount!;
-    final double monthlyPayment = _payment!;
+    try {
+      _amortizationData = [];
+      final double r = _interestRate! / 100 / 12;
+      final int n = (_termYears! * 12).round();
 
-    for (int month = 1; month <= n; month++) {
-      final double interestPaid = currentBalance * r;
-      double principalPaid = monthlyPayment - interestPaid;
-
-      if (month == n) {
-        principalPaid = currentBalance;
+      if (_payment == null) {
+        _calculatePayment();
       }
 
-      final double newBalance = currentBalance - principalPaid;
+      if (_payment == null) return;
 
-      _amortizationData.add(
-        AmortizationEntry(
-          month: month,
-          payment: principalPaid + interestPaid,
-          principal: principalPaid,
-          interest: interestPaid,
-          balance: newBalance > 0 ? newBalance : 0,
-        ),
-      );
+      double currentBalance = _loanAmount!;
+      final double monthlyPayment = _payment!;
 
-      currentBalance = newBalance;
+      // In a real compute() isolate, this would be separate.
+      // For now, we just do it here.
+      for (int month = 1; month <= n; month++) {
+        final double interestPaid = currentBalance * r;
+        double principalPaid = monthlyPayment - interestPaid;
+
+        if (month == n) {
+          principalPaid = currentBalance;
+        }
+
+        final double newBalance = currentBalance - principalPaid;
+
+        _amortizationData.add(
+          AmortizationEntry(
+            month: month,
+            payment: principalPaid + interestPaid,
+            principal: principalPaid,
+            interest: interestPaid,
+            balance: newBalance > 0.01 ? newBalance : 0,
+          ),
+        );
+        currentBalance = newBalance;
+        
+        // Yield every 60 calculations to keep UI responsive if it's huge
+        if (month % 60 == 0) {
+          await Future.delayed(Duration.zero);
+        }
+      }
+    } finally {
+      _isComputingAmortization = false;
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   double calculateRemainingBalance(double years) {
@@ -1109,6 +1298,9 @@ class CalculatorProvider with ChangeNotifier {
     if (_payment == null) {
       _calculatePayment();
     }
+
+    // Safety check: if payment is still null (calculation failed), return 0
+    if (_payment == null) return 0;
 
     double currentBalance = _loanAmount!;
     final double monthlyPayment = _payment!;

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/calculator_provider.dart';
+import '../providers/comparison_provider.dart';
 import '../models/calculation_history.dart';
+import 'comparison_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -14,11 +16,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   String _type = 'all'; // all | payment | loan_amount | term | interest_rate | qualification
+  bool _selectionMode = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _selectionMode = !_selectionMode;
+      if (!_selectionMode) {
+        // Clear selections when exiting selection mode
+        context.read<ComparisonProvider>().clearSelections();
+      }
+    });
+  }
+
+  void _startComparison(BuildContext context) {
+    final comparisonProvider = context.read<ComparisonProvider>();
+    final calculatorProvider = context.read<CalculatorProvider>();
+
+    if (!comparisonProvider.canCompare) return;
+
+    final comparisonData = comparisonProvider.getComparisonData(
+      calculatorProvider.history.entries,
+    );
+
+    if (comparisonData != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ComparisonScreen(data: comparisonData),
+        ),
+      );
+    }
   }
 
   @override
@@ -37,10 +69,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
               : ListView.builder(
                   itemCount: entries.length,
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                  itemBuilder: (context, i) => _HistoryCard(
-                    entry: entries[i],
-                    onApply: () => provider.applyHistoryEntry(entries[i]),
-                    onDelete: () => provider.removeHistoryEntry(entries[i].id),
+                  itemBuilder: (context, i) => Consumer<ComparisonProvider>(
+                    builder: (context, comparisonProvider, _) => _HistoryCard(
+                      entry: entries[i],
+                      onApply: () => provider.applyHistoryEntry(entries[i]),
+                      onDelete: () => provider.removeHistoryEntry(entries[i].id),
+                      selected: comparisonProvider.isSelected(entries[i].id),
+                      selectionMode: _selectionMode,
+                      onSelect: () => comparisonProvider.toggleSelection(entries[i].id),
+                      onLongPress: () {
+                        if (!_selectionMode) {
+                          _toggleSelectionMode();
+                          comparisonProvider.toggleSelection(entries[i].id);
+                        }
+                      },
+                    ),
                   ),
                 ),
         ),
@@ -75,6 +118,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
           ),
           const SizedBox(width: 8),
+          Consumer<ComparisonProvider>(
+            builder: (context, comparisonProvider, _) {
+              if (_selectionMode) {
+                return Tooltip(
+                  message: 'Compare selected',
+                  child: IconButton(
+                    icon: Badge(
+                      label: Text('${comparisonProvider.selectionCount}'),
+                      child: const Icon(Icons.compare_arrows),
+                    ),
+                    onPressed: comparisonProvider.canCompare
+                        ? () => _startComparison(context)
+                        : null,
+                  ),
+                );
+              }
+              return Tooltip(
+                message: 'Compare calculations',
+                child: IconButton(
+                  icon: const Icon(Icons.compare_arrows),
+                  onPressed: provider.history.entries.length >= 2
+                      ? _toggleSelectionMode
+                      : null,
+                ),
+              );
+            },
+          ),
           Tooltip(
             message: 'Clear all history',
             child: IconButton(
@@ -160,54 +230,85 @@ class _HistoryCard extends StatelessWidget {
   final CalculationEntry entry;
   final VoidCallback onApply;
   final VoidCallback onDelete;
+  final bool selected;
+  final bool selectionMode;
+  final VoidCallback onSelect;
+  final VoidCallback onLongPress;
 
-  const _HistoryCard({required this.entry, required this.onApply, required this.onDelete});
+  const _HistoryCard({
+    required this.entry,
+    required this.onApply,
+    required this.onDelete,
+    required this.selected,
+    required this.selectionMode,
+    required this.onSelect,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(_iconFor(entry.type), color: theme.colorScheme.onPrimaryContainer),
-        ),
-        title: Text(entry.title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_fmt(entry.timestamp)),
-            const SizedBox(height: 2),
-            Text(entry.summary, maxLines: 2, overflow: TextOverflow.ellipsis),
-          ],
-        ),
-        isThreeLine: true,
-        trailing: Wrap(spacing: 4, children: [
-          IconButton(
-            tooltip: 'Apply to calculator',
-            icon: const Icon(Icons.playlist_add_check_outlined),
-            onPressed: onApply,
-          ),
-          IconButton(
-            tooltip: 'Delete',
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final ok = await showDialog<bool>(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: const Text('Delete entry?'),
-                  content: Text(entry.summary),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                    FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
-                  ],
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: selected
+            ? BorderSide(color: theme.colorScheme.primary, width: 2)
+            : BorderSide.none,
+      ),
+      color: selected ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3) : null,
+      child: InkWell(
+        onLongPress: onLongPress,
+        onTap: selectionMode ? onSelect : null,
+        child: ListTile(
+          leading: selectionMode
+              ? Checkbox(
+                  value: selected,
+                  onChanged: (_) => onSelect(),
+                )
+              : CircleAvatar(
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  child: Icon(_iconFor(entry.type), color: theme.colorScheme.onPrimaryContainer),
                 ),
-              );
-              if (ok == true) onDelete();
-            },
+          title: Text(entry.title),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_fmt(entry.timestamp)),
+              const SizedBox(height: 2),
+              Text(entry.summary, maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
           ),
-        ]),
+          isThreeLine: true,
+          trailing: selectionMode
+              ? null
+              : Wrap(spacing: 4, children: [
+                  IconButton(
+                    tooltip: 'Apply to calculator',
+                    icon: const Icon(Icons.playlist_add_check_outlined),
+                    onPressed: onApply,
+                  ),
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () async {
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('Delete entry?'),
+                          content: Text(entry.summary),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
+                          ],
+                        ),
+                      );
+                      if (ok == true) onDelete();
+                    },
+                  ),
+                ]),
+        ),
       ),
     );
   }

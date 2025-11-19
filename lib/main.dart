@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/providers/comparison_provider.dart';
 import 'package:loan_ranger/src/providers/nlp_settings_provider.dart';
-import 'package:loan_ranger/src/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'src/services/nlp_calculator_service.dart';
+import 'src/widgets/nlp_dialog.dart';
 
 import 'src/screens/amortization_screen.dart';
 import 'src/screens/analysis_screen.dart';
@@ -18,6 +20,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => CalculatorProvider()),
+        ChangeNotifierProvider(create: (context) => ComparisonProvider()),
         ChangeNotifierProvider(create: (context) => NlpSettingsProvider()),
       ],
       child: const LoanRangerApp(),
@@ -234,177 +237,7 @@ class _MainNavigatorState extends State<MainNavigator> {
     showDialog(
       context: context,
       builder: (context) =>
-          _NlpDialog(nlpService: _nlpService, speechToText: _speechToText),
-    );
-  }
-}
-
-class _NlpDialog extends StatefulWidget {
-  const _NlpDialog({required this.nlpService, required this.speechToText});
-
-  final NLPCalculatorService nlpService;
-  final stt.SpeechToText speechToText;
-
-  @override
-  State<_NlpDialog> createState() => _NlpDialogState();
-}
-
-class _NlpDialogState extends State<_NlpDialog> {
-  final TextEditingController _controller = TextEditingController();
-  bool _isListening = false;
-  bool _isProcessing = false;
-  String? _status;
-
-  @override
-  void dispose() {
-    widget.speechToText.stop();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await widget.speechToText.stop();
-      setState(() => _isListening = false);
-      return;
-    }
-
-    final available = await widget.speechToText.initialize(
-      onStatus: (status) => setState(() => _status = status),
-      onError: (error) => setState(() => _status = error.errorMsg),
-    );
-
-    if (!available) {
-      setState(() {
-        _status = 'Microphone not available';
-      });
-      return;
-    }
-
-    setState(() => _isListening = true);
-
-    await widget.speechToText.listen(
-      onResult: (result) {
-        setState(() {
-          _controller.text = result.recognizedWords;
-          _controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: _controller.text.length),
-          );
-        });
-      },
-      listenOptions: stt.SpeechListenOptions(
-        listenMode: stt.ListenMode.confirmation,
-      ),
-    );
-  }
-
-  Future<void> _runNlp() async {
-    final query = _controller.text.trim();
-    if (query.isEmpty) {
-      setState(() => _status = 'Please say or type a question.');
-      return;
-    }
-
-    final settings = context.read<NlpSettingsProvider>();
-    final apiKey = settings.apiKey;
-    if (apiKey == null || apiKey.isEmpty) {
-      setState(() => _status = 'Add your Gemini API key in Settings.');
-      return;
-    }
-
-    final calculator = context.read<CalculatorProvider>();
-    final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-
-    setState(() {
-      _isProcessing = true;
-      _status = 'Understanding your request...';
-    });
-
-    try {
-      if (!widget.nlpService.isInitialized) {
-        await widget.nlpService.initialize(apiKey);
-      }
-      final request = await widget.nlpService.processQuery(query);
-      final String resultMessage = await calculator.applyNlpRequest(request);
-      if (!mounted) return;
-      navigator.pop();
-      messenger.showSnackBar(SnackBar(content: Text(resultMessage)));
-    } catch (e) {
-      setState(() => _status = 'Error: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final suggestions = NLPCalculatorService().getSuggestions();
-
-    return AlertDialog(
-      title: const Text('Natural Language Input'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: _controller,
-            decoration: const InputDecoration(
-              hintText: 'Say or type your question...',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.search),
-            ),
-            maxLines: 3,
-            onSubmitted: (_) => _runNlp(),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: suggestions.take(3).map((s) {
-              return ActionChip(
-                label: Text(s, style: const TextStyle(fontSize: 12)),
-                onPressed: () {
-                  _controller.text = s;
-                  _controller.selection = TextSelection.fromPosition(
-                    TextPosition(offset: s.length),
-                  );
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 8),
-          if (_status != null)
-            Text(
-              _status!,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isProcessing ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        IconButton(
-          icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-          tooltip: _isListening ? 'Stop listening' : 'Start voice input',
-          onPressed: _isProcessing ? null : _toggleListening,
-        ),
-        ElevatedButton.icon(
-          onPressed: _isProcessing ? null : _runNlp,
-          icon: _isProcessing
-              ? const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.send),
-          label: Text(_isProcessing ? 'Processing...' : 'Go'),
-        ),
-      ],
+          NlpDialog(nlpService: _nlpService, speechToText: _speechToText),
     );
   }
 }

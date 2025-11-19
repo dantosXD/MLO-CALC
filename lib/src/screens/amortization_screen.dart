@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/calculator_provider.dart';
 import '../widgets/amortization_chart.dart';
@@ -6,6 +7,21 @@ import '../utils/formatters.dart';
 
 class AmortizationScreen extends StatelessWidget {
   const AmortizationScreen({super.key});
+
+  String _generateCsv(List<AmortizationEntry> data) {
+    final buffer = StringBuffer();
+    buffer.writeln('Month,Payment,Principal,Interest,Balance');
+    for (final entry in data) {
+      buffer.writeln(
+        '${entry.month},'
+        '${entry.payment.toStringAsFixed(2)},'
+        '${entry.principal.toStringAsFixed(2)},'
+        '${entry.interest.toStringAsFixed(2)},'
+        '${entry.balance.toStringAsFixed(2)}',
+      );
+    }
+    return buffer.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +64,46 @@ class AmortizationScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: calculatorProvider.loanAmount != null &&
-                            calculatorProvider.interestRate != null &&
-                            calculatorProvider.termYears != null
-                        ? () => calculatorProvider.generateAmortizationSchedule()
-                        : null,
-                    icon: const Icon(Icons.table_chart),
-                    label: const Text('Generate Schedule'),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: calculatorProvider.loanAmount != null &&
+                                calculatorProvider.interestRate != null &&
+                                calculatorProvider.termYears != null &&
+                                !calculatorProvider.isComputingAmortization
+                            ? () => calculatorProvider.generateAmortizationSchedule()
+                            : null,
+                        icon: calculatorProvider.isComputingAmortization
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.table_chart),
+                        label: Text(calculatorProvider.isComputingAmortization
+                            ? 'Generating...'
+                            : 'Generate'),
+                      ),
+                    ),
+                    if (calculatorProvider.amortizationData.isNotEmpty && !calculatorProvider.isComputingAmortization) ...[
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          final csv = _generateCsv(calculatorProvider.amortizationData);
+                          Clipboard.setData(ClipboardData(text: csv));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Schedule copied to clipboard')),
+                          );
+                        },
+                        icon: const Icon(Icons.copy),
+                        label: const Text('Copy CSV'),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

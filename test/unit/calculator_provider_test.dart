@@ -20,9 +20,9 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      // Expected payment: $1,987.54
+      // Expected payment: $1,987.26 (correct calculation for 350k @ 5.5% for 30 years)
       expect(provider.payment, isNotNull);
-      expect(provider.payment!, closeTo(1987.54, 0.01));
+      expect(provider.payment!, closeTo(1987.26, 0.01));
     });
 
     test('Calculate monthly payment - 15-year mortgage', () {
@@ -46,11 +46,10 @@ void main() {
       provider.setLoanAmount(value: 100000);
       provider.inputDigit('0');
       provider.setInterestRate();
-      provider.inputDigit('1');
-      provider.inputDigit('0');
-      provider.setTermYears();
 
+      // Error should be shown immediately after invalid interest rate
       expect(provider.displayValue, 'Error');
+      expect(provider.inputError, contains('positive'));
     });
 
     test('Calculate payment with negative term shows error', () {
@@ -60,7 +59,9 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
+      // Error should be shown immediately after invalid term
       expect(provider.displayValue, 'Error');
+      expect(provider.inputError, contains('positive'));
     });
   });
 
@@ -72,19 +73,20 @@ void main() {
     });
 
     test('Calculate loan amount from payment', () {
+      // Set payment = 2000
       provider.inputDigit('2');
       provider.inputDigit('0');
       provider.inputDigit('0');
       provider.inputDigit('0');
       provider.setPayment();
 
-      provider.clearAll();
+      // Set interest rate = 5.5%
       provider.inputDigit('5');
       provider.inputDecimal();
       provider.inputDigit('5');
       provider.setInterestRate();
 
-      provider.clearAll();
+      // Set term = 30 years
       provider.inputDigit('3');
       provider.inputDigit('0');
       provider.setTermYears();
@@ -107,7 +109,14 @@ void main() {
 
       // Now calculate loan amount from that payment
       provider.clearAll();
-      provider.inputDigit(calculatedPayment!.toStringAsFixed(2));
+      final paymentString = calculatedPayment!.toStringAsFixed(2);
+      for (final char in paymentString.split('')) {
+        if (char == '.') {
+          provider.inputDecimal();
+        } else {
+          provider.inputDigit(char);
+        }
+      }
       provider.setPayment();
       provider.inputDigit('6');
       provider.setInterestRate();
@@ -132,9 +141,9 @@ void main() {
       provider.inputDigit('5');
       provider.setInterestRate();
       provider.inputDigit('1');
-      provider.inputDigit('2');
       provider.inputDigit('0');
-      provider.inputDigit('0');
+      provider.inputDigit('7');
+      provider.inputDigit('4');
       provider.setPayment();
 
       // Should calculate term around 30 years
@@ -167,12 +176,9 @@ void main() {
     test('Calculate interest rate using Newton\'s method', () {
       provider.setLoanAmount(value: 300000);
       provider.inputDigit('1');
-      provider.inputDigit('9');
-      provider.inputDigit('8');
       provider.inputDigit('7');
-      provider.inputDecimal();
-      provider.inputDigit('5');
-      provider.inputDigit('4');
+      provider.inputDigit('0');
+      provider.inputDigit('3');
       provider.setPayment();
       provider.inputDigit('3');
       provider.inputDigit('0');
@@ -334,7 +340,7 @@ void main() {
       provider = CalculatorProvider();
     });
 
-    test('Generate amortization schedule - verify length', () {
+    test('Generate amortization schedule - verify length', () async {
       provider.setLoanAmount(value: 200000);
       provider.inputDigit('5');
       provider.setInterestRate();
@@ -342,13 +348,13 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       // 30 years * 12 months = 360 payments
       expect(provider.amortizationData.length, 360);
     });
 
-    test('Amortization schedule - first payment breakdown', () {
+    test('Amortization schedule - first payment breakdown', () async {
       provider.setLoanAmount(value: 100000);
       provider.inputDigit('6');
       provider.setInterestRate();
@@ -356,7 +362,7 @@ void main() {
       provider.inputDigit('5');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       final firstPayment = provider.amortizationData[0];
 
@@ -370,7 +376,7 @@ void main() {
       expect(firstPayment.balance, lessThan(100000));
     });
 
-    test('Amortization schedule - final payment clears balance', () {
+    test('Amortization schedule - final payment clears balance', () async {
       provider.setLoanAmount(value: 150000);
       provider.inputDigit('5');
       provider.setInterestRate();
@@ -378,7 +384,7 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       final finalPayment = provider.amortizationData.last;
 
@@ -386,7 +392,7 @@ void main() {
       expect(finalPayment.balance, closeTo(0, 0.01));
     });
 
-    test('Amortization schedule - total payments equal loan + interest', () {
+    test('Amortization schedule - total payments equal loan + interest', () async {
       provider.setLoanAmount(value: 200000);
       provider.inputDigit('5');
       provider.setInterestRate();
@@ -394,7 +400,7 @@ void main() {
       provider.inputDigit('0');
       provider.setTermYears();
 
-      provider.generateAmortizationSchedule();
+      await provider.generateAmortizationSchedule();
 
       double totalPrincipal = 0;
       double totalInterest = 0;
@@ -472,6 +478,7 @@ void main() {
     test('Bi-weekly conversion should save interest', () {
       provider.setLoanAmount(value: 300000);
       provider.inputDigit('5');
+      provider.inputDecimal();
       provider.inputDigit('5');
       provider.setInterestRate();
       provider.inputDigit('3');

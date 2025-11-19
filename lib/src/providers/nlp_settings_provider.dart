@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NlpSettingsProvider with ChangeNotifier {
   static const _keyName = 'geminiApiKey';
+  // Use secure storage for sensitive data like API keys
+  final _storage = const FlutterSecureStorage();
 
   String? _apiKey;
   bool _loaded = false;
@@ -19,22 +22,34 @@ class NlpSettingsProvider with ChangeNotifier {
     _apiKey = value?.trim();
     notifyListeners();
     try {
-      final prefs = await SharedPreferences.getInstance();
       if (_apiKey == null || _apiKey!.isEmpty) {
-        await prefs.remove(_keyName);
+        await _storage.delete(key: _keyName);
       } else {
-        await prefs.setString(_keyName, _apiKey!);
+        await _storage.write(key: _keyName, value: _apiKey!);
       }
-    } catch (_) {
-      // If persisting fails, we still keep the in-memory value.
+    } catch (e) {
+      debugPrint('Error saving API key: $e');
     }
   }
 
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      _apiKey = prefs.getString(_keyName);
-    } catch (_) {
+      // First try to load from secure storage
+      _apiKey = await _storage.read(key: _keyName);
+      
+      // Migration: If not found in secure storage, check SharedPreferences (old location)
+      if (_apiKey == null) {
+        final prefs = await SharedPreferences.getInstance();
+        final oldKey = prefs.getString(_keyName);
+        if (oldKey != null && oldKey.isNotEmpty) {
+          // Migrate to secure storage
+          _apiKey = oldKey;
+          await _storage.write(key: _keyName, value: oldKey);
+          await prefs.remove(_keyName); // Remove from insecure storage
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading API key: $e');
       _apiKey = null;
     } finally {
       _loaded = true;
