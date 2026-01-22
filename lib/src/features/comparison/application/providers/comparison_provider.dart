@@ -1,165 +1,156 @@
-/// Provider for managing calculation comparison state
-library;
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import '../models/calculation_history.dart';
+import 'package:loan_ranger/src/core/models/calculation_history.dart';
 
-/// Manages selection and comparison of calculation entries
 class ComparisonProvider extends ChangeNotifier {
-  final Set<String> _selectedIds = {};
+  final Set<String> _selectedIds = <String>{};
   static const int maxSelections = 3;
 
-  /// Get currently selected IDs
   Set<String> get selectedIds => Set.unmodifiable(_selectedIds);
-
-  /// Check if an entry is selected
   bool isSelected(String id) => _selectedIds.contains(id);
-
-  /// Get number of selected entries
   int get selectionCount => _selectedIds.length;
-
-  /// Check if comparison is available (2+ selections)
   bool get canCompare => _selectedIds.length >= 2;
-
-  /// Check if max selections reached
   bool get isMaxSelected => _selectedIds.length >= maxSelections;
 
-  /// Toggle selection for an entry
   void toggleSelection(String id) {
     if (_selectedIds.contains(id)) {
       _selectedIds.remove(id);
-    } else {
-      if (_selectedIds.length < maxSelections) {
-        _selectedIds.add(id);
-      }
+    } else if (_selectedIds.length < maxSelections) {
+      _selectedIds.add(id);
     }
     notifyListeners();
   }
 
-  /// Clear all selections
   void clearSelections() {
     _selectedIds.clear();
     notifyListeners();
   }
 
-  /// Select multiple entries
   void selectMultiple(List<String> ids) {
-    _selectedIds.clear();
-    final limitedIds = ids.take(maxSelections);
-    _selectedIds.addAll(limitedIds);
+    _selectedIds
+      ..clear()
+      ..addAll(ids.take(maxSelections));
     notifyListeners();
   }
 
-  /// Get selected entries from history
   List<CalculationEntry> getSelectedEntries(List<CalculationEntry> allEntries) {
     return allEntries
         .where((entry) => _selectedIds.contains(entry.id))
         .toList();
   }
 
-  /// Get comparison data for selected entries
-  ComparisonData? getComparisonData(List<CalculationEntry> allEntries) {
+  ComparisonData? buildComparison(List<CalculationEntry> allEntries) {
     final selected = getSelectedEntries(allEntries);
     if (selected.length < 2) return null;
-
-    return ComparisonData(entries: selected);
+    return ComparisonData.fromEntries(selected);
   }
 }
 
-/// Holds comparison data and calculations
 class ComparisonData {
-  final List<CalculationEntry> entries;
+  ComparisonData({
+    required this.views,
+    required this.summary,
+  });
 
-  ComparisonData({required this.entries});
+  final List<ComparisonEntryView> views;
+  final ComparisonSummary summary;
 
-  /// Get the entry with lowest total cost
-  CalculationEntry? get lowestCost {
-    final comparable = entries.where((e) => e.isComparable && e.totalPaid != null);
-    if (comparable.isEmpty) return null;
+  ComparisonEntryView get baseline =>
+      views.firstWhere((view) => view.isBaseline, orElse: () => views.first);
 
-    return comparable.reduce((a, b) =>
-        a.totalPaid! < b.totalPaid! ? a : b);
-  }
+  static ComparisonData fromEntries(List<CalculationEntry> entries) {
+    final views = entries.map(_buildView).toList();
 
-  /// Get the entry with lowest monthly payment
-  CalculationEntry? get lowestPayment {
-    final comparable = entries.where((e) => e.isComparable && e.monthlyPayment != null);
-    if (comparable.isEmpty) return null;
+    final ComparisonEntryView? baseline = views
+        .where((view) => view.totalCost != null)
+        .fold<ComparisonEntryView?>(
+      null,
+      (prev, curr) {
+        if (prev == null) return curr;
+        if (curr.totalCost != null && curr.totalCost! < prev.totalCost!) {
+          return curr;
+        }
+        return prev;
+      },
+    );
 
-    return comparable.reduce((a, b) =>
-        a.monthlyPayment! < b.monthlyPayment! ? a : b);
-  }
+    final ComparisonEntryView? resolvedBaseline =
+        baseline ?? (views.isNotEmpty ? views.first : null);
 
-  /// Get the entry with lowest interest
-  CalculationEntry? get lowestInterest {
-    final comparable = entries.where((e) => e.isComparable && e.totalInterest != null);
-    if (comparable.isEmpty) return null;
-
-    return comparable.reduce((a, b) =>
-        a.totalInterest! < b.totalInterest! ? a : b);
-  }
-
-  /// Get the entry with shortest term
-  CalculationEntry? get shortestTerm {
-    final comparable = entries.where((e) => e.isComparable && e.termYears != null);
-    if (comparable.isEmpty) return null;
-
-    return comparable.reduce((a, b) =>
-        a.termYears! < b.termYears! ? a : b);
-  }
-
-  /// Calculate difference between two values
-  static double? calculateDifference(double? value1, double? value2) {
-    if (value1 == null || value2 == null) return null;
-    return value2 - value1;
-  }
-
-  /// Calculate percentage difference
-  static double? calculatePercentageDifference(double? value1, double? value2) {
-    if (value1 == null || value2 == null || value1 == 0) return null;
-    return ((value2 - value1) / value1) * 100;
-  }
-
-  /// Get comparison summary statistics
-  ComparisonSummary get summary {
-    final comparable = entries.where((e) => e.isComparable).toList();
-
-    if (comparable.isEmpty) {
-      return ComparisonSummary(
-        count: entries.length,
-        comparableCount: 0,
+    final decoratedViews = views.map((view) {
+      if (resolvedBaseline == null) return view;
+      final breakEven = view.entry.id == resolvedBaseline.entry.id
+          ? null
+          : _estimateBreakEvenMonths(resolvedBaseline, view);
+      return view.copyWith(
+        isBaseline: view.entry.id == resolvedBaseline.entry.id,
+        breakEvenMonths: breakEven,
       );
-    }
+    }).toList();
 
-    // Calculate ranges
-    final payments = comparable.map((e) => e.monthlyPayment!).toList();
-    final totalCosts = comparable.map((e) => e.totalPaid!).toList();
-    final interests = comparable.map((e) => e.totalInterest!).toList();
+    return ComparisonData(
+      views: decoratedViews,
+      summary: ComparisonSummary.fromViews(decoratedViews),
+    );
+  }
 
-    return ComparisonSummary(
-      count: entries.length,
-      comparableCount: comparable.length,
-      minPayment: payments.reduce((a, b) => a < b ? a : b),
-      maxPayment: payments.reduce((a, b) => a > b ? a : b),
-      minTotalCost: totalCosts.reduce((a, b) => a < b ? a : b),
-      maxTotalCost: totalCosts.reduce((a, b) => a > b ? a : b),
-      minInterest: interests.reduce((a, b) => a < b ? a : b),
-      maxInterest: interests.reduce((a, b) => a > b ? a : b),
+  static ComparisonEntryView _buildView(CalculationEntry entry) {
+    return ComparisonEntryView(
+      entry: entry,
+      monthlyPayment: entry.monthlyPayment,
+      totalCost: entry.totalPaid,
+      totalInterest: entry.totalInterest,
+      termYears: entry.termYears,
+      miDropMonth: _estimateMiDropMonth(entry),
+      pitiPayment: entry.pitiPayment,
+      isBaseline: false,
     );
   }
 }
 
-/// Summary statistics for comparison
-class ComparisonSummary {
-  final int count;
-  final int comparableCount;
-  final double? minPayment;
-  final double? maxPayment;
-  final double? minTotalCost;
-  final double? maxTotalCost;
-  final double? minInterest;
-  final double? maxInterest;
+class ComparisonEntryView {
+  const ComparisonEntryView({
+    required this.entry,
+    required this.monthlyPayment,
+    required this.totalCost,
+    required this.totalInterest,
+    required this.termYears,
+    required this.miDropMonth,
+    required this.pitiPayment,
+    required this.isBaseline,
+    this.breakEvenMonths,
+  });
 
+  final CalculationEntry entry;
+  final double? monthlyPayment;
+  final double? totalCost;
+  final double? totalInterest;
+  final double? termYears;
+  final int? miDropMonth;
+  final double? pitiPayment;
+  final bool isBaseline;
+  final double? breakEvenMonths;
+
+  ComparisonEntryView copyWith({
+    bool? isBaseline,
+    double? breakEvenMonths,
+  }) {
+    return ComparisonEntryView(
+      entry: entry,
+      monthlyPayment: monthlyPayment,
+      totalCost: totalCost,
+      totalInterest: totalInterest,
+      termYears: termYears,
+      miDropMonth: miDropMonth,
+      pitiPayment: pitiPayment,
+      isBaseline: isBaseline ?? this.isBaseline,
+      breakEvenMonths: breakEvenMonths ?? this.breakEvenMonths,
+    );
+  }
+}
+
+class ComparisonSummary {
   ComparisonSummary({
     required this.count,
     required this.comparableCount,
@@ -171,18 +162,112 @@ class ComparisonSummary {
     this.maxInterest,
   });
 
-  double? get paymentRange =>
-      (minPayment != null && maxPayment != null)
-          ? maxPayment! - minPayment!
-          : null;
+  final int count;
+  final int comparableCount;
+  final double? minPayment;
+  final double? maxPayment;
+  final double? minTotalCost;
+  final double? maxTotalCost;
+  final double? minInterest;
+  final double? maxInterest;
 
-  double? get totalCostRange =>
-      (minTotalCost != null && maxTotalCost != null)
-          ? maxTotalCost! - minTotalCost!
-          : null;
+  double? get paymentRange => _range(minPayment, maxPayment);
+  double? get totalCostRange => _range(minTotalCost, maxTotalCost);
+  double? get interestRange => _range(minInterest, maxInterest);
 
-  double? get interestRange =>
-      (minInterest != null && maxInterest != null)
-          ? maxInterest! - minInterest!
-          : null;
+  static ComparisonSummary fromViews(List<ComparisonEntryView> views) {
+    final comparable = views.where((view) =>
+        view.monthlyPayment != null &&
+        view.totalCost != null &&
+        view.totalInterest != null);
+
+    if (comparable.isEmpty) {
+      return ComparisonSummary(count: views.length, comparableCount: 0);
+    }
+
+    double minPayment = double.infinity;
+    double maxPayment = 0;
+    double minTotalCost = double.infinity;
+    double maxTotalCost = 0;
+    double minInterest = double.infinity;
+    double maxInterest = 0;
+
+    for (final view in comparable) {
+      minPayment = math.min(minPayment, view.monthlyPayment!);
+      maxPayment = math.max(maxPayment, view.monthlyPayment!);
+      minTotalCost = math.min(minTotalCost, view.totalCost!);
+      maxTotalCost = math.max(maxTotalCost, view.totalCost!);
+      minInterest = math.min(minInterest, view.totalInterest!);
+      maxInterest = math.max(maxInterest, view.totalInterest!);
+    }
+
+    return ComparisonSummary(
+      count: views.length,
+      comparableCount: comparable.length,
+      minPayment: minPayment.isFinite ? minPayment : null,
+      maxPayment: maxPayment == 0 ? null : maxPayment,
+      minTotalCost: minTotalCost.isFinite ? minTotalCost : null,
+      maxTotalCost: maxTotalCost == 0 ? null : maxTotalCost,
+      minInterest: minInterest.isFinite ? minInterest : null,
+      maxInterest: maxInterest == 0 ? null : maxInterest,
+    );
+  }
+
+  static double? _range(double? min, double? max) {
+    if (min == null || max == null) return null;
+    return max - min;
+  }
+}
+
+double? _estimateBreakEvenMonths(
+  ComparisonEntryView baseline,
+  ComparisonEntryView candidate,
+) {
+  if (baseline.totalCost == null ||
+      candidate.totalCost == null ||
+      baseline.monthlyPayment == null ||
+      candidate.monthlyPayment == null) {
+    return null;
+  }
+
+  final double costDelta = candidate.totalCost! - baseline.totalCost!;
+  final double paymentDelta =
+      baseline.monthlyPayment! - candidate.monthlyPayment!;
+
+  if (paymentDelta.abs() < 1e-6) return null;
+
+  return (costDelta.abs() / paymentDelta.abs()).clamp(0, 1000);
+}
+
+int? _estimateMiDropMonth(CalculationEntry entry) {
+  final double? price = entry.price;
+  final double? loanAmount = entry.loanAmount;
+  final double? rate = entry.interestRate;
+  final double? termYears = entry.termYears;
+  final double? payment = entry.monthlyPayment;
+
+  if (price == null ||
+      loanAmount == null ||
+      rate == null ||
+      termYears == null ||
+      payment == null) {
+    return null;
+  }
+
+  final double targetBalance = price * 0.8;
+  final double monthlyRate = rate / 100 / 12;
+  final int totalMonths = (termYears * 12).round();
+  double balance = loanAmount;
+
+  for (int month = 1; month <= totalMonths; month++) {
+    final double interestPaid = monthlyRate > 0 ? balance * monthlyRate : 0;
+    final double principalPaid = payment - interestPaid;
+    balance -= principalPaid;
+    if (balance <= targetBalance) {
+      return month;
+    }
+    if (balance <= 0) break;
+  }
+
+  return null;
 }

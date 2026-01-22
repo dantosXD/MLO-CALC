@@ -1,7 +1,7 @@
 @echo off
-REM Build script for Android - Loan Ranger
+REM Build script for Android - MLO-Calc
 echo ========================================
-echo Loan Ranger - Android Build Script
+echo MLO-Calc - Android Build Script
 echo ========================================
 echo.
 

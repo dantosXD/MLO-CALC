@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../providers/calculator_provider.dart';
+import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 
 class AmortizationChart extends StatelessWidget {
   final List<AmortizationEntry> data;

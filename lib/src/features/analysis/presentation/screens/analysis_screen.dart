@@ -1,6 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/utils/advanced_calculations.dart';
+import 'package:loan_ranger/src/features/arm/presentation/screens/arm_wizard_screen.dart';
+import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing_costs_sheet.dart';
+import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:provider/provider.dart';
-import '../providers/calculator_provider.dart';
+
+import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
+import 'package:printing/printing.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
@@ -68,9 +77,30 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         ? '\$${calculatorProvider.payment!.toStringAsFixed(2)}'
                         : 'Not set',
                   ),
+                  const SizedBox(height: 8),
+                  _InfoRow(
+                    label: 'Closing Costs',
+                    value: '\$${calculatorProvider.closingCosts.total.toStringAsFixed(2)}',
+                  ),
+                  const SizedBox(height: 8),
+                  _InfoRow(
+                    label: 'Cash to Close',
+                    value: '\$${calculatorProvider.cashToClose.toStringAsFixed(2)}',
+                  ),
                 ],
               ),
             ),
+          ),
+
+          const SizedBox(height: 24),
+
+          _AdvancedToolsCard(
+            onLaunchArm: () => _openArmWizard(context),
+            onFutureValue: () => _showFutureValueSheet(context, calculatorProvider),
+            onApr: () => _showAprSheet(context, calculatorProvider),
+            onRentVsBuy: () => _openRentVsBuy(context),
+            onClosingCosts: () => _openClosingCosts(context),
+            onGenerateReport: () => _generateReport(context, calculatorProvider),
           ),
 
           const SizedBox(height: 24),
@@ -283,6 +313,241 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
     );
   }
+
+  void _generateReport(BuildContext context, CalculatorProvider provider) async {
+    if (provider.loanAmount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Calculate a loan first to generate a report.')),
+      );
+      return;
+    }
+
+    final pdfData = await ReportService.generateLoanReport(provider: provider);
+    await Printing.sharePdf(bytes: pdfData, filename: 'loan-estimate.pdf');
+  }
+
+  void _openArmWizard(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ArmWizardScreen()),
+    );
+  }
+
+  void _openRentVsBuy(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const RentVsBuyScreen()),
+    );
+  }
+
+  void _openClosingCosts(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ClosingCostsSheet(),
+    );
+  }
+
+  void _showFutureValueSheet(
+    BuildContext context,
+    CalculatorProvider provider,
+  ) {
+    final double? basePrice = provider.price ?? provider.loanAmount;
+    if (basePrice == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Set a price or loan amount first.')),
+      );
+      return;
+    }
+
+    final rateController = TextEditingController(text: '3.0');
+    final yearsController = TextEditingController(text: '5');
+    double? result;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Future Value Projection',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: rateController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Annual Appreciation Rate (%)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: yearsController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Years',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final rate = double.tryParse(rateController.text);
+                        final years = double.tryParse(yearsController.text);
+                        if (rate == null || years == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Enter valid rate and term.'),
+                            ),
+                          );
+                          return;
+                        }
+                        final fv =
+                            basePrice * math.pow(1 + rate / 100, years);
+                        setModalState(() => result = fv);
+                      },
+                      child: const Text('Calculate'),
+                    ),
+                  ),
+                  if (result != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Projected Value',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${result!.toStringAsFixed(2)}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAprSheet(BuildContext context, CalculatorProvider provider) {
+    if (provider.loanAmount == null ||
+        provider.interestRate == null ||
+        provider.termYears == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Need loan amount, rate, and term first.')),
+      );
+      return;
+    }
+
+    final feesController = TextEditingController(text: '4500');
+    final pointsController = TextEditingController(text: '0');
+    double? aprResult;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'APR Estimator',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: feesController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Loan Fees (\$)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: pointsController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Discount Points (%)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final fees = double.tryParse(feesController.text);
+                        final points = double.tryParse(pointsController.text);
+                        if (fees == null || points == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Provide valid fees and points.'),
+                            ),
+                          );
+                          return;
+                        }
+                        final apr = AdvancedCalculations.calculateAPR(
+                          loanAmount: provider.loanAmount!,
+                          interestRate: provider.interestRate!,
+                          termYears: provider.termYears!,
+                          loanFees: fees,
+                          points: points,
+                        );
+                        setModalState(() => aprResult = apr);
+                      },
+                      child: const Text('Estimate APR'),
+                    ),
+                  ),
+                  if (aprResult != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'APR ${aprResult!.toStringAsFixed(3)}%',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
 class _InfoRow extends StatelessWidget {
@@ -353,6 +618,140 @@ class _ResultRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AdvancedToolsCard extends StatelessWidget {
+  const _AdvancedToolsCard({
+    required this.onLaunchArm,
+    required this.onFutureValue,
+    required this.onApr,
+    required this.onRentVsBuy,
+    required this.onClosingCosts,
+    required this.onGenerateReport,
+  });
+
+  final VoidCallback onLaunchArm;
+  final VoidCallback onFutureValue;
+  final VoidCallback onApr;
+  final VoidCallback onRentVsBuy;
+  final VoidCallback onClosingCosts;
+  final VoidCallback onGenerateReport;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Advanced Tools',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _ToolButton(
+                  icon: Icons.picture_as_pdf,
+                  title: 'PDF Report',
+                  subtitle: 'Share loan estimate',
+                  onPressed: onGenerateReport,
+                ),
+                _ToolButton(
+                  icon: Icons.request_quote,
+                  title: 'Closing Costs',
+                  subtitle: 'Estimate fees & cash to close',
+                  onPressed: onClosingCosts,
+                ),
+                _ToolButton(
+                  icon: Icons.auto_graph,
+                  title: 'ARM Wizard',
+                  subtitle: 'Model adjustable rate scenarios',
+                  onPressed: onLaunchArm,
+                ),
+                _ToolButton(
+                  icon: Icons.trending_up,
+                  title: 'Future Value',
+                  subtitle: 'Project appreciation by rate & term',
+                  onPressed: onFutureValue,
+                ),
+                _ToolButton(
+                  icon: Icons.percent,
+                  title: 'APR Estimator',
+                  subtitle: 'Include fees and points in APR',
+                  onPressed: onApr,
+                ),
+                _ToolButton(
+                  icon: Icons.compare_arrows,
+                  title: 'Rent vs Buy',
+                  subtitle: 'Compare renting vs buying costs',
+                  onPressed: onRentVsBuy,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ToolButton extends StatelessWidget {
+  const _ToolButton({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // On mobile, use full width minus padding; on larger screens, use fixed width
+    final buttonWidth = screenWidth < 600 ? double.infinity : 320.0;
+
+    return SizedBox(
+      width: buttonWidth,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.all(16),
+          alignment: Alignment.centerLeft,
+        ),
+        onPressed: onPressed,
+        child: Row(
+          children: [
+            Icon(icon, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

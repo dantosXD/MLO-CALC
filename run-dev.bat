@@ -1,7 +1,7 @@
 @echo off
-REM Development run script - Loan Ranger
+REM Development run script - MLO-Calc
 echo ========================================
-echo Loan Ranger - Development Run
+echo MLO-Calc - Development Run
 echo ========================================
 echo.
 

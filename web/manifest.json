@@ -1,6 +1,6 @@
 {
-    "name": "Loan Ranger - Mortgage Calculator",
-    "short_name": "Loan Ranger",
+    "name": "MLO-Calc - Mortgage Calculator",
+    "short_name": "MLO-Calc",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#263238",

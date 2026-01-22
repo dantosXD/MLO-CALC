@@ -1,22 +1,41 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/services/connectivity_service.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_cache_service.dart';
 
 class NlpSettingsProvider with ChangeNotifier {
   static const _keyName = 'geminiApiKey';
   // Use secure storage for sensitive data like API keys
   final _storage = const FlutterSecureStorage();
+  final ConnectivityService _connectivity = ConnectivityService();
+  final NlpCacheService _cache = NlpCacheService();
 
   String? _apiKey;
   bool _loaded = false;
 
   NlpSettingsProvider() {
     _load();
+    _connectivity.addListener(_onConnectivityChanged);
   }
 
   String? get apiKey => _apiKey;
   bool get isLoaded => _loaded;
   bool get hasKey => (_apiKey != null && _apiKey!.isNotEmpty);
+  
+  // Connectivity status
+  bool get isOnline => _connectivity.isOnline;
+  bool get isOffline => _connectivity.isOffline;
+  
+  // Cache access
+  NlpCacheService get cache => _cache;
+  int get pendingRequestCount => _cache.pendingCount;
+  bool get hasPendingRequests => _cache.hasPendingRequests;
+
+  void _onConnectivityChanged() {
+    notifyListeners();
+  }
 
   Future<void> setApiKey(String? value) async {
     _apiKey = value?.trim();
@@ -34,6 +53,9 @@ class NlpSettingsProvider with ChangeNotifier {
 
   Future<void> _load() async {
     try {
+      // Load cache
+      await _cache.load();
+      
       // First try to load from secure storage
       _apiKey = await _storage.read(key: _keyName);
       
@@ -55,5 +77,12 @@ class NlpSettingsProvider with ChangeNotifier {
       _loaded = true;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _connectivity.removeListener(_onConnectivityChanged);
+    _connectivity.dispose();
+    super.dispose();
   }
 }

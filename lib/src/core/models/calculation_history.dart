@@ -32,6 +32,8 @@ class CalculationEntry {
     double? homeInsurance,
     double? mortgageInsurance,
     double? monthlyExpenses,
+    double? price,
+    double? downPayment,
     String? notes,
   }) {
     final now = DateTime.now();
@@ -51,6 +53,8 @@ class CalculationEntry {
     if (homeInsurance != null) inputs['homeInsurance'] = homeInsurance;
     if (mortgageInsurance != null) inputs['mortgageInsurance'] = mortgageInsurance;
     if (monthlyExpenses != null) inputs['monthlyExpenses'] = monthlyExpenses;
+    if (price != null) inputs['price'] = price;
+    if (downPayment != null) inputs['downPayment'] = downPayment;
 
     // Store results based on type
     switch (type) {
@@ -245,6 +249,8 @@ class CalculationEntry {
   double? get homeInsurance => inputs['homeInsurance'] as double?;
   double? get mortgageInsurance => inputs['mortgageInsurance'] as double?;
   double? get monthlyExpenses => inputs['monthlyExpenses'] as double?;
+  double? get price => inputs['price'] as double?;
+  double? get downPayment => inputs['downPayment'] as double?;
 
   /// Calculate total monthly PITI payment
   double? get pitiPayment {

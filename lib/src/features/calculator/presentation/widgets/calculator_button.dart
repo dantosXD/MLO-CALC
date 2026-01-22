@@ -8,6 +8,7 @@ class CalculatorButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
   final VoidCallback? onLongPress;
+  final VoidCallback? onDoubleTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
   final IconData? icon;
@@ -20,6 +21,7 @@ class CalculatorButton extends StatefulWidget {
     required this.text,
     required this.onPressed,
     this.onLongPress,
+    this.onDoubleTap,
     this.backgroundColor,
     this.foregroundColor,
     this.icon,
@@ -47,7 +49,7 @@ class _CalculatorButtonState extends State<CalculatorButton>
 
     // Scale animation for press effect
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 50),
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
@@ -151,8 +153,8 @@ class _CalculatorButtonState extends State<CalculatorButton>
     }
 
     Widget button = ElevatedButton(
-      onPressed: _handleTap,
-      onLongPress: widget.onLongPress != null ? _handleLongPress : null,
+      onPressed: () {},
+      onLongPress: null,
       style: ElevatedButton.styleFrom(
         backgroundColor: widget.backgroundColor ??
             Theme.of(context).colorScheme.secondaryContainer,
@@ -205,16 +207,31 @@ class _CalculatorButtonState extends State<CalculatorButton>
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(4.0),
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: Semantics(
-            button: true,
-            label: widget.text,
-            enabled: true,
-            onTap: widget.onPressed,
-            onLongPress: widget.onLongPress,
-            child: button,
-          ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ScaleTransition(
+              scale: _scaleAnimation,
+              child: Semantics(
+                button: true,
+                label: widget.text,
+                enabled: true,
+                onTap: widget.onPressed,
+                onLongPress: widget.onLongPress,
+                child: button,
+              ),
+            ),
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (_) => _handleTap(),
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onLongPress: widget.onLongPress != null ? _handleLongPress : null,
+                onDoubleTap: widget.onDoubleTap,
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ],
         ),
       ),
     );

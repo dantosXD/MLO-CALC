@@ -1,0 +1,19 @@
+Project: MLO-CALC
+
+Goal:
+Build a mortgage loan calculator with amortization schedule support for the existing Flutter app.
+
+Core Features:
+- Basic payment calculation (principal, interest, taxes, insurance).
+- Down payment input and validation.
+- Generate amortization schedule with monthly breakdown.
+- Display amortization table and summary in UI.
+- Persist inputs within session while app is open.
+
+Constraints:
+- Use existing Flutter/Dart architecture in the repo.
+- Keep UI consistent with existing styling.
+- No backend services required.
+
+Notes:
+- Focus on correctness and clear UX.

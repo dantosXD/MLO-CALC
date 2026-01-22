@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loan_ranger/src/validators/financial_validators.dart';
+import 'package:loan_ranger/src/core/validators/financial_validators.dart';
 
 void main() {
   group('FinancialValidators - Interest Rate', () {

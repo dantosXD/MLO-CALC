@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import '../providers/calculator_provider.dart';
-import '../utils/formatters.dart';
-import '../theme/calculator_palette.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/theme/calculator_palette.dart';
 
 class AnimatedDisplay extends StatelessWidget {
   final String displayValue;
@@ -17,15 +15,6 @@ class AnimatedDisplay extends StatelessWidget {
     this.subtitle,
     this.isError = false,
   });
-
-  // Helper to conditionally apply animations (skip on Android)
-  Widget _conditionalAnimate(Widget child, {Duration? duration}) {
-    // Disable animations on Android to prevent crashes
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return child;
-    }
-    return child.animate().fadeIn(duration: duration ?? 300.ms);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +35,20 @@ class AnimatedDisplay extends StatelessWidget {
     final accent = colorScheme.secondary;
     final accentOn = colorScheme.onSecondary;
 
-    return Container(
+    return GestureDetector(
+      onVerticalDragEnd: (details) {
+        // Swipe up = forward, Swipe down = reverse
+        if (details.primaryVelocity != null) {
+          if (details.primaryVelocity! < -500) {
+            // Swipe up
+            calculatorProvider.cycleDisplayMode();
+          } else if (details.primaryVelocity! > 500) {
+            // Swipe down
+            calculatorProvider.cycleDisplayMode(reverse: true);
+          }
+        }
+      },
+      child: Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: gradient,
@@ -66,111 +68,87 @@ class AnimatedDisplay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Title
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _conditionalAnimate(
-                  Icon(
-                    Icons.calculate_outlined,
-                    color: accentOn,
-                    size: 16,
-                  ),
-                  duration: 500.ms,
-                ),
-                const SizedBox(width: 6),
-                _conditionalAnimate(
-                  Text(
-                    'MLO-Calc',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: accentOn,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  duration: 600.ms,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
             // Main Display Value
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: (palette?.displayBackground ??
-                        colorScheme.surfaceContainerHighest)
-                    .withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: accent.withValues(alpha: 0.35),
-                  width: 1,
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: (palette?.displayBackground ??
+                          colorScheme.surfaceContainerHighest)
+                      .withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      _formatDisplayValue(displayValue),
-                      key: ValueKey<String>(displayValue),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: isError ? colorScheme.error : accentOn,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: FittedBox(
+                        alignment: Alignment.centerRight,
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _formatDisplayValue(displayValue),
+                          key: ValueKey<String>(displayValue),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: isError ? colorScheme.error : accentOn,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      subtitle ?? 'MONTHLY P&I',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: accentOn,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.8,
+                    const SizedBox(height: 4),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        subtitle ?? _getDisplayLabel(calculatorProvider),
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: accentOn,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.8,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 6),
 
-            // Status Grid - Compact
+            // Status Grid - Compact (Loan Info)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildCompactStatusItem(
                   context,
                   'L/A',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.loanAmount),
+                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.loanAmount, maxDigits: 7),
                   calculatorProvider.loanAmount != null,
                 ),
                 _buildCompactStatusItem(
                   context,
                   'Rate',
                   calculatorProvider.interestRate != null
-                    ? '${calculatorProvider.interestRate!.toStringAsFixed(2)}%'
+                    ? '${calculatorProvider.interestRate!.toStringAsFixed(3)}%'
                     : '--',
                   calculatorProvider.interestRate != null,
                 ),
@@ -178,22 +156,79 @@ class AnimatedDisplay extends StatelessWidget {
                   context,
                   'Term',
                   calculatorProvider.termYears != null
-                    ? '${calculatorProvider.termYears!.toInt()}y'
+                    ? '${calculatorProvider.termYears!.toStringAsFixed(1)}y'
                     : '--',
                   calculatorProvider.termYears != null,
                 ),
                 _buildCompactStatusItem(
                   context,
                   'Pmt',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.payment),
-                  calculatorProvider.payment != null,
+                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.displayPayment, maxDigits: 7),
+                  calculatorProvider.displayPayment != null,
                 ),
               ],
             ),
+            
+            // PITI Components Row - Only show if any are set
+            if (_hasPitiComponents(calculatorProvider)) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (calculatorProvider.propertyTax != null)
+                    _buildCompactStatusItem(
+                      context,
+                      'Tax',
+                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.propertyTax! / 12, maxDigits: 7),
+                      true,
+                    ),
+                  if (calculatorProvider.homeInsurance != null)
+                    _buildCompactStatusItem(
+                      context,
+                      'Ins',
+                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.homeInsurance! / 12, maxDigits: 7),
+                      true,
+                    ),
+                  if (calculatorProvider.mortgageInsurance != null)
+                    _buildCompactStatusItem(
+                      context,
+                      'PMI',
+                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.mortgageInsurance! / 12, maxDigits: 7),
+                      true,
+                    ),
+                  if (calculatorProvider.monthlyExpenses != null)
+                    _buildCompactStatusItem(
+                      context,
+                      'HOA',
+                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.monthlyExpenses, maxDigits: 7),
+                      true,
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
+      ),
     );
+  }
+  
+  bool _hasPitiComponents(CalculatorProvider provider) {
+    return provider.propertyTax != null ||
+           provider.homeInsurance != null ||
+           provider.mortgageInsurance != null ||
+           provider.monthlyExpenses != null;
+  }
+
+  String _getDisplayLabel(CalculatorProvider provider) {
+    switch (provider.displayMode) {
+      case PaymentDisplayMode.interestOnly:
+        return 'INTEREST ONLY';
+      case PaymentDisplayMode.piti:
+        return 'MONTHLY PITI';
+      case PaymentDisplayMode.standardPI:
+        return 'MONTHLY P&I';
+    }
   }
 
   String _formatDisplayValue(String rawValue) {

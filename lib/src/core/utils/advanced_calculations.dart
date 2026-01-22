@@ -6,6 +6,8 @@ library;
 
 import 'dart:math';
 
+import 'decimal_utils.dart';
+
 /// ARM (Adjustable Rate Mortgage) calculation results
 class ARMCalculation {
   final List<ARMPeriod> periods;
@@ -125,8 +127,8 @@ class AdvancedCalculations {
 
     return ARMCalculation(
       periods: periods,
-      totalInterest: totalInterest,
-      totalPaid: totalPaid,
+      totalInterest: DecimalUtils.roundToCents(totalInterest),
+      totalPaid: DecimalUtils.roundToCents(totalPaid),
     );
   }
 
@@ -141,7 +143,7 @@ class AdvancedCalculations {
   /// - loanFees: Upfront fees and closing costs
   /// - points: Discount points (1 point = 1% of loan amount)
   ///
-  /// Returns APR as a percentage
+  /// Returns APR as a percentage (rounded to 3 decimal places)
   static double calculateAPR({
     required double loanAmount,
     required double interestRate,
@@ -170,9 +172,17 @@ class AdvancedCalculations {
     double apr = interestRate; // Start with nominal rate
     const double tolerance = convergenceTolerance;
     const int maxIterations = maxNewtonIterations;
+    double bestApr = apr;
+    double bestError = double.infinity;
 
     for (int i = 0; i < maxIterations; i++) {
       final double testRate = apr / 100 / 12;
+
+      // Guard against invalid rates
+      if (testRate <= 0 || testRate.isNaN) {
+        apr = interestRate;
+        continue;
+      }
 
       // Present value of payments at test rate
       final double pv = monthlyPayment *
@@ -181,6 +191,12 @@ class AdvancedCalculations {
       // Difference from net loan amount
       final double difference = pv - netLoanAmount;
 
+      // Track best result
+      if (difference.abs() < bestError) {
+        bestError = difference.abs();
+        bestApr = apr;
+      }
+
       if (difference.abs() < tolerance) break;
 
       // Derivative for Newton's method
@@ -188,14 +204,29 @@ class AdvancedCalculations {
           (numPayments * pow(1 + testRate, -numPayments - 1) / testRate -
               (1 - pow(1 + testRate, -numPayments)) / (testRate * testRate));
 
-      apr -= (difference / pvPrime) * 100 * 12;
+      if (pvPrime.abs() < 1e-10) break;
+
+      final double delta = (difference / pvPrime) * 100 * 12;
+
+      // Guard against extreme deltas
+      if (delta.isNaN || delta.isInfinite || delta.abs() > 25) {
+        apr = (apr + bestApr) / 2;
+        continue;
+      }
+
+      apr -= delta;
 
       // Bounds check
       if (apr < 0) apr = 0.1;
       if (apr > 100) apr = 50;
     }
 
-    return apr;
+    // Use best approximation if we didn't converge
+    if (bestError > tolerance && bestError < double.infinity) {
+      apr = bestApr;
+    }
+
+    return DecimalUtils.roundToDecimal(apr, 3);
   }
 
   /// Calculate future value of property
@@ -205,14 +236,14 @@ class AdvancedCalculations {
   /// - appreciationRate: Annual appreciation rate (percentage)
   /// - years: Number of years to project
   ///
-  /// Returns projected future value
+  /// Returns projected future value (rounded to cents)
   static double calculateFutureValue({
     required double currentValue,
     required double appreciationRate,
     required double years,
   }) {
     final double rate = appreciationRate / 100;
-    return currentValue * pow(1 + rate, years);
+    return DecimalUtils.roundToCents(currentValue * pow(1 + rate, years));
   }
 
   /// Calculate equity after specified period
@@ -271,14 +302,14 @@ class AdvancedCalculations {
   /// - interestRate: Annual interest rate (percentage)
   /// - daysUntilFirstPayment: Days between closing and first payment
   ///
-  /// Returns prepaid interest amount
+  /// Returns prepaid interest amount (rounded to cents)
   static double calculateOddDaysInterest({
     required double loanAmount,
     required double interestRate,
     required int daysUntilFirstPayment,
   }) {
     final double dailyRate = (interestRate / 100) / 365;
-    return loanAmount * dailyRate * daysUntilFirstPayment;
+    return DecimalUtils.roundToCents(loanAmount * dailyRate * daysUntilFirstPayment);
   }
 
   /// Calculate after-tax monthly payment
@@ -291,7 +322,7 @@ class AdvancedCalculations {
   /// - loanBalance: Current loan balance
   /// - taxBracket: Marginal tax rate (percentage, e.g., 24 for 24%)
   ///
-  /// Returns estimated after-tax monthly payment
+  /// Returns estimated after-tax monthly payment (rounded to cents)
   static double calculateAfterTaxPayment({
     required double monthlyPayment,
     required double interestRate,
@@ -306,7 +337,7 @@ class AdvancedCalculations {
     final double taxSavings = interestPortion * (taxBracket / 100);
 
     // Effective payment after tax benefit
-    return monthlyPayment - taxSavings;
+    return DecimalUtils.roundToCents(monthlyPayment - taxSavings);
   }
 
   /// Calculate break-even point for buying points
@@ -380,136 +411,5 @@ class AdvancedCalculations {
     if (monthlySavings <= 0) return double.infinity;
 
     return refinanceCosts / monthlySavings;
-  }
-}
-
-/// Standard mortgage calculation utilities
-///
-/// Provides core Time Value of Money (TVM) calculations for
-/// Payment, Loan Amount, Interest Rate, and Term.
-class LoanMath {
-  // Private constructor
-  LoanMath._();
-
-  /// Calculate Monthly Payment (P&I)
-  ///
-  /// Formula: M = P * [ r(1+r)^n ] / [ (1+r)^n - 1 ]
-  static double calculatePayment({
-    required double loanAmount,
-    required double interestRate, // Annual percentage (e.g. 5.5)
-    required double termYears,
-  }) {
-    if (loanAmount <= 0 || interestRate <= 0 || termYears <= 0) {
-      return 0;
-    }
-
-    final double r = interestRate / 100 / 12;
-    final double n = termYears * 12;
-
-    return loanAmount * (r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
-  }
-
-  /// Calculate Loan Amount (Principal)
-  ///
-  /// Formula: P = M * [ (1+r)^n - 1 ] / [ r(1+r)^n ]
-  static double calculateLoanAmount({
-    required double payment,
-    required double interestRate,
-    required double termYears,
-  }) {
-    if (payment <= 0 || interestRate <= 0 || termYears <= 0) {
-      return 0;
-    }
-
-    final double r = interestRate / 100 / 12;
-    final double n = termYears * 12;
-
-    return payment * (pow(1 + r, n) - 1) / (r * pow(1 + r, n));
-  }
-
-  /// Calculate Loan Term in Years
-  ///
-  /// Formula: n = -log(1 - (P*r)/M) / log(1+r)
-  static double calculateTerm({
-    required double loanAmount,
-    required double payment,
-    required double interestRate,
-  }) {
-    if (loanAmount <= 0 || payment <= 0 || interestRate <= 0) {
-      return 0;
-    }
-
-    final double r = interestRate / 100 / 12;
-
-    // Check if payment covers interest
-    if (loanAmount * r >= payment) {
-      return 0; // Payment too small, never pays off
-    }
-
-    final double nMonths = -log(1 - (loanAmount * r) / payment) / log(1 + r);
-    return nMonths / 12;
-  }
-
-  /// Calculate Interest Rate
-  ///
-  /// Solves for rate using Newton-Raphson method.
-  static double calculateInterestRate({
-    required double loanAmount,
-    required double payment,
-    required double termYears,
-  }) {
-    if (loanAmount <= 0 || payment <= 0 || termYears <= 0) {
-      return 0;
-    }
-
-    final double n = termYears * 12;
-
-    // Initial guess strategy:
-    // Total paid = M * n
-    // Total interest = (M * n) - P
-    // Approx avg balance = P / 2
-    // Approx rate ~= (Total Interest / n_years) / (P / 2)
-    final double totalInterest = (payment * n) - loanAmount;
-    if (totalInterest <= 0) return 0;
-
-    double rate = (totalInterest / termYears) / (loanAmount * 0.5) * 100;
-    
-    // Clamp initial guess
-    if (rate < 0.1) rate = 0.1;
-    if (rate > 20) rate = 10;
-
-    const double tolerance = 0.000001;
-    const int maxIterations = 50;
-
-    for (int i = 0; i < maxIterations; i++) {
-      final double r = rate / 100 / 12;
-      
-      if (r <= -1) {
-        rate = 0.1;
-        continue;
-      }
-
-      final double factor = pow(1 + r, n).toDouble();
-      
-      // f(r) derived from payment formula rearrangement
-      final double fVal = loanAmount * r * factor - payment * (factor - 1);
-      final double dfVal = loanAmount * (factor + r * n * factor / (1 + r)) - payment * n * factor / (1 + r);
-      
-      if (dfVal.abs() < 1e-9) break;
-      
-      final double rateChangeMonthly = fVal / dfVal;
-      final double rateChangeAnnual = rateChangeMonthly * 12 * 100;
-      
-      final double newRate = rate - rateChangeAnnual;
-      
-      if ((newRate - rate).abs() < tolerance) {
-        return newRate;
-      }
-      
-      rate = newRate;
-      if (rate < 0) rate = 0.01; 
-    }
-
-    return rate;
   }
 }

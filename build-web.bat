@@ -1,7 +1,7 @@
 @echo off
-REM Build script for Web - Loan Ranger
+REM Build script for Web - MLO-Calc
 echo ========================================
-echo Loan Ranger - Web Build Script
+echo MLO-Calc - Web Build Script
 echo ========================================
 echo.
 

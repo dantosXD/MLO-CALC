@@ -1,4 +1,4 @@
-# Loan Ranger - Mortgage Calculator
+# MLO-Calc - Mortgage Calculator
 
 A professional Flutter application for mortgage and real estate financial calculations.
 

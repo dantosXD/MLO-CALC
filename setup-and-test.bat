@@ -1,9 +1,9 @@
 @echo off
-REM Complete Setup and Test Script for Loan Ranger
+REM Complete Setup and Test Script for MLO-Calc
 REM This script will check for Flutter, install dependencies, and run tests
 
 echo ========================================
-echo Loan Ranger - Complete Setup and Test
+echo MLO-Calc - Complete Setup and Test
 echo ========================================
 echo.
 

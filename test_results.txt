@@ -1,0 +1,96 @@
+00:00 +0: loading C:/Users/207ds/Desktop/Apps/MLO-CALC/test/unit/calculator_provider_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: CalculatorProvider - Payment Calculations Calculate monthly payment - standard 30-year mortgage
+00:00 +1: CalculatorProvider - Payment Calculations Calculate monthly payment - 15-year mortgage
+00:00 +2: CalculatorProvider - Payment Calculations Calculate payment with zero interest rate shows error
+00:00 +2 -1: CalculatorProvider - Payment Calculations Calculate payment with zero interest rate shows error [E]
+  Expected: 'Error'
+    Actual: '0'
+     Which: is different.
+            Expected: Error
+              Actual: 0
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\calculator_provider_test.dart 55:7        main.<fn>.<fn>
+  
+00:00 +2 -1: CalculatorProvider - Payment Calculations Calculate payment with negative term shows error
+00:00 +2 -2: CalculatorProvider - Payment Calculations Calculate payment with negative term shows error [E]
+  Expected: 'Error'
+    Actual: '0'
+     Which: is different.
+            Expected: Error
+              Actual: 0
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\calculator_provider_test.dart 67:7        main.<fn>.<fn>
+  
+00:00 +2 -2: CalculatorProvider - Loan Amount Calculations Calculate loan amount from payment
+00:00 +3 -2: CalculatorProvider - Loan Amount Calculations Calculate loan amount - verify formula inverse
+00:00 +4 -2: CalculatorProvider - Term Calculations Calculate term from loan amount and payment
+00:00 +5 -2: CalculatorProvider - Term Calculations Calculate term - payment too low shows error
+00:00 +5 -3: CalculatorProvider - Term Calculations Calculate term - payment too low shows error [E]
+  Expected: contains 'Payment too low'
+    Actual: '500'
+     Which: does not contain 'Payment too low'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\calculator_provider_test.dart 169:7       main.<fn>.<fn>
+  
+00:00 +5 -3: CalculatorProvider - Interest Rate Calculations Calculate interest rate using Newton's method
+00:00 +6 -3: CalculatorProvider - Interest Rate Calculations Calculate interest rate - verify convergence
+00:00 +7 -3: CalculatorProvider - Interest Rate Calculations Interest rate solver surfaces payment too low error
+00:00 +7 -4: CalculatorProvider - Interest Rate Calculations Interest rate solver surfaces payment too low error [E]
+  Expected: contains 'Payment too low'
+    Actual: '500'
+     Which: does not contain 'Payment too low'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\calculator_provider_test.dart 226:7       main.<fn>.<fn>
+  
+00:00 +7 -4: CalculatorProvider - PITI Calculations Calculate PITI payment with all components
+00:00 +8 -4: CalculatorProvider - PITI Calculations Toggle between P&I and PITI display
+00:00 +8 -5: CalculatorProvider - PITI Calculations Toggle between P&I and PITI display [E]
+  Expected: 'pi'
+    Actual: 'std'
+     Which: is different.
+            Expected: pi
+              Actual: std
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\calculator_provider_test.dart 296:7       main.<fn>.<fn>
+  
+00:00 +8 -5: CalculatorProvider - Down Payment Calculations Calculate loan amount from price and percentage down payment
+00:00 +9 -5: CalculatorProvider - Down Payment Calculations Calculate loan amount from price and flat down payment
+00:00 +10 -5: CalculatorProvider - Amortization Schedule Generate amortization schedule - verify length
+00:00 +11 -5: CalculatorProvider - Amortization Schedule Amortization schedule - first payment breakdown
+00:00 +12 -5: CalculatorProvider - Amortization Schedule Amortization schedule - final payment clears balance
+00:00 +13 -5: CalculatorProvider - Amortization Schedule Amortization schedule - total payments equal loan + interest
+00:00 +14 -5: CalculatorProvider - Remaining Balance (Balloon) Calculate remaining balance after 5 years
+00:00 +15 -5: CalculatorProvider - Remaining Balance (Balloon) Remaining balance after full term is zero
+00:00 +16 -5: CalculatorProvider - Bi-Weekly Conversion Bi-weekly payment should be half of monthly
+00:00 +17 -5: CalculatorProvider - Bi-Weekly Conversion Bi-weekly conversion should save interest
+00:00 +18 -5: CalculatorProvider - Qualification Calculations Calculate maximum qualifying loan amount
+00:00 +19 -5: CalculatorProvider - Qualification Calculations Calculate minimum required income
+00:00 +20 -5: CalculatorProvider - Edge Cases Clear all resets all state
+00:00 +21 -5: CalculatorProvider - Edge Cases Switching to arithmetic mode clears financial state
+00:00 +21 -6: CalculatorProvider - Edge Cases Switching to arithmetic mode clears financial state [E]
+  Expected: null
+    Actual: <200000.0>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\calculator_provider_test.dart 590:7       main.<fn>.<fn>
+  
+00:00 +21 -6: (tearDownAll)
+00:00 +21 -6: Some tests failed.

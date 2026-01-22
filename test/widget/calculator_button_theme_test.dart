@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
-import 'package:loan_ranger/src/widgets/calculator_button.dart';
+import 'package:loan_ranger/src/features/calculator/presentation/widgets/calculator_button.dart';
 
 void main() {
   testWidgets('CalculatorButton applies custom colors', (tester) async {

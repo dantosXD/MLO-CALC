@@ -1,11 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:loan_ranger/src/providers/calculator_provider.dart';
-import 'package:loan_ranger/src/providers/nlp_settings_provider.dart';
-import 'package:loan_ranger/src/services/nlp_calculator_service.dart';
-import 'package:loan_ranger/src/utils/constants.dart';
-import 'package:loan_ranger/src/widgets/voice_waveform.dart';
+import 'package:loan_ranger/src/core/utils/constants.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/presentation/widgets/voice_waveform.dart';
+import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
@@ -153,10 +154,52 @@ class _NlpDialogState extends State<NlpDialog> {
     _notifyStateChange();
 
     try {
+      // Check cache first
+      final cached = settings.cache.getCachedResponse(query);
+      if (cached != null) {
+        setState(() => _status = 'Using cached response...');
+        final String resultMessage = await calculator.applyNlpRequest(cached.response);
+        
+        HapticFeedback.mediumImpact();
+        if (!mounted) return;
+        navigator.pop();
+        messenger.showSnackBar(SnackBar(
+          content: Text('$resultMessage (cached)'),
+          action: SnackBarAction(
+            label: 'Refresh',
+            onPressed: () async {
+              // Queue for fresh response
+              await settings.cache.queueRequest(query);
+            },
+          ),
+        ));
+        return;
+      }
+      
+      // Check if offline
+      if (settings.isOffline) {
+        // Queue request for later
+        await settings.cache.queueRequest(query);
+        setState(() => _status = 'Offline - request queued for later');
+        HapticFeedback.selectionClick();
+        
+        await Future.delayed(const Duration(seconds: 2));
+        if (!mounted) return;
+        navigator.pop();
+        messenger.showSnackBar(const SnackBar(
+          content: Text('You\'re offline. Request saved for when you reconnect.'),
+        ));
+        return;
+      }
+      
       if (!widget.nlpService.isInitialized) {
         await widget.nlpService.initialize(apiKey);
       }
       final request = await widget.nlpService.processQuery(query);
+      
+      // Cache the response
+      await settings.cache.cacheResponse(query, request);
+      
       final String resultMessage = await calculator.applyNlpRequest(request);
       
       HapticFeedback.mediumImpact();
@@ -164,7 +207,13 @@ class _NlpDialogState extends State<NlpDialog> {
       navigator.pop();
       messenger.showSnackBar(SnackBar(content: Text(resultMessage)));
     } catch (e) {
-      setState(() => _status = 'Error: $e');
+      // If error and offline, queue for later
+      if (settings.isOffline) {
+        await settings.cache.queueRequest(query);
+        setState(() => _status = 'Offline - request queued');
+      } else {
+        setState(() => _status = 'Error: $e');
+      }
       HapticFeedback.heavyImpact();
       _notifyStateChange();
     } finally {
@@ -178,9 +227,44 @@ class _NlpDialogState extends State<NlpDialog> {
   @override
   Widget build(BuildContext context) {
     final suggestions = NLPCalculatorService().getSuggestions();
+    final settings = context.watch<NlpSettingsProvider>();
 
     return AlertDialog(
-      title: const Text('Voice Assistant'),
+      title: Row(
+        children: [
+          const Expanded(child: Text('Voice Assistant')),
+          if (settings.isOffline)
+            Tooltip(
+              message: 'Offline - cached responses available',
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withAlpha(50),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.cloud_off, size: 14, color: Colors.orange),
+                    SizedBox(width: 4),
+                    Text(
+                      'Offline',
+                      style: TextStyle(fontSize: 11, color: Colors.orange),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (settings.hasPendingRequests)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Badge(
+                label: Text('${settings.pendingRequestCount}'),
+                child: const Icon(Icons.schedule, size: 18),
+              ),
+            ),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,

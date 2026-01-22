@@ -1,182 +1,551 @@
 import 'package:flutter/material.dart';
-import '../models/calculation_history.dart';
-import '../providers/comparison_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/math/loan_math.dart';
+import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
+import 'package:loan_ranger/src/features/share/presentation/dialogs/share_quote_dialog.dart';
 
-class ComparisonScreen extends StatelessWidget {
+import '../../application/providers/comparison_provider.dart';
+import '../../domain/export/comparison_exporter.dart';
+
+class ComparisonScreen extends StatefulWidget {
+  const ComparisonScreen({super.key, required this.data});
+
   final ComparisonData data;
 
-  const ComparisonScreen({super.key, required this.data});
+  @override
+  State<ComparisonScreen> createState() => _ComparisonScreenState();
+}
+
+class _ComparisonScreenState extends State<ComparisonScreen> {
+  static const LoanMath _loanMath = LoanMath();
+
+  double _rateDelta = 0;
+  double _termDelta = 0;
+  double _downPaymentDelta = 0;
 
   @override
   Widget build(BuildContext context) {
-    final normalized = data.entries.map(_normalize).whereType<_NormalizedData>().toList();
-    final summary = data.summary;
+    final currency = NumberFormat.simpleCurrency();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Compare Calculations'),
-      ),
-      body: normalized.isEmpty
-          ? const Center(child: Text('No comparable data found in selection.'))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (summary.comparableCount >= 2) _buildSummaryCard(context, summary),
-                  const SizedBox(height: 24),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columnSpacing: 24,
-                      columns: [
-                        const DataColumn(label: Text('Metric', style: TextStyle(fontWeight: FontWeight.bold))),
-                        ...normalized.map((e) => DataColumn(
-                              label: Container(
-                                constraints: const BoxConstraints(maxWidth: 120),
-                                child: Text(
-                                  e.title,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            )),
-                      ],
-                      rows: [
-                        _buildRow('Loan Amount', normalized, (d) => '\$${d.loanAmount.toStringAsFixed(2)}'),
-                        _buildRow('Interest Rate', normalized, (d) => '${d.interestRate.toStringAsFixed(3)}%'),
-                        _buildRow('Term (Years)', normalized, (d) => d.termYears.toStringAsFixed(1)),
-                        _buildRow('Monthly Payment', normalized, (d) => '\$${d.monthlyPayment.toStringAsFixed(2)}'),
-                        _buildRow('Total Cost', normalized, (d) => '\$${d.totalCost.toStringAsFixed(2)}'),
-                        _buildRow('Total Interest', normalized, (d) => '\$${d.totalInterest.toStringAsFixed(2)}'),
-                        // Add difference rows if exactly 2 items
-                        if (normalized.length == 2) ...[
-                          _buildDiffRow('Difference (Cost)', normalized[0], normalized[1], (d) => d.totalCost),
-                          _buildDiffRow('Difference (Interest)', normalized[0], normalized[1], (d) => d.totalInterest),
-                          _buildDiffRow('Difference (Payment)', normalized[0], normalized[1], (d) => d.monthlyPayment),
-                        ],
-                      ],
-                    ),
+        title: const Text('Scenario Comparison'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share),
+            tooltip: 'Share scenario',
+            onPressed: () async {
+              final selected = await showModalBottomSheet<ComparisonEntryView>(
+                context: context,
+                builder: (context) => SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Text(
+                          'Share which scenario?',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      ...widget.data.views.map(
+                        (view) => ListTile(
+                          title: Text(view.entry.title),
+                          subtitle: Text(view.entry.summary),
+                          trailing: view.isBaseline
+                              ? const Icon(Icons.star, size: 18)
+                              : null,
+                          onTap: () => Navigator.of(context).pop(view),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
-                ],
-              ),
-            ),
-    );
-  }
+                ),
+              );
 
-  Widget _buildSummaryCard(BuildContext context, ComparisonSummary summary) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
+              if (!context.mounted || selected == null) return;
+              ShareQuoteDialog.show(
+                context,
+                data: QuoteShareData.fromCalculationEntry(selected.entry),
+                scenarioName: selected.entry.title,
+                title: 'Share Scenario',
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Export CSV',
+            onPressed: () {
+              final csv = ComparisonExporter.buildCsv(widget.data);
+              _showExportDialog(context, csv);
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Summary', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Text('Cost Difference: \$${summary.totalCostRange?.toStringAsFixed(2) ?? 'N/A'}'),
-            Text('Monthly Difference: \$${summary.paymentRange?.toStringAsFixed(2) ?? 'N/A'}'),
-            Text('Interest Difference: \$${summary.interestRange?.toStringAsFixed(2) ?? 'N/A'}'),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: widget.data.views
+                  .map(
+                    (view) => _ComparisonCard(
+                      view: view,
+                      baselinePayment: widget.data.baseline.monthlyPayment,
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 24),
+            _ComparisonSummaryView(summary: widget.data.summary),
+            const SizedBox(height: 24),
+            _buildSensitivitySection(currency),
           ],
         ),
       ),
     );
   }
 
-  DataRow _buildRow(String label, List<_NormalizedData> data, String Function(_NormalizedData) extractor) {
+  Widget _buildSensitivitySection(NumberFormat currency) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sensitivity Analysis',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            _SliderTile(
+              title: 'Interest Rate Δ (${_rateDelta.toStringAsFixed(2)}%)',
+              min: -2,
+              max: 2,
+              value: _rateDelta,
+              onChanged: (value) => setState(() => _rateDelta = value),
+            ),
+            _SliderTile(
+              title: 'Term Δ (${_termDelta.toStringAsFixed(1)} yrs)',
+              min: -5,
+              max: 5,
+              value: _termDelta,
+              onChanged: (value) => setState(() => _termDelta = value),
+            ),
+            _SliderTile(
+              title:
+                  'Down Payment Δ (${_downPaymentDelta.toStringAsFixed(1)} pts)',
+              min: -10,
+              max: 10,
+              value: _downPaymentDelta,
+              onChanged: (value) => setState(() => _downPaymentDelta = value),
+            ),
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text('Scenario')),
+                  DataColumn(label: Text('Adj Payment')),
+                  DataColumn(label: Text('Adj Rate')),
+                  DataColumn(label: Text('Adj Term')),
+                  DataColumn(label: Text('Adj Loan')),
+                ],
+                rows: widget.data.views
+                    .map(
+                      (view) => _buildSensitivityRow(
+                        view,
+                        currency,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  DataRow _buildSensitivityRow(
+    ComparisonEntryView view,
+    NumberFormat currency,
+  ) {
+    final projection = _project(view);
     return DataRow(
       cells: [
-        DataCell(Text(label, style: const TextStyle(fontWeight: FontWeight.w500))),
-        ...data.map((d) => DataCell(Text(extractor(d)))),
+        DataCell(Text(view.entry.title)),
+        DataCell(Text(
+          projection.adjustedPayment != null
+              ? currency.format(projection.adjustedPayment)
+              : '—',
+        )),
+        DataCell(Text(
+          projection.adjustedRate?.toStringAsFixed(2) ?? '—',
+        )),
+        DataCell(Text(
+          projection.adjustedTerm?.toStringAsFixed(1) ?? '—',
+        )),
+        DataCell(Text(
+          projection.adjustedLoan != null
+              ? currency.format(projection.adjustedLoan)
+              : '—',
+        )),
       ],
     );
   }
 
-  DataRow _buildDiffRow(String label, _NormalizedData d1, _NormalizedData d2, double Function(_NormalizedData) getValue) {
-    final v1 = getValue(d1);
-    final v2 = getValue(d2);
-    final diff = v1 - v2; // d1 - d2. If positive, d1 is more expensive.
-    
-    final diffStr = diff.abs().toStringAsFixed(2);
-    final color = diff == 0 ? Colors.grey : (diff > 0 ? Colors.red : Colors.green);
-    
-    return DataRow(
-      cells: [
-        DataCell(Text(label, style: const TextStyle(fontStyle: FontStyle.italic))),
-         DataCell(const Text('-')), // Base
-         DataCell(
-           Row(
-             children: [
-               Icon(diff > 0 ? Icons.add : Icons.remove, size: 12, color: color),
-               Text('\$$diffStr', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-             ],
-           )
-         ),
-      ]
+  _AdjustedProjection _project(ComparisonEntryView view) {
+    final double? baseRate = view.entry.interestRate;
+    final double? baseTerm = view.termYears;
+    final double? baseLoan = view.entry.loanAmount;
+    final double? price = view.entry.price;
+    final double? downPaymentPercent = (price != null && baseLoan != null)
+        ? ((price - baseLoan) / price) * 100
+        : null;
+
+    final double adjustedRate = ((baseRate ?? 0) + _rateDelta).clamp(0.01, 20);
+    final double adjustedTerm = ((baseTerm ?? 0) + _termDelta).clamp(5, 40);
+
+    double? adjustedLoan;
+    if (price != null && downPaymentPercent != null) {
+      final double percent =
+          (downPaymentPercent + _downPaymentDelta).clamp(0, 90);
+      adjustedLoan = price * (1 - percent / 100);
+    } else if (baseLoan != null) {
+      adjustedLoan = baseLoan;
+    }
+
+    double? adjustedPayment;
+    if (adjustedLoan != null) {
+      adjustedPayment = _calculatePayment(
+        adjustedLoan,
+        adjustedRate,
+        adjustedTerm,
+      );
+    }
+
+    return _AdjustedProjection(
+      adjustedPayment: adjustedPayment,
+      adjustedRate: adjustedRate,
+      adjustedTerm: adjustedTerm,
+      adjustedLoan: adjustedLoan,
     );
   }
 
-  _NormalizedData? _normalize(CalculationEntry entry) {
-    // Try to extract standard loan params
-    final inputs = entry.inputs;
-    final results = entry.results;
-    
-    // Merge inputs and results to find values
-    final all = {...inputs, ...results};
-
-    final loanAmount = _getDouble(all, 'loanAmount');
-    final interestRate = _getDouble(all, 'interestRate');
-    final termYears = _getDouble(all, 'termYears');
-    final payment = _getDouble(all, 'payment');
-
-    if (loanAmount != null && interestRate != null && termYears != null && payment != null) {
-      final totalCost = payment * termYears * 12;
-      final totalInterest = totalCost - loanAmount;
-      
-      // Use a shorter title if possible
-      String title = entry.summary.split('→').first.trim();
-      if (title.length > 20) title = '${title.substring(0, 17)}...';
-
-      return _NormalizedData(
-        id: entry.id,
-        title: title,
-        loanAmount: loanAmount,
-        interestRate: interestRate,
-        termYears: termYears,
-        monthlyPayment: payment,
-        totalCost: totalCost,
-        totalInterest: totalInterest,
-      );
+  double _calculatePayment(double principal, double rate, double termYears) {
+    if (rate <= 0) {
+      return principal / (termYears * 12);
     }
-    return null;
+    return _loanMath.calculatePayment(
+      loanAmount: principal,
+      interestRate: rate,
+      termYears: termYears,
+    );
   }
 
-  double? _getDouble(Map<String, dynamic> map, String key) {
-    final v = map[key];
-    if (v is num) return v.toDouble();
-    if (v is String) return double.tryParse(v);
-    return null;
+  void _showExportDialog(BuildContext context, String csv) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Export Preview',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              height: 200,
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  csv,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Copy the CSV text above to share with borrowers or import into spreadsheets.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-class _NormalizedData {
-  final String id;
-  final String title;
-  final double loanAmount;
-  final double interestRate;
-  final double termYears;
-  final double monthlyPayment;
-  final double totalCost;
-  final double totalInterest;
-
-  _NormalizedData({
-    required this.id,
-    required this.title,
-    required this.loanAmount,
-    required this.interestRate,
-    required this.termYears,
-    required this.monthlyPayment,
-    required this.totalCost,
-    required this.totalInterest,
+class _ComparisonCard extends StatelessWidget {
+  const _ComparisonCard({
+    required this.view,
+    required this.baselinePayment,
   });
+
+  final ComparisonEntryView view;
+  final double? baselinePayment;
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = NumberFormat.simpleCurrency();
+    final theme = Theme.of(context);
+    final double? delta = (view.monthlyPayment != null &&
+            baselinePayment != null &&
+            !view.isBaseline)
+        ? view.monthlyPayment! - baselinePayment!
+        : null;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    // On mobile, use full width; on larger screens, use fixed width
+    final cardWidth = screenWidth < 600 ? double.infinity : 340.0;
+
+    return SizedBox(
+      width: cardWidth,
+      child: Card(
+        color: view.isBaseline
+            ? theme.colorScheme.primaryContainer
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                view.entry.title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color:
+                      view.isBaseline ? theme.colorScheme.onPrimaryContainer : null,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                view.entry.summary,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: view.isBaseline
+                      ? theme.colorScheme.onPrimaryContainer
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _MetricRow(
+                label: 'Monthly Payment',
+                value: view.monthlyPayment != null
+                    ? currency.format(view.monthlyPayment)
+                    : '—',
+                highlight: delta,
+              ),
+              _MetricRow(
+                label: 'Total Cost',
+                value: view.totalCost != null
+                    ? currency.format(view.totalCost)
+                    : '—',
+              ),
+              _MetricRow(
+                label: 'Total Interest',
+                value: view.totalInterest != null
+                    ? currency.format(view.totalInterest)
+                    : '—',
+              ),
+              _MetricRow(
+                label: 'MI Drop (mo)',
+                value: view.miDropMonth?.toString() ?? '—',
+              ),
+              _MetricRow(
+                label: 'Break-even (mo)',
+                value: view.breakEvenMonths?.toStringAsFixed(1) ?? '—',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricRow extends StatelessWidget {
+  const _MetricRow({
+    required this.label,
+    required this.value,
+    this.highlight,
+  });
+
+  final String label;
+  final String value;
+  final double? highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    Color? color;
+    String? deltaLabel;
+    if (highlight != null) {
+      color = highlight! < 0 ? Colors.green : Colors.red;
+      deltaLabel =
+          '${highlight! > 0 ? '+' : ''}${highlight!.toStringAsFixed(2)} /mo';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              if (deltaLabel != null)
+                Text(
+                  deltaLabel,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(color: color),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComparisonSummaryView extends StatelessWidget {
+  const _ComparisonSummaryView({required this.summary});
+
+  final ComparisonSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        _SummaryChip(
+          label: 'Selections',
+          value: '${summary.comparableCount}/${summary.count}',
+        ),
+        _SummaryChip(
+          label: 'Payment Range',
+          value: _formatCurrency(summary.paymentRange),
+        ),
+        _SummaryChip(
+          label: 'Interest Range',
+          value: _formatCurrency(summary.interestRange),
+        ),
+      ],
+    );
+  }
+
+  String _formatCurrency(double? value) {
+    if (value == null) return '—';
+    final currency = NumberFormat.simpleCurrency();
+    return currency.format(value);
+  }
+}
+
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      label: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SliderTile extends StatelessWidget {
+  const _SliderTile({
+    required this.title,
+    required this.min,
+    required this.max,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final double min;
+  final double max;
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title),
+        Slider(
+          min: min,
+          max: max,
+          divisions: 40,
+          value: value,
+          label: value.toStringAsFixed(2),
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+class _AdjustedProjection {
+  const _AdjustedProjection({
+    required this.adjustedPayment,
+    required this.adjustedRate,
+    required this.adjustedTerm,
+    required this.adjustedLoan,
+  });
+
+  final double? adjustedPayment;
+  final double? adjustedRate;
+  final double? adjustedTerm;
+  final double? adjustedLoan;
 }

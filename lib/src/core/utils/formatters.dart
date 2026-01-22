@@ -11,7 +11,7 @@ class CurrencyFormatter {
     decimalDigits: 0,
   );
 
-  static final NumberFormat _numberFormat = NumberFormat.decimalPattern();
+  static final Map<int, NumberFormat> _decimalFormatCache = <int, NumberFormat>{};
 
   /// Format as currency with symbol and decimals: $350,000.00
   static String formatCurrency(double? value, {bool showDecimals = true}) {
@@ -32,11 +32,15 @@ class CurrencyFormatter {
   /// Format as number with commas: 350,000
   static String formatNumber(double? value, {int decimals = 0}) {
     if (value == null) return '0';
-    if (decimals == 0) {
-      return _numberFormat.format(value.round());
-    } else {
-      return _numberFormat.format(value);
-    }
+
+    final format = _decimalFormatCache.putIfAbsent(decimals, () {
+      final f = NumberFormat.decimalPattern();
+      f.minimumFractionDigits = decimals;
+      f.maximumFractionDigits = decimals;
+      return f;
+    });
+
+    return format.format(value);
   }
 
   /// Format years: 30 years or 5.5 years
@@ -56,15 +60,58 @@ class CurrencyFormatter {
   }
 
   /// Compact currency format for display: $350K or $1.2M
-  static String formatCompactCurrency(double? value) {
-    if (value == null) return '\$0';
-    if (value >= 1000000) {
-      return '\$${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value >= 1000) {
-      return '\$${(value / 1000).toStringAsFixed(1)}K';
-    } else {
-      return formatCurrency(value, showDecimals: false);
+  /// Use [maxDigits] to control precision (default 4, max 7 for detailed view)
+  static String formatCompactCurrency(double? value, {int maxDigits = 4}) {
+    if (value == null) return '--';
+
+    final absValue = value.abs();
+    final intDigits = absValue.floor().toString().length;
+    if (intDigits <= maxDigits) {
+      return formatCurrency(value);
     }
+
+    final sign = value < 0 ? '-' : '';
+    if (absValue >= 1000000) {
+      final scaled = absValue / 1000000;
+      final decimals = _compactDecimals(scaled, maxDigits - 1);
+      final formatted = _trimTrailingZeros(scaled.toStringAsFixed(decimals));
+      return '$sign\$$formatted' 'M';
+    } else if (absValue >= 1000) {
+      final scaled = absValue / 1000;
+      final decimals = _compactDecimals(scaled, maxDigits - 1);
+      final formatted = _trimTrailingZeros(scaled.toStringAsFixed(decimals));
+      return '$sign\$$formatted' 'K';
+    }
+
+    return formatCurrency(value);
+  }
+
+  static String _trimTrailingZeros(String value) {
+    if (!value.contains('.')) return value;
+    var out = value;
+    out = out.replaceAll(RegExp(r'0+$'), '');
+    out = out.replaceAll(RegExp(r'\.$'), '');
+    return out;
+  }
+
+  static int _compactDecimals(double scaled, int maxDigits) {
+    // Keep compact values readable and avoid nonsense like 500.0000K.
+    // Rule of thumb:
+    // - 100+ => 0 decimals (500K)
+    // - 10-99.9 => 1 decimal (12.3K)
+    // - <10 => 2 decimals (1.23M)
+    int desired;
+    if (scaled >= 100) {
+      desired = 0;
+    } else if (scaled >= 10) {
+      desired = 1;
+    } else {
+      desired = 2;
+    }
+
+    final intDigits = scaled.floor().toString().length;
+    final allowed = (maxDigits - intDigits).clamp(0, 6);
+    return desired.clamp(0, allowed);
   }
 
   /// Parse currency string to double

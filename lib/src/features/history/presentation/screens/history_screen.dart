@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/calculator_provider.dart';
-import '../providers/comparison_provider.dart';
-import '../models/calculation_history.dart';
-import 'comparison_screen.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
+import 'package:loan_ranger/src/core/models/calculation_history.dart';
+import 'package:loan_ranger/src/features/comparison/presentation/screens/comparison_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -40,7 +40,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (!comparisonProvider.canCompare) return;
 
-    final comparisonData = comparisonProvider.getComparisonData(
+    final comparisonData = comparisonProvider.buildComparison(
       calculatorProvider.history.entries,
     );
 
