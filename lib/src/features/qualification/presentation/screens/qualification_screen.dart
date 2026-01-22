@@ -529,8 +529,18 @@ class _QualificationScreenState extends State<QualificationScreen> {
           FilledButton(
             onPressed: () async {
               final name = nameController.text.trim();
-              final housing = double.tryParse(housingController.text) ?? 28;
-              final debt = double.tryParse(debtController.text) ?? 36;
+
+              // Get text from controllers and trim whitespace
+              final housingText = housingController.text.trim();
+              final debtText = debtController.text.trim();
+
+              // Parse with validation - only use defaults if text is empty
+              final housing = housingText.isEmpty
+                  ? (ratio?.housingRatio ?? 28.0)
+                  : (double.tryParse(housingText) ?? (ratio?.housingRatio ?? 28.0));
+              final debt = debtText.isEmpty
+                  ? (ratio?.debtRatio ?? 36.0)
+                  : (double.tryParse(debtText) ?? (ratio?.debtRatio ?? 36.0));
 
               if (name.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -540,12 +550,12 @@ class _QualificationScreenState extends State<QualificationScreen> {
               }
 
               final provider = context.read<QualifyingRatiosProvider>();
-              
+
               if (isEditing) {
                 await provider.updateRatio(ratio.copyWith(
                   name: name,
-                  description: descController.text.trim().isEmpty 
-                      ? null 
+                  description: descController.text.trim().isEmpty
+                      ? null
                       : descController.text.trim(),
                   housingRatio: housing,
                   debtRatio: debt,
@@ -553,8 +563,8 @@ class _QualificationScreenState extends State<QualificationScreen> {
               } else {
                 await provider.addRatio(
                   name: name,
-                  description: descController.text.trim().isEmpty 
-                      ? null 
+                  description: descController.text.trim().isEmpty
+                      ? null
                       : descController.text.trim(),
                   housingRatio: housing,
                   debtRatio: debt,
