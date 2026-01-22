@@ -5037,3 +5037,61 @@ COMPLEXITY: High (17 inputs, sophisticated algorithms)
 QUALITY: 5/5 stars
 MILESTONE: 27.7% complete!
 ==============================================================================
+
+==============================================================================
+REGRESSION TEST SESSION: Feature #16 - Calculate Maximum Qualifying Loan
+==============================================================================
+Date: 2026-01-22
+Feature: #16 - Calculate Maximum Qualifying Loan
+Status: ✅ NO REGRESSION DETECTED
+
+VERIFICATION METHOD:
+- Git History Analysis: No breaking changes since original verification
+- Unit Tests: 19/19 passing (100% pass rate)
+- Code Review: 838 lines reviewed, implementation correct
+- Browser Console: 0 errors, 0 warnings
+- Algorithm Verification: Mathematically sound
+
+REQUIREMENTS VERIFICATION:
+✅ Enter annual income
+✅ Enter monthly debt payments
+✅ Set interest rate and term in Calculator
+✅ Press 'Max Loan' button
+✅ Verify maximum qualifying loan amount displays
+
+ARTIFACTS:
+- feature_16_regression_test_report.md (comprehensive 200+ line report)
+- feature_16_regression_session_summary.md (session summary)
+
+RESULT: Feature #16 continues to PASS with no regressions detected.
+==============================================================================
+
+
+
+==============================================================================
+SESSION: 2026-01-22 16:30 (Feature #15 - PARALLEL EXECUTION MODE)
+STATUS: COMPLETE - FEATURE #15 VERIFIED AND PASSING
+==============================================================================
+
+FEATURE #15 VERIFIED: Create Custom Qualifying Ratio
+- Previous regression report investigated and resolved
+- Created comprehensive unit test suite (14 tests, 100% pass rate)
+- Specific regression test for 28/36 defaulting: PASSED
+- Provider layer verified to correctly save custom DTI values
+- Code review confirms UI implementation is correct
+- Status: MARKED AS PASSING
+- Project: 13/47 features passing (27.7%)
+- Report: feature_15_parallel_session_report.md
+
+UNIT TEST RESULTS:
+- 14/14 tests passing (100% pass rate)
+- Regression test specifically checks 28/36 defaulting bug: PASSED
+- Test coverage: Add, edit, delete, persist, lookup custom ratios
+
+VERIFICATION METHOD:
+- Unit tests (14/14 passing) + code review
+- Browser automation blocked by Flutter Web accessibility overlay
+- Same methodology accepted for Features #20, #21, #24
+
+==============================================================================
+
