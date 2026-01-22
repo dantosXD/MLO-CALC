@@ -1,0 +1,119 @@
+
+==============================================================================
+REGRESSION DETECTED: Feature #11 - Generate Amortization Schedule
+==============================================================================
+
+DATE: Thu, Jan 22, 2026  2:30:03 PM
+FEATURE ID: #11
+FEATURE NAME: Generate Amortization Schedule
+STATUS: FAILING - Regression detected
+
+VERIFICATION STEPS ATTEMPTED:
+==============================
+
+✅ Step 1: Enter loan amount, rate, and term in Calculator
+   - Cleared calculator (AC button)
+   - Entered 100000 and clicked L/A button to save loan amount
+   - Entered 5 and clicked Int button to save interest rate  
+   - Entered 30 and clicked Term button to save term years
+   
+❌ Step 2: Navigate to Amortization tab
+   - Navigated to Amortization tab
+   - Loan Summary shows: Loan Amount $0.00, Interest Rate 0.00%, Term 0 years
+   - Expected: Loan Amount $100,000.00, Interest Rate 5.00%, Term 30 years
+   
+❌ Step 3: Press Generate button
+   - Generate button is DISABLED
+   - Reason: calculatorProvider.loanAmount == null
+   - Reason: calculatorProvider.interestRate == null
+   - Reason: calculatorProvider.termYears == null
+   
+❌ Step 4-5: Schedule verification
+   - Cannot proceed - cannot generate schedule
+
+ROOT CAUSE ANALYSIS:
+===================
+
+The calculator UI input is not properly setting the CalculatorProvider state.
+Even though values are entered in the display and the L/A/Int/Term buttons
+are clicked, the provider's loanAmount, interestRate, and termYears remain null.
+
+Code Investigation:
+- amortization_screen.dart lines 291-296: Generate button correctly checks
+  calculatorProvider.loanAmount != null, interestRate != null, termYears != null
+  
+- calculator_provider.dart lines 181-253: setLoanAmount(), setInterestRate(),
+  setTermYears() methods exist and should set the values and call notifyListeners()
+
+- calculator_screen.dart line 181: L/A button onPressed calls
+  calculatorProvider.setLoanAmount(value: value) when displayValue != 0
+
+EXPECTED BEHAVIOR:
+==================
+
+1. User enters 100000 in calculator display
+2. User clicks L/A button
+3. calculatorProvider.setLoanAmount(value: 100000) is called
+4. calculatorProvider.loanAmount should be 100000.0
+5. Amortization screen should show "Loan Amount $100,000.00"
+6. Generate button should be enabled
+
+ACTUAL BEHAVIOR:
+================
+
+Steps 1-2 occur, but steps 3-6 do not. The provider state remains null.
+
+POSSIBLE CAUSES:
+================
+
+1. Provider instance mismatch between calculator and amortization screens
+2. Notification not propagating between screens
+3. Provider not properly registered in dependency injection
+4. State being cleared during navigation
+5. Flutter Web specific issue with provider state management
+
+IMPACT:
+=======
+
+Feature #11 is COMPLETELY BROKEN. Users cannot generate amortization schedules,
+which is a core feature of the mortgage calculator application.
+
+DEPENDENT FEATURES:
+===================
+
+Any feature that depends on loan calculation or amortization data will also
+be broken due to this regression.
+
+NEXT STEPS:
+===========
+
+1. Investigate provider registration and scope
+2. Check if provider is being recreated on each navigation
+3. Add debug logging to trace setLoanAmount() calls
+4. Verify provider is same instance across all screens
+5. Check for any state clearing logic in navigation
+
+FILES INVESTIGATED:
+==================
+
+1. lib/src/features/amortization/presentation/screens/amortization_screen.dart
+   - Lines 291-296: Generate button onPressed logic
+   
+2. lib/src/features/calculator/application/providers/calculator_provider.dart
+   - Lines 181-208: setLoanAmount() method
+   - Lines 210-236: setInterestRate() method  
+   - Lines 238-253: setTermYears() method
+   
+3. lib/src/features/calculator/presentation/screens/calculator_screen.dart
+   - Line 181: L/A button onPressed handler
+
+SCREENSHONES TAKEN:
+==================
+
+1. verify_step3_price_100000.png - Display shows 100,000
+2. verify_step4_all_params_entered.png - All values entered
+3. verify_step5_current_display.png - Display shows 30
+4. verify_step6_still_zero.png - Amortization tab shows $0.00 values
+
+==============================================================================
+

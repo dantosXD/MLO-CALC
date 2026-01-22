@@ -3340,3 +3340,13 @@ BREAKTHROUGH: Identified correct feature, verified DTI calculation logic
 ARTIFACTS: 747-line verification report, scenario testing, mathematical proof
 ==============================================================================
 
+
+[Testing] Session date: Thu, Jan 22, 2026  2:30:16 PM
+[Testing] Feature tested: #11 - Generate Amortization Schedule
+[Testing] Status: REGRESSION DETECTED
+[Testing] Action: Marked feature as failing
+[Testing] Root cause: CalculatorProvider state not being set from UI input
+[Testing] Impact: Feature completely broken - cannot generate amortization schedules
+[Testing] Screenshots: 4 screenshots documenting the failure
+[Testing] Report: regression_report_feature_11.txt created
+
