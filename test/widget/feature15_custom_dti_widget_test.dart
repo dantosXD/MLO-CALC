@@ -1,0 +1,237 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
+import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  group('Feature #15: Widget Tests - Custom DTI Ratio UI', () {
+    late QualifyingRatiosProvider provider;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      provider = QualifyingRatiosProvider();
+      await Future.delayed(const Duration(milliseconds: 100));
+    });
+
+    testWidgets('Add custom ratio with 31/43 DTI values', (tester) async {
+      // Arrange - Build the screen
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
+            value: provider,
+            child: const QualificationScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Act - Tap the add custom ratio button
+      final addBtn = find.byIcon(Icons.add);
+      expect(addBtn, findsWidgets);
+      await tester.tap(addBtn.first);
+      await tester.pumpAndSettle();
+
+      // Verify dialog appeared
+      expect(find.text('Add Custom Ratio'), findsOneWidget);
+
+      // Enter test data
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Name'),
+        'Test FHA Expanded',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Description (optional)'),
+        'Test description',
+      );
+
+      // Find the Housing DTI field and enter 31
+      final housingField = find.widgetWithText(TextField, 'Housing DTI %');
+      await tester.enterText(housingField, '31');
+
+      // Find the Total DTI field and enter 43
+      final debtField = find.widgetWithText(TextField, 'Total DTI %');
+      await tester.enterText(debtField, '43');
+
+      // Tap the Add button
+      final addButton = find.text('Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      // Assert - Verify the ratio was added with correct values
+      final customRatios = provider.customRatios;
+      expect(customRatios.length, equals(1),
+          reason: 'Should have 1 custom ratio');
+
+      final addedRatio = customRatios.first;
+      expect(addedRatio.name, equals('Test FHA Expanded'));
+      expect(addedRatio.housingRatio, equals(31.0),
+          reason: 'FAILING REGRESSION: Housing DTI is ${addedRatio.housingRatio} instead of 31.0');
+      expect(addedRatio.debtRatio, equals(43.0),
+          reason: 'FAILING REGRESSION: Total DTI is ${addedRatio.debtRatio} instead of 43.0');
+    });
+
+    testWidgets('Add custom ratio with 25/38 DTI values', (tester) async {
+      // Arrange
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
+            value: provider,
+            child: const QualificationScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Act
+      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Name'),
+        'Conservative Ratio',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Housing DTI %'),
+        '25',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Total DTI %'),
+        '38',
+      );
+
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      final ratio = provider.customRatios.first;
+      expect(ratio.housingRatio, equals(25.0),
+          reason: 'FAILING REGRESSION: Housing DTI is ${ratio.housingRatio} instead of 25.0');
+      expect(ratio.debtRatio, equals(38.0),
+          reason: 'FAILING REGRESSION: Total DTI is ${ratio.debtRatio} instead of 38.0');
+    });
+
+    testWidgets('Edit existing ratio to change DTI values', (tester) async {
+      // Arrange - Create initial ratio
+      await provider.addRatio(
+        name: 'Original Ratio',
+        housingRatio: 28.0,
+        debtRatio: 36.0,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
+            value: provider,
+            child: const QualificationScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Act - Open the ratios list
+      await tester.tap(find.text('View All Ratios'));
+      await tester.pumpAndSettle();
+
+      // Find and tap edit button for our custom ratio
+      final editButton = find.ancestor(
+        of: find.text('Original Ratio'),
+        matching: find.byType(IconButton).at(1), // Second IconButton is edit
+      );
+      await tester.tap(editButton);
+      await tester.pumpAndSettle();
+
+      // Clear and enter new values
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Housing DTI %'),
+        '35',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Total DTI %'),
+        '45',
+      );
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      final updated = provider.customRatios.first;
+      expect(updated.housingRatio, equals(35.0),
+          reason: 'FAILING REGRESSION: Housing DTI is ${updated.housingRatio} instead of 35.0');
+      expect(updated.debtRatio, equals(45.0),
+          reason: 'FAILING REGRESSION: Total DTI is ${updated.debtRatio} instead of 45.0');
+    });
+
+    testWidgets(
+        'Regression test: Verify user-entered values are preserved, not defaults',
+        (tester) async {
+      // This is the critical regression test
+      // Bug: Users enter 31/43 but it saves as 28/36
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
+            value: provider,
+            child: const QualificationScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open dialog
+      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pumpAndSettle();
+
+      // Enter NON-default values
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Name'),
+        'REGRESSION TEST',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Housing DTI %'),
+        '31',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Total DTI %'),
+        '43',
+      );
+
+      // Save
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+
+      // CRITICAL ASSERTIONS - These will fail if regression exists
+      final ratio = provider.customRatios.first;
+
+      expect(
+        ratio.housingRatio,
+        equals(31.0),
+        reason:
+            '\n\n*** REGRESSION DETECTED ***\n'
+            'User entered: 31\n'
+            'But saved as: ${ratio.housingRatio}\n'
+            'This is the DEFAULT value (28)\n'
+            'User input was LOST!\n',
+      );
+
+      expect(
+        ratio.debtRatio,
+        equals(43.0),
+        reason:
+            '\n\n*** REGRESSION DETECTED ***\n'
+            'User entered: 43\n'
+            'But saved as: ${ratio.debtRatio}\n'
+            'This is the DEFAULT value (36)\n'
+            'User input was LOST!\n',
+      );
+    });
+  });
+}
