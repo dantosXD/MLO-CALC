@@ -1,0 +1,3 @@
+@echo off
+echo Exporting Feature #6...
+echo. = node -e "const fs = require('fs'); const data = fs.readFileSync('get_feature6.js', 'utf8'); eval(data);"
