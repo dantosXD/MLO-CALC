@@ -246,7 +246,16 @@ class _DisplayCard extends StatelessWidget {
                 label: 'L/A',
                 value: CurrencyFormatter.formatCompactCurrency(calc.loanAmount),
                 isSet: calc.loanAmount != null,
-                onTap: () => _setFromDisplay(context, 'Loan Amount', (v) => calc.setLoanAmount(value: v)),
+                onTap: () {
+                  // If there's a value in the display, set it as the loan amount
+                  final parsed = double.tryParse(display.displayValue);
+                  if (parsed != null && parsed != 0) {
+                    _setFromDisplay(context, 'Loan Amount', (v) => calc.setLoanAmount(value: v));
+                  } else {
+                    // Otherwise, solve for loan amount if we have payment, interest rate, and term
+                    calc.calculateLoanAmount();
+                  }
+                },
                 onDoubleTap: () => _clearField(context, 'Loan Amount', () => calc.clearLoanAmount()),
               ),
               const SizedBox(width: 6),
