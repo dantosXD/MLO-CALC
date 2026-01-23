@@ -1,0 +1,11 @@
+{
+  "id": 9,
+  "category": "Calculator",
+  "name": "Keyboard Input (Desktop)",
+  "description": "Test keyboard input for digits, operations, and special keys",
+  "steps": "[\"Use number keys 0-9 to input digits\", \"Use +, -, *, / for operations\", \"Use Enter/= for equals\", \"Use Escape for clear all\", \"Use Backspace for delete\", \"Verify all keyboard inputs work correctly\"]",
+  "passes": 0,
+  "in_progress": 1,
+  "dependencies": null,
+  "priority": 55
+}

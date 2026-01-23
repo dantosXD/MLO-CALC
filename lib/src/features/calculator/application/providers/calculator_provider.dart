@@ -710,9 +710,9 @@ class CalculatorProvider with ChangeNotifier {
     } else {
       _interestRate = result.value;
       _unregisterManualInput(_ManualVar.interestRate);
-      
+
       _calculationResultController.add(_interestRate!);
-      
+
       _history.addEntry(CalculationEntry.fromLoanCalculation(
         type: 'interest_rate',
         loanAmount: _loanAmount,
@@ -729,6 +729,12 @@ class CalculatorProvider with ChangeNotifier {
       _saveState();
     }
     notifyListeners();
+  }
+
+  /// Public method to trigger interest rate calculation from UI
+  /// When user has entered loan amount, payment, and term, this calculates the interest rate
+  void calculateInterestRate() {
+    _calculateInterestRate();
   }
 
   // --- Other Domain Methods ---

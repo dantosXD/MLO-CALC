@@ -241,10 +241,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         CalculatorButton(
                           text: 'Int',
                           onPressed: () {
+                            // If there's a value in the display, set it as the interest rate
                             final value = double.tryParse(displayProvider.displayValue);
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setInterestRate(value: value);
+                            } else {
+                              // Otherwise, solve for interest rate if we have loan amount, payment, and term
+                              calculatorProvider.calculateInterestRate();
                             }
                           },
                           onDoubleTap: () => _clearField(context, 'Rate', calculatorProvider.clearInterestRate),
