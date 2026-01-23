@@ -467,11 +467,18 @@ class _SecondaryFieldsRow extends StatelessWidget {
           color: AppTheme.loanButton,
           onTap: () => _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
         ),
-        _RowChip(
-          label: 'DnPmt',
-          value: calc.downPayment,
-          color: AppTheme.successGreen,
-          onTap: () => _setFromDisplay(context, 'Down Pmt', (v) => calc.setDownPayment(value: v)),
+        Selector<CalculatorProvider, (double?, double?)>(
+          selector: (_, calc) => (calc.downPayment, calc.downPaymentPercentage),
+          builder: (context, values, _) {
+            final (downPayment, downPaymentPct) = values;
+            return _RowChip(
+              label: 'DnPmt',
+              value: downPayment,
+              color: AppTheme.successGreen,
+              onTap: () => _setFromDisplay(context, 'Down Pmt', (v) => calc.setDownPayment(value: v)),
+              subtitle: downPaymentPct != null ? '${downPaymentPct.toStringAsFixed(1)}%' : null,
+            );
+          },
         ),
         _RowChip(
           label: 'Tax',
@@ -518,12 +525,14 @@ class _RowChip extends StatelessWidget {
     required this.value,
     required this.color,
     required this.onTap,
+    this.subtitle,
   });
 
   final String label;
   final double? value;
   final Color color;
   final VoidCallback onTap;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -565,6 +574,15 @@ class _RowChip extends StatelessWidget {
                       color: hasValue ? (isDark ? Colors.white : Colors.black87) : Colors.grey,
                     ),
                   ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w500,
+                        color: color.withValues(alpha: 0.8),
+                      ),
+                    ),
                 ],
               ),
             ),

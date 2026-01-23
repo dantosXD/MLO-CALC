@@ -103,6 +103,13 @@ class CalculatorProvider with ChangeNotifier {
   double? get payment => _payment;
   double? get price => _price;
   double? get downPayment => _downPayment;
+  double? get downPaymentPercentage {
+    if (_price == null || _price == 0 || _downPayment == null) return null;
+    // If down payment is already a percentage (< 100), return it
+    if (_downPayment! < 100) return _downPayment;
+    // Otherwise calculate percentage from amount
+    return (_downPayment! / _price!) * 100;
+  }
   double? get propertyTax => _propertyTax;
   double? get homeInsurance => _homeInsurance;
   double? get mortgageInsurance => _mortgageInsurance;
