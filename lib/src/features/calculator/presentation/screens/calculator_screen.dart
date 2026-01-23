@@ -188,10 +188,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         CalculatorButton(
                           text: 'Term',
                           onPressed: () {
+                            // If there's a value in the display, set it as the term
                             final value = double.tryParse(displayProvider.displayValue);
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setTermYears(value: value);
+                            } else {
+                              // Otherwise, solve for term if we have loan amount, payment, and interest rate
+                              calculatorProvider.calculateTerm();
                             }
                           },
                           onDoubleTap: () => _clearField(context, 'Term', calculatorProvider.clearTermYears),

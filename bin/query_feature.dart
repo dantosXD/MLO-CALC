@@ -10,11 +10,11 @@ void main() async {
 
   final result = await db.query('features',
       where: 'id = ?',
-      whereArgs: [8],
+      whereArgs: [2],
       columns: ['id', 'priority', 'category', 'name', 'description', 'steps', 'passes', 'in_progress', 'dependencies']);
 
   if (result.isNotEmpty) {
-    print('Feature #8:');
+    print('Feature #2:');
     print('ID: ${result[0]['id']}');
     print('Priority: ${result[0]['priority']}');
     print('Category: ${result[0]['category']}');
@@ -25,7 +25,7 @@ void main() async {
     print('In Progress: ${result[0]['in_progress']}');
     print('Dependencies: ${result[0]['dependencies']}');
   } else {
-    print('Feature #8 not found');
+    print('Feature #2 not found');
   }
 
   await db.close();

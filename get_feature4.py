@@ -3,7 +3,7 @@ import json
 
 conn = sqlite3.connect('features.db')
 cursor = conn.cursor()
-cursor.execute('SELECT id, category, name, description, steps, passes, in_progress, dependencies FROM features WHERE id = 2')
+cursor.execute('SELECT id, category, name, description, steps, passes, in_progress, dependencies FROM features WHERE id = 4')
 row = cursor.fetchone()
 
 if row:
@@ -16,6 +16,6 @@ if row:
     print(f'In Progress: {row[6]}')
     print(f'Dependencies: {row[7]}')
 else:
-    print('Feature #5 not found')
+    print('Feature #4 not found')
 
 conn.close()

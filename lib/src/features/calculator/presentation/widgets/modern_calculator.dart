@@ -264,7 +264,16 @@ class _DisplayCard extends StatelessWidget {
                 label: 'Term',
                 value: calc.termYears != null ? '${calc.termYears!.toInt()}y' : '--',
                 isSet: calc.termYears != null,
-                onTap: () => _setFromDisplay(context, 'Term', (v) => calc.setTermYears(value: v)),
+                onTap: () {
+                  // If there's a value in the display, set it as the term
+                  final parsed = double.tryParse(display.displayValue);
+                  if (parsed != null && parsed != 0) {
+                    _setFromDisplay(context, 'Term', (v) => calc.setTermYears(value: v));
+                  } else {
+                    // Otherwise, solve for term if we have loan amount, payment, and interest rate
+                    calc.calculateTerm();
+                  }
+                },
                 onDoubleTap: () => _clearField(context, 'Term', () => calc.clearTermYears()),
               ),
               const SizedBox(width: 6),

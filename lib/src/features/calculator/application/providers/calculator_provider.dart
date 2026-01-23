@@ -737,6 +737,12 @@ class CalculatorProvider with ChangeNotifier {
     _calculateInterestRate();
   }
 
+  /// Public method to trigger term calculation from UI
+  /// When user has entered loan amount, payment, and interest rate, this calculates the term
+  void calculateTerm() {
+    _calculateTerm();
+  }
+
   // --- Other Domain Methods ---
 
   Future<void> generateAmortizationSchedule() async {
