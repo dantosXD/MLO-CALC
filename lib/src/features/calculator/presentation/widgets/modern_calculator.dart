@@ -262,7 +262,7 @@ class _DisplayCard extends StatelessWidget {
               _StatChip(
                 label: 'Rate',
                 value: calc.interestRate != null
-                    ? '${calc.interestRate!.toStringAsFixed(2)}%'
+                    ? '${calc.interestRate!.toStringAsFixed(3)}%'
                     : '--',
                 isSet: calc.interestRate != null,
                 onTap: () => _setFromDisplay(context, 'Rate', (v) => calc.setInterestRate(value: v)),
