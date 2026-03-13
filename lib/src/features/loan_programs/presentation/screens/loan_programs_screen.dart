@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import '../../application/providers/loan_programs_provider.dart';
 import '../../domain/models/loan_program.dart';
@@ -113,7 +114,7 @@ class LoanProgramsScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Selected "${program.name}" (${program.housingRatio.toInt()}/${program.debtRatio.toInt()}%)',
+          'Selected "${program.name}" (${CurrencyFormatter.formatPercent(program.housingRatio, decimals: 2)}/${CurrencyFormatter.formatPercent(program.debtRatio, decimals: 2)})',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -221,11 +222,14 @@ class _SelectedProgramCard extends StatelessWidget {
               children: [
                 _InfoChip(
                   label: 'DTI',
-                  value: '${program.housingRatio}/${program.debtRatio}',
+                  value: '${CurrencyFormatter.formatPercent(program.housingRatio, decimals: 2)}/${CurrencyFormatter.formatPercent(program.debtRatio, decimals: 2)}',
                 ),
                 _InfoChip(
                   label: 'Min Down',
-                  value: '${program.minDownPaymentPercent}%',
+                  value: CurrencyFormatter.formatPercent(
+                    program.minDownPaymentPercent,
+                    decimals: 2,
+                  ),
                 ),
                 if (program.maxLoanAmount != null)
                   _InfoChip(
@@ -364,7 +368,7 @@ class _ProgramCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'DTI: ${program.housingRatio}/${program.debtRatio} • Min Down: ${program.minDownPaymentPercent}%',
+                      'DTI: ${CurrencyFormatter.formatPercent(program.housingRatio, decimals: 2)}/${CurrencyFormatter.formatPercent(program.debtRatio, decimals: 2)} • Min Down: ${CurrencyFormatter.formatPercent(program.minDownPaymentPercent, decimals: 2)}',
                       style: theme.textTheme.bodySmall,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

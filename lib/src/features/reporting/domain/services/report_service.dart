@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -9,7 +10,6 @@ import 'package:printing/printing.dart';
 
 class ReportService {
   static final _currency = NumberFormat.simpleCurrency();
-  static final _percent = NumberFormat.decimalPercentPattern(decimalDigits: 3);
 
   static Future<Uint8List> generateLoanReport({
     required CalculatorProvider provider,
@@ -79,7 +79,10 @@ class ReportService {
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               _buildInfoColumn('Loan Amount', _currency.format(provider.loanAmount ?? 0)),
-              _buildInfoColumn('Interest Rate', '${provider.interestRate?.toStringAsFixed(3)}%'),
+              _buildInfoColumn(
+                'Interest Rate',
+                CurrencyFormatter.formatPercent(provider.interestRate, decimals: 3),
+              ),
               _buildInfoColumn('Term', '${provider.termYears?.toStringAsFixed(0)} Years'),
             ],
           ),
@@ -98,8 +101,11 @@ class ReportService {
   }
 
   static String _calculateLTV(CalculatorProvider provider) {
-    if (provider.price == null || provider.loanAmount == null || provider.price == 0) return '0.0';
-    return _percent.format(provider.loanAmount! / provider.price!);
+    if (provider.price == null || provider.loanAmount == null || provider.price == 0) return '0%';
+    return CurrencyFormatter.formatPercent(
+      (provider.loanAmount! / provider.price!) * 100,
+      decimals: 3,
+    );
   }
 
   static pw.Widget _buildInfoColumn(String label, String value) {

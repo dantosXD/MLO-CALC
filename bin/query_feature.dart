@@ -1,12 +1,12 @@
-import 'dart:io';
-import 'package:sqflite_common/sql.dart';
+// ignore_for_file: avoid_print
+
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  final db = await openDatabase('features.db');
+  final db = await databaseFactory.openDatabase('features.db');
 
   final result = await db.query('features',
       where: 'id = ?',

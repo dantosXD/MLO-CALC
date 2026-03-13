@@ -1,13 +1,14 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:math';
-import 'package:sqflite_common/sql.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  final db = await openDatabase('features.db');
+  final db = await databaseFactory.openDatabase('features.db');
 
   // Get all passing features
   final result = await db.query('features',

@@ -1,12 +1,12 @@
+// ignore_for_file: avoid_print
+
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite_common/sqlite_api.dart';
-import 'dart:io';
 
 void main() async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  final db = await openDatabase('features.db');
+  final db = await databaseFactory.openDatabase('features.db');
 
   final List<Map> results = await db.query(
     'features',

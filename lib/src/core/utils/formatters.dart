@@ -12,6 +12,7 @@ class CurrencyFormatter {
   );
 
   static final Map<int, NumberFormat> _decimalFormatCache = <int, NumberFormat>{};
+  static final Map<int, NumberFormat> _percentFormatCache = <int, NumberFormat>{};
 
   /// Format as currency with symbol and decimals: $350,000.00
   static String formatCurrency(double? value, {bool showDecimals = true}) {
@@ -25,8 +26,16 @@ class CurrencyFormatter {
 
   /// Format as percentage: 5.25%
   static String formatPercent(double? value, {int decimals = 2}) {
-    if (value == null) return '0.00%';
-    return '${value.toStringAsFixed(decimals)}%';
+    if (value == null) return '0%';
+
+    final format = _percentFormatCache.putIfAbsent(decimals, () {
+      final f = NumberFormat.decimalPattern();
+      f.minimumFractionDigits = 0;
+      f.maximumFractionDigits = decimals;
+      return f;
+    });
+
+    return '${format.format(value)}%';
   }
 
   /// Format as number with commas: 350,000

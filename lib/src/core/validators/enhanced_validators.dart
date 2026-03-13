@@ -5,6 +5,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 
 /// Warning severity levels
 enum WarningSeverity { info, warning, critical }
@@ -135,7 +136,7 @@ class DtiValidator {
   static ValidationWarning? checkQmCompliance(double backEndDti) {
     if (backEndDti > 50) {
       return ValidationWarning(
-        message: 'DTI ${backEndDti.toStringAsFixed(1)}% exceeds most program limits',
+        message: 'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds most program limits',
         severity: WarningSeverity.critical,
         suggestion: 'Consider debt payoff, income increase, or lower loan amount',
       );
@@ -143,7 +144,7 @@ class DtiValidator {
     
     if (backEndDti > qmThreshold) {
       return ValidationWarning(
-        message: 'DTI ${backEndDti.toStringAsFixed(1)}% exceeds QM threshold (43%)',
+        message: 'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds QM threshold (43%)',
         severity: WarningSeverity.warning,
         suggestion: 'Non-QM loan may be required, or find compensating factors',
       );
@@ -151,7 +152,7 @@ class DtiValidator {
     
     if (backEndDti > 36) {
       return ValidationWarning(
-        message: 'DTI ${backEndDti.toStringAsFixed(1)}% above standard guidelines',
+        message: 'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} above standard guidelines',
         severity: WarningSeverity.info,
         suggestion: 'May require compensating factors (credit score, reserves, etc.)',
       );
@@ -172,7 +173,7 @@ class DtiValidator {
     // Check front-end
     if (frontEndLimit != null && frontEndDti > frontEndLimit) {
       warnings.add(ValidationWarning(
-        message: 'Housing DTI ${frontEndDti.toStringAsFixed(1)}% exceeds ${frontEndLimit.toStringAsFixed(0)}% limit',
+        message: 'Housing DTI ${CurrencyFormatter.formatPercent(frontEndDti, decimals: 1)} exceeds ${CurrencyFormatter.formatPercent(frontEndLimit, decimals: 2)} limit',
         severity: frontEndDti > frontEndLimit + 5 
             ? WarningSeverity.warning 
             : WarningSeverity.info,
@@ -182,7 +183,7 @@ class DtiValidator {
     // Check back-end
     if (backEndLimit != null && backEndDti > backEndLimit) {
       warnings.add(ValidationWarning(
-        message: 'Total DTI ${backEndDti.toStringAsFixed(1)}% exceeds ${backEndLimit.toStringAsFixed(0)}% limit',
+        message: 'Total DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds ${CurrencyFormatter.formatPercent(backEndLimit, decimals: 2)} limit',
         severity: backEndDti > backEndLimit + 5 
             ? WarningSeverity.warning 
             : WarningSeverity.info,
@@ -223,7 +224,7 @@ class LtvValidator {
     // PMI warning
     if (ltv > pmiThreshold && loanType != 'VA' && loanType != 'USDA') {
       warnings.add(ValidationWarning(
-        message: 'LTV ${ltv.toStringAsFixed(1)}% requires mortgage insurance',
+        message: 'LTV ${CurrencyFormatter.formatPercent(ltv, decimals: 1)} requires mortgage insurance',
         severity: WarningSeverity.info,
         suggestion: 'PMI required until LTV reaches 80%',
       ));
@@ -232,13 +233,13 @@ class LtvValidator {
     // High LTV warnings
     if (ltv > 95) {
       warnings.add(ValidationWarning(
-        message: 'Very high LTV (${ltv.toStringAsFixed(1)}%)',
+        message: 'Very high LTV (${CurrencyFormatter.formatPercent(ltv, decimals: 1)})',
         severity: WarningSeverity.warning,
         suggestion: 'Limited program options, higher rates likely',
       ));
     } else if (ltv > 90) {
       warnings.add(ValidationWarning(
-        message: 'High LTV (${ltv.toStringAsFixed(1)}%)',
+        message: 'High LTV (${CurrencyFormatter.formatPercent(ltv, decimals: 1)})',
         severity: WarningSeverity.info,
         suggestion: 'Higher PMI rates and stricter guidelines may apply',
       ));

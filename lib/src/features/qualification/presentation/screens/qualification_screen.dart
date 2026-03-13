@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
@@ -15,28 +16,62 @@ class QualificationScreen extends StatefulWidget {
 class _QualificationScreenState extends State<QualificationScreen> {
   final _incomeController = TextEditingController();
   final _debtController = TextEditingController();
-  bool _isInitialized = false;
+  final _incomeFocusNode = FocusNode();
+  final _debtFocusNode = FocusNode();
+  CalculatorProvider? _calculatorProvider;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isInitialized) {
-      final provider = Provider.of<CalculatorProvider>(context, listen: false);
-      if (provider.annualIncome != null) {
-        _incomeController.text = provider.annualIncome!.toStringAsFixed(0);
-      }
-      if (provider.monthlyDebt != null) {
-        _debtController.text = provider.monthlyDebt!.toStringAsFixed(2);
-      }
-      _isInitialized = true;
+    final nextProvider = context.read<CalculatorProvider>();
+    if (!identical(_calculatorProvider, nextProvider)) {
+      _calculatorProvider?.removeListener(_syncFormFieldsFromProvider);
+      _calculatorProvider = nextProvider;
+      _calculatorProvider?.addListener(_syncFormFieldsFromProvider);
     }
+    _syncFormFieldsFromProvider();
   }
 
   @override
   void dispose() {
+    _calculatorProvider?.removeListener(_syncFormFieldsFromProvider);
     _incomeController.dispose();
     _debtController.dispose();
+    _incomeFocusNode.dispose();
+    _debtFocusNode.dispose();
     super.dispose();
+  }
+
+  void _syncFormFieldsFromProvider() {
+    final provider = _calculatorProvider;
+    if (provider == null) return;
+
+    if (!_incomeFocusNode.hasFocus) {
+      _syncTextController(
+        _incomeController,
+        provider.annualIncome != null
+            ? provider.annualIncome!.toStringAsFixed(0)
+            : '',
+      );
+    }
+
+    if (!_debtFocusNode.hasFocus) {
+      _syncTextController(
+        _debtController,
+        provider.monthlyDebt != null
+            ? provider.monthlyDebt!.toStringAsFixed(2)
+            : '',
+      );
+    }
+  }
+
+  void _syncTextController(TextEditingController controller, String text) {
+    if (controller.text == text) return;
+    controller.value = controller.value.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+      composing: TextRange.empty,
+    );
   }
 
   @override
@@ -113,7 +148,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
                             return DropdownMenuItem<String>(
                               value: ratio.id,
                               child: Text(
-                                '${ratio.name} (${ratio.housingRatio.toInt()}/${ratio.debtRatio.toInt()})',
+                                ratio.displayName,
                               ),
                             );
                           }).toList(),
@@ -152,7 +187,10 @@ class _QualificationScreenState extends State<QualificationScreen> {
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               Text(
-                                '${selectedRatio.housingRatio}%',
+                                CurrencyFormatter.formatPercent(
+                                  selectedRatio.housingRatio,
+                                  decimals: 2,
+                                ),
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
@@ -167,7 +205,10 @@ class _QualificationScreenState extends State<QualificationScreen> {
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               Text(
-                                '${selectedRatio.debtRatio}%',
+                                CurrencyFormatter.formatPercent(
+                                  selectedRatio.debtRatio,
+                                  decimals: 2,
+                                ),
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
@@ -220,6 +261,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
                     const SizedBox(height: 16),
                     TextField(
                       controller: _incomeController,
+                      focusNode: _incomeFocusNode,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: 'Annual Income',
@@ -235,6 +277,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
                     const SizedBox(height: 16),
                     TextField(
                       controller: _debtController,
+                      focusNode: _debtFocusNode,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: 'Monthly Debt Payments',
@@ -269,7 +312,10 @@ class _QualificationScreenState extends State<QualificationScreen> {
                     _InfoRow(
                       label: 'Interest Rate',
                       value: calculatorProvider.interestRate != null
-                          ? '${calculatorProvider.interestRate!.toStringAsFixed(3)}%'
+                          ? CurrencyFormatter.formatPercent(
+                              calculatorProvider.interestRate,
+                              decimals: 3,
+                            )
                           : 'Not set',
                     ),
                     const SizedBox(height: 8),
@@ -799,7 +845,10 @@ class _RatioListTile extends StatelessWidget {
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.surfaceContainerHighest,
         child: Text(
-          '${ratio.housingRatio.toInt()}',
+          CurrencyFormatter.formatPercent(
+            ratio.housingRatio,
+            decimals: 2,
+          ).replaceAll('%', ''),
           style: TextStyle(
             color: isSelected
                 ? Theme.of(context).colorScheme.onPrimary
@@ -811,7 +860,7 @@ class _RatioListTile extends StatelessWidget {
       ),
       title: Text(ratio.name),
       subtitle: Text(
-        '${ratio.housingRatio.toInt()}% / ${ratio.debtRatio.toInt()}%${ratio.description != null ? ' • ${ratio.description}' : ''}',
+        '${CurrencyFormatter.formatPercent(ratio.housingRatio, decimals: 2)} / ${CurrencyFormatter.formatPercent(ratio.debtRatio, decimals: 2)}${ratio.description != null ? ' • ${ratio.description}' : ''}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),

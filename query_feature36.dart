@@ -1,4 +1,5 @@
-import 'dart:io';
+// ignore_for_file: avoid_print
+
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/utils/advanced_calculations.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/arm/presentation/screens/arm_wizard_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing_costs_sheet.dart';
 import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
@@ -66,7 +67,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     _InfoRow(
                       label: 'Interest Rate',
                       value: calculatorProvider.interestRate != null
-                          ? '${calculatorProvider.interestRate!.toStringAsFixed(3)}%'
+                          ? CurrencyFormatter.formatPercent(
+                              calculatorProvider.interestRate,
+                              decimals: 3,
+                            )
                           : 'Not set',
                     ),
                     const SizedBox(height: 8),
@@ -581,7 +585,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   if (aprResult != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'APR ${aprResult!.toStringAsFixed(3)}%',
+                      'APR ${CurrencyFormatter.formatPercent(aprResult, decimals: 3)}',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),

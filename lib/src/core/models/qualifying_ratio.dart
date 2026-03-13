@@ -1,3 +1,5 @@
+import 'package:loan_ranger/src/core/utils/formatters.dart';
+
 class QualifyingRatio {
   final String id;
   final String name;
@@ -55,7 +57,11 @@ class QualifyingRatio {
     );
   }
 
-  String get displayName => '$name (${housingRatio.toInt()}/${debtRatio.toInt()})';
+  String get displayName =>
+      '$name (${_formatRatioValue(housingRatio)}/${_formatRatioValue(debtRatio)})';
+
+  static String _formatRatioValue(double value) =>
+      CurrencyFormatter.formatPercent(value, decimals: 2).replaceAll('%', '');
 }
 
 /// Default built-in qualifying ratios

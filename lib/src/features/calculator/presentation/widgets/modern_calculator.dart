@@ -344,7 +344,10 @@ class _DisplayCard extends StatelessWidget {
                 _StatChip(
                   label: 'Rate',
                   value: calc.interestRate != null
-                      ? '${calc.interestRate!.toStringAsFixed(3)}%'
+                      ? CurrencyFormatter.formatPercent(
+                          calc.interestRate,
+                          decimals: 3,
+                        )
                       : '--',
                   isSet: calc.interestRate != null,
                   onTap: () => _setFromDisplay(
@@ -622,7 +625,10 @@ class _SecondaryFieldsRow extends StatelessWidget {
                 (v) => calc.setDownPayment(value: v),
               ),
               subtitle: downPaymentPct != null
-                  ? '${downPaymentPct.toStringAsFixed(1)}%'
+                  ? CurrencyFormatter.formatPercent(
+                      downPaymentPct,
+                      decimals: 2,
+                    )
                   : null,
             );
           },

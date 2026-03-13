@@ -148,7 +148,10 @@ class AnimatedDisplay extends StatelessWidget {
                   context,
                   'Rate',
                   calculatorProvider.interestRate != null
-                    ? '${calculatorProvider.interestRate!.toStringAsFixed(3)}%'
+                    ? CurrencyFormatter.formatPercent(
+                        calculatorProvider.interestRate,
+                        decimals: 3,
+                      )
                     : '--',
                   calculatorProvider.interestRate != null,
                 ),

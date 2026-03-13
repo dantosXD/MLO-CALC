@@ -1,4 +1,4 @@
-import 'dart:io';
+// ignore_for_file: avoid_print
 
 void main() async {
   // Simple script to print feature #32 info

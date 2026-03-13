@@ -125,6 +125,9 @@ class _CalculatorButtonState extends State<CalculatorButton>
     widget.onLongPress?.call();
   }
 
+  bool get _usesImmediateTap =>
+      widget.onLongPress == null && widget.onDoubleTap == null;
+
   @override
   Widget build(BuildContext context) {
     Widget buttonChild = widget.icon != null
@@ -221,16 +224,20 @@ class _CalculatorButtonState extends State<CalculatorButton>
                 child: button,
               ),
             ),
-            Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (_) => _handleTap(),
-              child: GestureDetector(
+            if (_usesImmediateTap)
+              Listener(
                 behavior: HitTestBehavior.translucent,
+                onPointerDown: (_) => _handleTap(),
+                child: const SizedBox.expand(),
+              )
+            else
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _handleTap,
                 onLongPress: widget.onLongPress != null ? _handleLongPress : null,
                 onDoubleTap: widget.onDoubleTap,
-                child: Container(color: Colors.transparent),
+                child: const SizedBox.expand(),
               ),
-            ),
           ],
         ),
       ),

@@ -3,6 +3,8 @@ library;
 
 import 'dart:convert';
 
+import 'package:loan_ranger/src/core/utils/formatters.dart';
+
 /// Represents a single calculation in history
 class CalculationEntry {
   final String id;
@@ -163,19 +165,32 @@ class CalculationEntry {
         final rate = inputs['interestRate'];
         final term = inputs['termYears'];
         final payment = results['payment'];
-        buffer.write('\$$loan at $rate% for $term years → \$$payment/mo');
+        buffer.write(
+          '${CurrencyFormatter.formatCurrency((loan as num?)?.toDouble(), showDecimals: false)} '
+          'at ${CurrencyFormatter.formatPercent((rate as num?)?.toDouble(), decimals: 3)} '
+          'for ${CurrencyFormatter.formatYears((term as num?)?.toDouble())} '
+          '→ ${CurrencyFormatter.formatCurrency((payment as num?)?.toDouble())}/mo',
+        );
         break;
       case 'loan_amount':
         final payment = inputs['payment'];
         final rate = inputs['interestRate'];
         final term = inputs['termYears'];
         final loan = results['loanAmount'];
-        buffer.write('\$$payment/mo at $rate% for $term years → \$$loan loan');
+        buffer.write(
+          '${CurrencyFormatter.formatCurrency((payment as num?)?.toDouble())}/mo '
+          'at ${CurrencyFormatter.formatPercent((rate as num?)?.toDouble(), decimals: 3)} '
+          'for ${CurrencyFormatter.formatYears((term as num?)?.toDouble())} '
+          '→ ${CurrencyFormatter.formatCurrency((loan as num?)?.toDouble(), showDecimals: false)} loan',
+        );
         break;
       case 'qualification':
         final income = inputs['annualIncome'];
         final maxLoan = results['maxLoanAmount'];
-        buffer.write('Income: \$$income → Max loan: \$$maxLoan');
+        buffer.write(
+          'Income: ${CurrencyFormatter.formatCurrency((income as num?)?.toDouble(), showDecimals: false)} '
+          '→ Max loan: ${CurrencyFormatter.formatCurrency((maxLoan as num?)?.toDouble(), showDecimals: false)}',
+        );
         break;
       default:
         buffer.write('Calculation');

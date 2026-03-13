@@ -224,5 +224,63 @@ void main() {
             'User input was LOST!\n',
       );
     });
+
+    testWidgets('Qualification inputs sync with provider updates', (
+      tester,
+    ) async {
+      final calculatorProvider = CalculatorProvider();
+      addTearDown(calculatorProvider.dispose);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<CalculatorProvider>.value(
+              value: calculatorProvider,
+            ),
+            ChangeNotifierProvider<QualifyingRatiosProvider>.value(
+              value: provider,
+            ),
+          ],
+          child: const MaterialApp(
+            home: QualificationScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      calculatorProvider.setAnnualIncome(value: 98500);
+      calculatorProvider.setMonthlyDebt(value: 1425.75);
+      await tester.pump();
+
+      final incomeField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Annual Income'),
+      );
+      final debtField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Monthly Debt Payments'),
+      );
+
+      expect(incomeField.controller?.text, '98500');
+      expect(debtField.controller?.text, '1425.75');
+
+      await tester.pump(const Duration(milliseconds: 800));
+    });
+
+    testWidgets('Qualification UI shows decimal ratio precision', (tester) async {
+      await provider.addRatio(
+        name: 'Decimal Precision',
+        housingRatio: 31.5,
+        debtRatio: 43.25,
+      );
+
+      await provider.selectRatio(provider.customRatios.first);
+
+      await tester.pumpWidget(buildTestApp());
+      await tester.pumpAndSettle();
+
+      expect(find.text('31.5%'), findsWidgets);
+      expect(find.text('43.25%'), findsWidgets);
+      expect(find.text('Decimal Precision (31.5/43.25)'), findsOneWidget);
+    });
   });
 }

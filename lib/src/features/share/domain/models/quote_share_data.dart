@@ -90,7 +90,9 @@ class QuoteShareData {
         ? CurrencyFormatter.formatCurrency(loanAmount, showDecimals: false)
         : '';
     tokens['interest_rate'] =
-        interestRate != null ? '${interestRate!.toStringAsFixed(3)}%' : '';
+        interestRate != null
+            ? CurrencyFormatter.formatPercent(interestRate, decimals: 3)
+            : '';
     tokens['term_years'] =
         termYears != null ? '${termYears!.toStringAsFixed(1)} years' : '';
 

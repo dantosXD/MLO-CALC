@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -86,6 +87,17 @@ void main() {
           reason: 'Should preserve decimal housing DTI');
       expect(ratio.debtRatio, equals(41.5),
           reason: 'Should preserve decimal total DTI');
+    });
+
+    test('Qualifying ratio displayName preserves meaningful decimal precision', () {
+      const ratio = QualifyingRatio(
+        id: 'decimal',
+        name: 'Decimal Ratio',
+        housingRatio: 31.5,
+        debtRatio: 43.25,
+      );
+
+      expect(ratio.displayName, 'Decimal Ratio (31.5/43.25)');
     });
 
     test('Add custom ratio without description (optional field)', () async {
