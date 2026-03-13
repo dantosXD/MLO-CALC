@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +10,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   group('Feature #15: Widget Tests - Custom DTI Ratio UI', () {
     late QualifyingRatiosProvider provider;
+
+    setUpAll(() async {
+      await configureDependencies();
+    });
+
+    Widget buildTestApp() {
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider<CalculatorProvider>(
+            create: (_) => CalculatorProvider(),
+          ),
+          ChangeNotifierProvider<QualifyingRatiosProvider>.value(
+            value: provider,
+          ),
+        ],
+        child: const MaterialApp(
+          home: QualificationScreen(),
+        ),
+      );
+    }
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
@@ -20,14 +42,7 @@ void main() {
 
     testWidgets('Add custom ratio with 31/43 DTI values', (tester) async {
       // Arrange - Build the screen
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
-            value: provider,
-            child: const QualificationScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(buildTestApp());
 
       await tester.pumpAndSettle();
 
@@ -78,14 +93,7 @@ void main() {
 
     testWidgets('Add custom ratio with 25/38 DTI values', (tester) async {
       // Arrange
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
-            value: provider,
-            child: const QualificationScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(buildTestApp());
 
       await tester.pumpAndSettle();
 
@@ -124,28 +132,16 @@ void main() {
         housingRatio: 28.0,
         debtRatio: 36.0,
       );
+      await provider.selectRatio(provider.customRatios.first);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
-            value: provider,
-            child: const QualificationScreen(),
-          ),
-        ),
+        buildTestApp(),
       );
 
       await tester.pumpAndSettle();
 
-      // Act - Open the ratios list
-      await tester.tap(find.text('View All Ratios'));
-      await tester.pumpAndSettle();
-
-      // Find and tap edit button for our custom ratio
-      final editButton = find.ancestor(
-        of: find.text('Original Ratio'),
-        matching: find.byType(IconButton).at(1), // Second IconButton is edit
-      );
-      await tester.tap(editButton);
+      // Act - Edit currently selected custom ratio
+      await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
       // Clear and enter new values
@@ -176,12 +172,7 @@ void main() {
       // Bug: Users enter 31/43 but it saves as 28/36
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<QualifyingRatiosProvider>.value(
-            value: provider,
-            child: const QualificationScreen(),
-          ),
-        ),
+        buildTestApp(),
       );
 
       await tester.pumpAndSettle();

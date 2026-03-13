@@ -62,18 +62,18 @@ class _NlpDialogState extends State<NlpDialog> {
 
     final available = await widget.speechToText.initialize(
       onStatus: (status) {
+        if (!mounted) return;
         setState(() => _status = status);
         if (status == 'done' || status == 'notListening') {
-          if (mounted) {
-             setState(() {
-                 _isListening = false;
-                 _soundLevel = 0.0;
-             });
-          }
+          setState(() {
+            _isListening = false;
+            _soundLevel = 0.0;
+          });
         }
         _notifyStateChange();
       },
       onError: (error) {
+        if (!mounted) return;
         setState(() => _status = 'Error: ${error.errorMsg}');
         _notifyStateChange();
       },
@@ -192,9 +192,7 @@ class _NlpDialogState extends State<NlpDialog> {
         return;
       }
       
-      if (!widget.nlpService.isInitialized) {
-        await widget.nlpService.initialize(apiKey);
-      }
+      await widget.nlpService.initialize(apiKey);
       final request = await widget.nlpService.processQuery(query);
       
       // Cache the response
@@ -226,7 +224,7 @@ class _NlpDialogState extends State<NlpDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final suggestions = NLPCalculatorService().getSuggestions();
+    final suggestions = widget.nlpService.getSuggestions();
     final settings = context.watch<NlpSettingsProvider>();
 
     return AlertDialog(

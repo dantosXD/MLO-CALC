@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loan_ranger/src/core/utils/constants.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_display_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
@@ -20,6 +21,9 @@ class CalculatorScreen extends StatefulWidget {
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
   late FocusNode _focusNode;
+  LoanQuoteController? _loanQuoteController;
+  CalculatorDisplayNotifier? _displayNotifier;
+  double? _lastPresentedValue;
 
   @override
   void initState() {
@@ -28,14 +32,57 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextQuoteController = context
+        .read<CalculatorProvider>()
+        .loanQuoteController;
+    final nextDisplayNotifier = context.read<CalculatorDisplayNotifier>();
+
+    if (!identical(_loanQuoteController, nextQuoteController)) {
+      _loanQuoteController?.removeListener(_syncPresentedValue);
+      _loanQuoteController = nextQuoteController;
+      _loanQuoteController?.addListener(_syncPresentedValue);
+    }
+    _displayNotifier = nextDisplayNotifier;
+    _syncPresentedValue(force: true);
+  }
+
+  @override
   void dispose() {
+    _loanQuoteController?.removeListener(_syncPresentedValue);
     _focusNode.dispose();
     super.dispose();
   }
 
-  void _handleKeyPress(KeyEvent event, CalculatorDisplayNotifier displayProvider, CalculatorProvider calculatorProvider) {
+  void _syncPresentedValue({bool force = false}) {
+    final quoteController = _loanQuoteController;
+    final displayNotifier = _displayNotifier;
+    if (quoteController == null || displayNotifier == null) return;
+
+    final presentedValue = quoteController.presentedValue;
+    if (presentedValue == null) {
+      _lastPresentedValue = null;
+      return;
+    }
+    if (!force && presentedValue == _lastPresentedValue) {
+      return;
+    }
+
+    _lastPresentedValue = presentedValue;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      displayNotifier.setValue(presentedValue);
+    });
+  }
+
+  void _handleKeyPress(
+    KeyEvent event,
+    CalculatorDisplayNotifier displayProvider,
+    CalculatorProvider calculatorProvider,
+  ) {
     if (event is! KeyDownEvent) return;
-    
+
     final key = event.logicalKey;
 
     // Numbers 0-9 (main keyboard)
@@ -139,7 +186,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     key: const ValueKey('display'),
                     displayValue: display.displayValue,
                     subtitle: display.inputError ?? calc.inputError,
-                    isError: display.displayValue == 'Error' ||
+                    isError:
+                        display.displayValue == 'Error' ||
                         display.inputError != null ||
                         calc.inputError != null,
                   );
@@ -163,7 +211,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         CalculatorButton(
                           text: 'Price',
                           onPressed: () {
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setPrice(value: value);
@@ -175,13 +225,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         CalculatorButton(
                           text: 'L/A',
                           onPressed: () {
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setLoanAmount(value: value);
                             }
                           },
-                          onDoubleTap: () => _clearField(context, 'Loan Amount', calculatorProvider.clearLoanAmount),
+                          onDoubleTap: () => _clearField(
+                            context,
+                            'Loan Amount',
+                            calculatorProvider.clearLoanAmount,
+                          ),
                           backgroundColor: const Color(0xFF3A5062),
                           foregroundColor: Colors.white,
                         ),
@@ -189,7 +245,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           text: 'Term',
                           onPressed: () {
                             // If there's a value in the display, set it as the term
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setTermYears(value: value);
@@ -198,7 +256,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                               calculatorProvider.calculateTerm();
                             }
                           },
-                          onDoubleTap: () => _clearField(context, 'Term', calculatorProvider.clearTermYears),
+                          onDoubleTap: () => _clearField(
+                            context,
+                            'Term',
+                            calculatorProvider.clearTermYears,
+                          ),
                           backgroundColor: const Color(0xFF3A5062),
                           foregroundColor: Colors.white,
                         ),
@@ -208,16 +270,29 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             return CalculatorButton(
                               text: isInterestOnly ? 'I/O' : 'Pmt',
                               onPressed: () {
-                                final value = double.tryParse(displayProvider.displayValue);
+                                final value = double.tryParse(
+                                  displayProvider.displayValue,
+                                );
                                 // Skip if value is same as current payment (avoid reset)
-                                if (value != null && value != 0 && value != calculatorProvider.payment) {
+                                if (value != null &&
+                                    value != 0 &&
+                                    value != calculatorProvider.payment) {
                                   displayProvider.clear();
                                   calculatorProvider.setPayment(value: value);
                                 }
                               },
-                              onLongPress: () => _showPaymentOptions(context, calculatorProvider),
-                              onDoubleTap: () => _clearField(context, 'Payment', calculatorProvider.clearPayment),
-                              backgroundColor: isInterestOnly ? const Color(0xFF7B68EE) : const Color(0xFF3A5062),
+                              onLongPress: () => _showPaymentOptions(
+                                context,
+                                calculatorProvider,
+                              ),
+                              onDoubleTap: () => _clearField(
+                                context,
+                                'Payment',
+                                calculatorProvider.clearPayment,
+                              ),
+                              backgroundColor: isInterestOnly
+                                  ? const Color(0xFF7B68EE)
+                                  : const Color(0xFF3A5062),
                               foregroundColor: Colors.white,
                             );
                           },
@@ -233,7 +308,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         CalculatorButton(
                           text: 'DnPmt',
                           onPressed: () {
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setDownPayment(value: value);
@@ -246,7 +323,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           text: 'Int',
                           onPressed: () {
                             // If there's a value in the display, set it as the interest rate
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setInterestRate(value: value);
@@ -255,14 +334,20 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                               calculatorProvider.calculateInterestRate();
                             }
                           },
-                          onDoubleTap: () => _clearField(context, 'Rate', calculatorProvider.clearInterestRate),
+                          onDoubleTap: () => _clearField(
+                            context,
+                            'Rate',
+                            calculatorProvider.clearInterestRate,
+                          ),
                           backgroundColor: const Color(0xFF3A5062),
                           foregroundColor: Colors.white,
                         ),
                         CalculatorButton(
                           text: 'Tax',
                           onPressed: () {
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setPropertyTax(value: value);
@@ -274,7 +359,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         CalculatorButton(
                           text: 'Ins',
                           onPressed: () {
-                            final value = double.tryParse(displayProvider.displayValue);
+                            final value = double.tryParse(
+                              displayProvider.displayValue,
+                            );
                             if (value != null && value != 0) {
                               displayProvider.clear();
                               calculatorProvider.setHomeInsurance(value: value);
@@ -465,13 +552,18 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         ? KeyboardListener(
             focusNode: _focusNode..requestFocus(),
             autofocus: true,
-            onKeyEvent: (event) => _handleKeyPress(event, displayProvider, calculatorProvider),
+            onKeyEvent: (event) =>
+                _handleKeyPress(event, displayProvider, calculatorProvider),
             child: calculatorUI,
           )
         : calculatorUI;
   }
 
-  void _clearField(BuildContext context, String label, VoidCallback clearAction) {
+  void _clearField(
+    BuildContext context,
+    String label,
+    VoidCallback clearAction,
+  ) {
     clearAction();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -498,18 +590,18 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           children: [
             Text(
               'Payment Options',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('Interest Only Payment'),
               subtitle: Text(
-                provider.isInterestOnly 
-                  ? 'Calculating interest-only payment'
-                  : 'Standard P&I payment',
+                provider.isInterestOnly
+                    ? 'Calculating interest-only payment'
+                    : 'Standard P&I payment',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               value: provider.isInterestOnly,
@@ -546,7 +638,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final monthlyIns = (homeInsurance ?? 0) / 12;
     final monthlyPmi = (mortgageInsurance ?? 0) / 12;
     final monthlyHoa = monthlyExpenses ?? 0;
-    final totalPiti = (payment ?? 0) + monthlyTax + monthlyIns + monthlyPmi + monthlyHoa;
+    final totalPiti =
+        (payment ?? 0) + monthlyTax + monthlyIns + monthlyPmi + monthlyHoa;
 
     showModalBottomSheet(
       context: context,
@@ -562,19 +655,39 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           children: [
             Text(
               'PITI Breakdown',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            _buildPitiRow(context, 'Principal & Interest', payment, isTotal: false),
+            _buildPitiRow(
+              context,
+              'Principal & Interest',
+              payment,
+              isTotal: false,
+            ),
             _buildPitiRow(context, 'Property Tax', monthlyTax, isTotal: false),
-            _buildPitiRow(context, 'Home Insurance', monthlyIns, isTotal: false),
+            _buildPitiRow(
+              context,
+              'Home Insurance',
+              monthlyIns,
+              isTotal: false,
+            ),
             if (monthlyPmi > 0)
-              _buildPitiRow(context, 'Mortgage Insurance', monthlyPmi, isTotal: false),
+              _buildPitiRow(
+                context,
+                'Mortgage Insurance',
+                monthlyPmi,
+                isTotal: false,
+              ),
             if (monthlyHoa > 0)
-              _buildPitiRow(context, 'HOA/Expenses', monthlyHoa, isTotal: false),
+              _buildPitiRow(
+                context,
+                'HOA/Expenses',
+                monthlyHoa,
+                isTotal: false,
+              ),
             const Divider(height: 24),
             _buildPitiRow(context, 'Total Monthly', totalPiti, isTotal: true),
             const SizedBox(height: 8),
@@ -584,7 +697,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
-  Widget _buildPitiRow(BuildContext context, String label, double? value, {required bool isTotal}) {
+  Widget _buildPitiRow(
+    BuildContext context,
+    String label,
+    double? value, {
+    required bool isTotal,
+  }) {
     final formatted = value != null && value > 0
         ? '\$${value.toStringAsFixed(2)}'
         : '--';
@@ -621,9 +739,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 /// Uses Selector to only rebuild when memory changes
 class _MemoryButton extends StatelessWidget {
   final CalculatorDisplayNotifier provider;
-  
+
   const _MemoryButton({required this.provider});
-  
+
   @override
   Widget build(BuildContext context) {
     // Use Selector to only rebuild when memory changes
@@ -631,12 +749,14 @@ class _MemoryButton extends StatelessWidget {
       selector: (_, p) => (p.hasMemory, p.memory),
       builder: (context, memoryState, _) {
         final (hasMemory, memory) = memoryState;
-        
+
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.all(2.0),
             child: Material(
-              color: hasMemory ? const Color(0xFF2E7D32) : const Color(0xFF3A5062),
+              color: hasMemory
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFF3A5062),
               borderRadius: BorderRadius.circular(8),
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
@@ -648,7 +768,8 @@ class _MemoryButton extends StatelessWidget {
                     _showMemoryMenu(context, provider, hasMemory, memory);
                   }
                 },
-                onLongPress: () => _showMemoryMenu(context, provider, hasMemory, memory),
+                onLongPress: () =>
+                    _showMemoryMenu(context, provider, hasMemory, memory),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -680,7 +801,7 @@ class _MemoryButton extends StatelessWidget {
       },
     );
   }
-  
+
   String _formatMemory(double? value) {
     if (value == null) return '';
     if (value.abs() >= 1000000) {
@@ -690,12 +811,21 @@ class _MemoryButton extends StatelessWidget {
     }
     return value.toStringAsFixed(0);
   }
-  
-  void _showMemoryMenu(BuildContext context, CalculatorDisplayNotifier provider, bool hasMemory, double? memory) {
+
+  void _showMemoryMenu(
+    BuildContext context,
+    CalculatorDisplayNotifier provider,
+    bool hasMemory,
+    double? memory,
+  ) {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
-    final Offset position = button.localToGlobal(Offset.zero, ancestor: overlay);
-    
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final Offset position = button.localToGlobal(
+      Offset.zero,
+      ancestor: overlay,
+    );
+
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -713,7 +843,10 @@ class _MemoryButton extends StatelessWidget {
               const SizedBox(width: 12),
               const Text('M+'),
               const Spacer(),
-              Text('Add to memory', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              Text(
+                'Add to memory',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
             ],
           ),
         ),
@@ -725,7 +858,10 @@ class _MemoryButton extends StatelessWidget {
               const SizedBox(width: 12),
               const Text('M−'),
               const Spacer(),
-              Text('Subtract from memory', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              Text(
+                'Subtract from memory',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
             ],
           ),
         ),
@@ -739,8 +875,10 @@ class _MemoryButton extends StatelessWidget {
                 const SizedBox(width: 12),
                 const Text('MR'),
                 const Spacer(),
-                Text('Recall: ${_formatMemory(memory)}', 
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(
+                  'Recall: ${_formatMemory(memory)}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
               ],
             ),
           ),
@@ -752,7 +890,10 @@ class _MemoryButton extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text('MC', style: TextStyle(color: Colors.red[400])),
                 const Spacer(),
-                Text('Clear memory', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(
+                  'Clear memory',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
               ],
             ),
           ),
@@ -781,12 +922,9 @@ class _MemoryButton extends StatelessWidget {
 /// Zero button with long-press popup for 00, 000
 class _ZeroButton extends StatelessWidget {
   final CalculatorDisplayNotifier provider;
-  
-  const _ZeroButton({
-    super.key,
-    required this.provider,
-  });
-  
+
+  const _ZeroButton({super.key, required this.provider});
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -814,12 +952,16 @@ class _ZeroButton extends StatelessWidget {
       ),
     );
   }
-  
+
   void _showZeroMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
-    final Offset position = button.localToGlobal(Offset.zero, ancestor: overlay);
-    
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final Offset position = button.localToGlobal(
+      Offset.zero,
+      ancestor: overlay,
+    );
+
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -833,9 +975,15 @@ class _ZeroButton extends StatelessWidget {
           value: '00',
           child: Row(
             children: [
-              const Text('00', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                '00',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(width: 12),
-              Text('Add two zeros', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              Text(
+                'Add two zeros',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
             ],
           ),
         ),
@@ -843,9 +991,15 @@ class _ZeroButton extends StatelessWidget {
           value: '000',
           child: Row(
             children: [
-              const Text('000', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                '000',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(width: 12),
-              Text('Add three zeros', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              Text(
+                'Add three zeros',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
             ],
           ),
         ),

@@ -1,26 +1,26 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/calculator_state.dart';
 
 class CalculatorPersistenceService {
-  static const List<String> _doubleKeys = [
-    'loanAmount',
-    'interestRate',
-    'termYears',
-    'payment',
-    'price',
-    'downPayment',
-    'propertyTax',
-    'homeInsurance',
-    'mortgageInsurance',
-    'monthlyExpenses',
-    'annualIncome',
-    'monthlyDebt',
-  ];
+  static const String _scenarioSessionKey = 'scenarioSession';
 
   Future<CalculatorStateSnapshot> load() async {
     final prefs = await SharedPreferences.getInstance();
-    return CalculatorStateSnapshot(
+    final scenarioSession = prefs.getString(_scenarioSessionKey);
+    if (scenarioSession != null && scenarioSession.isNotEmpty) {
+      try {
+        return CalculatorStateSnapshot.fromJsonString(scenarioSession);
+      } on FormatException {
+        // Fall back to the legacy flat snapshot if the new session payload is corrupt.
+      } on TypeError {
+        // Fall back to the legacy flat snapshot if the new session payload shape changed.
+      }
+    }
+
+    return CalculatorStateSnapshot.fromLegacy(
       loanAmount: prefs.getDouble('loanAmount'),
       interestRate: prefs.getDouble('interestRate'),
       termYears: prefs.getDouble('termYears'),
@@ -39,20 +39,6 @@ class CalculatorPersistenceService {
 
   Future<void> save(CalculatorStateSnapshot snapshot) async {
     final prefs = await SharedPreferences.getInstance();
-    final map = snapshot.toDoubleMap();
-
-    for (final key in _doubleKeys) {
-      if (map.containsKey(key)) {
-        await prefs.setDouble(key, map[key]!);
-      } else {
-        await prefs.remove(key);
-      }
-    }
-
-    if (snapshot.historyJson != null) {
-      await prefs.setString('calculationHistory', snapshot.historyJson!);
-    } else {
-      await prefs.remove('calculationHistory');
-    }
+    await prefs.setString(_scenarioSessionKey, jsonEncode(snapshot.toJson()));
   }
 }

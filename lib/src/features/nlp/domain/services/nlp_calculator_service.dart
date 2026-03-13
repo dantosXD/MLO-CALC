@@ -5,13 +5,27 @@ import 'dart:developer' as developer;
 class NLPCalculatorService {
   GenerativeModel? _model;
   bool _isInitialized = false;
+  String? _activeApiKey;
 
   /// Initialize the service with Gemini API key
   /// Users should set their API key via environment variable or settings
   Future<void> initialize(String apiKey) async {
+    final normalizedKey = apiKey.trim();
+    if (normalizedKey.isEmpty) {
+      _isInitialized = false;
+      _model = null;
+      _activeApiKey = null;
+      throw Exception('API key is empty');
+    }
+
+    if (_isInitialized && _activeApiKey == normalizedKey) {
+      return;
+    }
+
     try {
-      _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
+      _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: normalizedKey);
       _isInitialized = true;
+      _activeApiKey = normalizedKey;
     } catch (e) {
       developer.log(
         'Error initializing NLP service',
@@ -19,6 +33,7 @@ class NLPCalculatorService {
         error: e,
       );
       _isInitialized = false;
+      _activeApiKey = null;
     }
   }
 

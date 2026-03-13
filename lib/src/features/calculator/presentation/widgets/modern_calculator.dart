@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_display_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/calculator_button.dart';
@@ -17,6 +18,9 @@ class ModernCalculator extends StatefulWidget {
 
 class _ModernCalculatorState extends State<ModernCalculator> {
   late FocusNode _focusNode;
+  LoanQuoteController? _loanQuoteController;
+  CalculatorDisplayNotifier? _displayNotifier;
+  double? _lastPresentedValue;
 
   @override
   void initState() {
@@ -25,61 +29,121 @@ class _ModernCalculatorState extends State<ModernCalculator> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextQuoteController = context
+        .read<CalculatorProvider>()
+        .loanQuoteController;
+    final nextDisplayNotifier = context.read<CalculatorDisplayNotifier>();
+
+    if (!identical(_loanQuoteController, nextQuoteController)) {
+      _loanQuoteController?.removeListener(_syncPresentedValue);
+      _loanQuoteController = nextQuoteController;
+      _loanQuoteController?.addListener(_syncPresentedValue);
+    }
+    _displayNotifier = nextDisplayNotifier;
+    _syncPresentedValue(force: true);
+  }
+
+  @override
   void dispose() {
+    _loanQuoteController?.removeListener(_syncPresentedValue);
     _focusNode.dispose();
     super.dispose();
   }
 
-  void _handleKeyPress(KeyEvent event, CalculatorDisplayNotifier displayProvider, CalculatorProvider calculatorProvider) {
+  void _syncPresentedValue({bool force = false}) {
+    final quoteController = _loanQuoteController;
+    final displayNotifier = _displayNotifier;
+    if (quoteController == null || displayNotifier == null) return;
+
+    final presentedValue = quoteController.presentedValue;
+    if (presentedValue == null) {
+      _lastPresentedValue = null;
+      return;
+    }
+    if (!force && presentedValue == _lastPresentedValue) {
+      return;
+    }
+
+    _lastPresentedValue = presentedValue;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      displayNotifier.setValue(presentedValue);
+    });
+  }
+
+  void _handleKeyPress(
+    KeyEvent event,
+    CalculatorDisplayNotifier displayProvider,
+    CalculatorProvider calculatorProvider,
+  ) {
     if (event is! KeyDownEvent) return;
-    
+
     final key = event.logicalKey;
 
     // Numbers 0-9
     if (key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0) {
       displayProvider.inputDigit('0');
-    } else if (key == LogicalKeyboardKey.digit1 || key == LogicalKeyboardKey.numpad1) {
+    } else if (key == LogicalKeyboardKey.digit1 ||
+        key == LogicalKeyboardKey.numpad1) {
       displayProvider.inputDigit('1');
-    } else if (key == LogicalKeyboardKey.digit2 || key == LogicalKeyboardKey.numpad2) {
+    } else if (key == LogicalKeyboardKey.digit2 ||
+        key == LogicalKeyboardKey.numpad2) {
       displayProvider.inputDigit('2');
-    } else if (key == LogicalKeyboardKey.digit3 || key == LogicalKeyboardKey.numpad3) {
+    } else if (key == LogicalKeyboardKey.digit3 ||
+        key == LogicalKeyboardKey.numpad3) {
       displayProvider.inputDigit('3');
-    } else if (key == LogicalKeyboardKey.digit4 || key == LogicalKeyboardKey.numpad4) {
+    } else if (key == LogicalKeyboardKey.digit4 ||
+        key == LogicalKeyboardKey.numpad4) {
       displayProvider.inputDigit('4');
-    } else if (key == LogicalKeyboardKey.digit5 || key == LogicalKeyboardKey.numpad5) {
+    } else if (key == LogicalKeyboardKey.digit5 ||
+        key == LogicalKeyboardKey.numpad5) {
       displayProvider.inputDigit('5');
-    } else if (key == LogicalKeyboardKey.digit6 || key == LogicalKeyboardKey.numpad6) {
+    } else if (key == LogicalKeyboardKey.digit6 ||
+        key == LogicalKeyboardKey.numpad6) {
       displayProvider.inputDigit('6');
-    } else if (key == LogicalKeyboardKey.digit7 || key == LogicalKeyboardKey.numpad7) {
+    } else if (key == LogicalKeyboardKey.digit7 ||
+        key == LogicalKeyboardKey.numpad7) {
       displayProvider.inputDigit('7');
-    } else if (key == LogicalKeyboardKey.digit8 || key == LogicalKeyboardKey.numpad8) {
+    } else if (key == LogicalKeyboardKey.digit8 ||
+        key == LogicalKeyboardKey.numpad8) {
       displayProvider.inputDigit('8');
-    } else if (key == LogicalKeyboardKey.digit9 || key == LogicalKeyboardKey.numpad9) {
+    } else if (key == LogicalKeyboardKey.digit9 ||
+        key == LogicalKeyboardKey.numpad9) {
       displayProvider.inputDigit('9');
     }
     // Decimal point
-    else if (key == LogicalKeyboardKey.period || key == LogicalKeyboardKey.numpadDecimal) {
+    else if (key == LogicalKeyboardKey.period ||
+        key == LogicalKeyboardKey.numpadDecimal) {
       displayProvider.inputDecimal();
     }
     // Operations
-    else if (key == LogicalKeyboardKey.add || key == LogicalKeyboardKey.numpadAdd) {
+    else if (key == LogicalKeyboardKey.add ||
+        key == LogicalKeyboardKey.numpadAdd) {
       displayProvider.performOperation('+');
-    } else if (key == LogicalKeyboardKey.minus || key == LogicalKeyboardKey.numpadSubtract) {
+    } else if (key == LogicalKeyboardKey.minus ||
+        key == LogicalKeyboardKey.numpadSubtract) {
       displayProvider.performOperation('-');
-    } else if (key == LogicalKeyboardKey.asterisk || key == LogicalKeyboardKey.numpadMultiply) {
+    } else if (key == LogicalKeyboardKey.asterisk ||
+        key == LogicalKeyboardKey.numpadMultiply) {
       displayProvider.performOperation('x');
-    } else if (key == LogicalKeyboardKey.slash || key == LogicalKeyboardKey.numpadDivide) {
+    } else if (key == LogicalKeyboardKey.slash ||
+        key == LogicalKeyboardKey.numpadDivide) {
       displayProvider.performOperation('/');
     }
     // Equals
-    else if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter || key == LogicalKeyboardKey.equal) {
+    else if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.equal) {
       displayProvider.calculateResult();
     }
     // Clear
     else if (key == LogicalKeyboardKey.escape) {
       displayProvider.clearAll();
       calculatorProvider.clearAll();
-    } else if (key == LogicalKeyboardKey.backspace || key == LogicalKeyboardKey.delete) {
+    } else if (key == LogicalKeyboardKey.backspace ||
+        key == LogicalKeyboardKey.delete) {
       displayProvider.backspace();
     }
     // Percent
@@ -96,7 +160,8 @@ class _ModernCalculatorState extends State<ModernCalculator> {
     final displayProvider = context.read<CalculatorDisplayNotifier>();
 
     // Only use keyboard listener on desktop platforms
-    final bool isDesktop = kIsWeb ||
+    final bool isDesktop =
+        kIsWeb ||
         defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux ||
         defaultTargetPlatform == TargetPlatform.macOS;
@@ -143,7 +208,8 @@ class _ModernCalculatorState extends State<ModernCalculator> {
         ? KeyboardListener(
             focusNode: _focusNode..requestFocus(),
             autofocus: true,
-            onKeyEvent: (event) => _handleKeyPress(event, displayProvider, calculatorProvider),
+            onKeyEvent: (event) =>
+                _handleKeyPress(event, displayProvider, calculatorProvider),
             child: calculatorUI,
           )
         : calculatorUI;
@@ -159,7 +225,8 @@ class _DisplayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isError = display.displayValue == 'Error' ||
+    final isError =
+        display.displayValue == 'Error' ||
         display.inputError != null ||
         calc.inputError != null;
 
@@ -177,128 +244,169 @@ class _DisplayCard extends StatelessWidget {
         }
       },
       child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1A365D), const Color(0xFF0891B2)]
-              : [AppTheme.primaryNavy, AppTheme.primaryTeal],
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [const Color(0xFF1A365D), const Color(0xFF0891B2)]
+                : [AppTheme.primaryNavy, AppTheme.primaryTeal],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryTeal.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryTeal.withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  _formatDisplayValue(display.displayValue),
-                  style: const TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isError
-                      ? Colors.red.withValues(alpha: 0.3)
-                      : calc.isInterestOnly
-                          ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
-                          : AppTheme.accentGold.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  display.inputError ?? calc.inputError ?? _getDisplayLabel(calc),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: isError ? Colors.red.shade100 : Colors.white,
-                    letterSpacing: 0.5,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    _formatDisplayValue(display.displayValue),
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _StatChip(
-                label: 'L/A',
-                value: CurrencyFormatter.formatCompactCurrency(calc.loanAmount),
-                isSet: calc.loanAmount != null,
-                onTap: () {
-                  // If there's a value in the display, set it as the loan amount
-                  final parsed = double.tryParse(display.displayValue);
-                  if (parsed != null && parsed != 0) {
-                    _setFromDisplay(context, 'Loan Amount', (v) => calc.setLoanAmount(value: v));
-                  } else {
-                    // Otherwise, solve for loan amount if we have payment, interest rate, and term
-                    calc.calculateLoanAmount();
-                  }
-                },
-                onDoubleTap: () => _clearField(context, 'Loan Amount', () => calc.clearLoanAmount()),
-              ),
-              const SizedBox(width: 6),
-              _StatChip(
-                label: 'Rate',
-                value: calc.interestRate != null
-                    ? '${calc.interestRate!.toStringAsFixed(3)}%'
-                    : '--',
-                isSet: calc.interestRate != null,
-                onTap: () => _setFromDisplay(context, 'Rate', (v) => calc.setInterestRate(value: v)),
-                onDoubleTap: () => _clearField(context, 'Rate', () => calc.clearInterestRate()),
-              ),
-              const SizedBox(width: 6),
-              _StatChip(
-                label: 'Term',
-                value: calc.termYears != null ? '${calc.termYears!.toInt()}y' : '--',
-                isSet: calc.termYears != null,
-                onTap: () {
-                  // If there's a value in the display, set it as the term
-                  final parsed = double.tryParse(display.displayValue);
-                  if (parsed != null && parsed != 0) {
-                    _setFromDisplay(context, 'Term', (v) => calc.setTermYears(value: v));
-                  } else {
-                    // Otherwise, solve for term if we have loan amount, payment, and interest rate
-                    calc.calculateTerm();
-                  }
-                },
-                onDoubleTap: () => _clearField(context, 'Term', () => calc.clearTermYears()),
-              ),
-              const SizedBox(width: 6),
-              _StatChip(
-                label: calc.isInterestOnly ? 'I/O' : 'Pmt',
-                value: CurrencyFormatter.formatCompactCurrency(calc.displayPayment),
-                isSet: calc.displayPayment != null,
-                isInterestOnly: calc.isInterestOnly,
-                onTap: () => _setFromDisplay(context, 'Payment', (v) => calc.setPayment(value: v)),
-                onLongPress: () => _showPaymentOptions(context, calc, display),
-                onDoubleTap: () => _clearField(context, 'Payment', () => calc.clearPayment()),
-              ),
-            ],
-          ),
-        ],
-      ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isError
+                        ? Colors.red.withValues(alpha: 0.3)
+                        : calc.isInterestOnly
+                        ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
+                        : AppTheme.accentGold.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    display.inputError ??
+                        calc.inputError ??
+                        _getDisplayLabel(calc),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isError ? Colors.red.shade100 : Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _StatChip(
+                  label: 'L/A',
+                  value: CurrencyFormatter.formatCompactCurrency(
+                    calc.loanAmount,
+                  ),
+                  isSet: calc.loanAmount != null,
+                  onTap: () {
+                    // If there's a value in the display, set it as the loan amount
+                    final parsed = double.tryParse(display.displayValue);
+                    if (parsed != null && parsed != 0) {
+                      _setFromDisplay(
+                        context,
+                        'Loan Amount',
+                        (v) => calc.setLoanAmount(value: v),
+                      );
+                    } else {
+                      // Otherwise, solve for loan amount if we have payment, interest rate, and term
+                      calc.calculateLoanAmount();
+                    }
+                  },
+                  onDoubleTap: () => _clearField(
+                    context,
+                    'Loan Amount',
+                    () => calc.clearLoanAmount(),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _StatChip(
+                  label: 'Rate',
+                  value: calc.interestRate != null
+                      ? '${calc.interestRate!.toStringAsFixed(3)}%'
+                      : '--',
+                  isSet: calc.interestRate != null,
+                  onTap: () => _setFromDisplay(
+                    context,
+                    'Rate',
+                    (v) => calc.setInterestRate(value: v),
+                  ),
+                  onDoubleTap: () => _clearField(
+                    context,
+                    'Rate',
+                    () => calc.clearInterestRate(),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _StatChip(
+                  label: 'Term',
+                  value: calc.termYears != null
+                      ? '${calc.termYears!.toInt()}y'
+                      : '--',
+                  isSet: calc.termYears != null,
+                  onTap: () {
+                    // If there's a value in the display, set it as the term
+                    final parsed = double.tryParse(display.displayValue);
+                    if (parsed != null && parsed != 0) {
+                      _setFromDisplay(
+                        context,
+                        'Term',
+                        (v) => calc.setTermYears(value: v),
+                      );
+                    } else {
+                      // Otherwise, solve for term if we have loan amount, payment, and interest rate
+                      calc.calculateTerm();
+                    }
+                  },
+                  onDoubleTap: () =>
+                      _clearField(context, 'Term', () => calc.clearTermYears()),
+                ),
+                const SizedBox(width: 6),
+                _StatChip(
+                  label: calc.isInterestOnly ? 'I/O' : 'Pmt',
+                  value: CurrencyFormatter.formatCompactCurrency(
+                    calc.displayPayment,
+                  ),
+                  isSet: calc.displayPayment != null,
+                  isInterestOnly: calc.isInterestOnly,
+                  onTap: () => _setFromDisplay(
+                    context,
+                    'Payment',
+                    (v) => calc.setPayment(value: v),
+                  ),
+                  onLongPress: () =>
+                      _showPaymentOptions(context, calc, display),
+                  onDoubleTap: () => _clearField(
+                    context,
+                    'Payment',
+                    () => calc.clearPayment(),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -311,7 +419,11 @@ class _DisplayCard extends StatelessWidget {
     return rawValue;
   }
 
-  void _setFromDisplay(BuildContext context, String label, void Function(double) setter) {
+  void _setFromDisplay(
+    BuildContext context,
+    String label,
+    void Function(double) setter,
+  ) {
     final parsed = double.tryParse(display.displayValue);
     if (parsed != null && parsed != 0) {
       display.clear();
@@ -338,7 +450,11 @@ class _DisplayCard extends StatelessWidget {
     }
   }
 
-  void _clearField(BuildContext context, String label, VoidCallback clearAction) {
+  void _clearField(
+    BuildContext context,
+    String label,
+    VoidCallback clearAction,
+  ) {
     clearAction();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -350,7 +466,11 @@ class _DisplayCard extends StatelessWidget {
     );
   }
 
-  void _showPaymentOptions(BuildContext context, CalculatorProvider provider, CalculatorDisplayNotifier displayNotifier) {
+  void _showPaymentOptions(
+    BuildContext context,
+    CalculatorProvider provider,
+    CalculatorDisplayNotifier displayNotifier,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -365,18 +485,18 @@ class _DisplayCard extends StatelessWidget {
           children: [
             Text(
               'Payment Options',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('Interest Only Payment'),
               subtitle: Text(
-                provider.isInterestOnly 
-                  ? 'Calculating interest-only payment'
-                  : 'Standard P&I payment',
+                provider.isInterestOnly
+                    ? 'Calculating interest-only payment'
+                    : 'Standard P&I payment',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               value: provider.isInterestOnly,
@@ -425,7 +545,7 @@ class _StatChip extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             decoration: BoxDecoration(
-              color: isInterestOnly 
+              color: isInterestOnly
                   ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
                   : Colors.white.withValues(alpha: isSet ? 0.2 : 0.1),
               borderRadius: BorderRadius.circular(8),
@@ -433,8 +553,8 @@ class _StatChip extends StatelessWidget {
                 color: isInterestOnly
                     ? const Color(0xFF7B68EE).withValues(alpha: 0.8)
                     : isSet
-                        ? AppTheme.accentGold.withValues(alpha: 0.6)
-                        : Colors.white.withValues(alpha: 0.2),
+                    ? AppTheme.accentGold.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.2),
                 width: isSet || isInterestOnly ? 1.5 : 1,
               ),
             ),
@@ -455,7 +575,9 @@ class _StatChip extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isSet ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                    color: isSet
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -483,7 +605,8 @@ class _SecondaryFieldsRow extends StatelessWidget {
           label: 'Price',
           value: calc.price,
           color: AppTheme.loanButton,
-          onTap: () => _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
+          onTap: () =>
+              _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
         ),
         Selector<CalculatorProvider, (double?, double?)>(
           selector: (_, calc) => (calc.downPayment, calc.downPaymentPercentage),
@@ -493,8 +616,14 @@ class _SecondaryFieldsRow extends StatelessWidget {
               label: 'DnPmt',
               value: downPayment,
               color: AppTheme.successGreen,
-              onTap: () => _setFromDisplay(context, 'Down Pmt', (v) => calc.setDownPayment(value: v)),
-              subtitle: downPaymentPct != null ? '${downPaymentPct.toStringAsFixed(1)}%' : null,
+              onTap: () => _setFromDisplay(
+                context,
+                'Down Pmt',
+                (v) => calc.setDownPayment(value: v),
+              ),
+              subtitle: downPaymentPct != null
+                  ? '${downPaymentPct.toStringAsFixed(1)}%'
+                  : null,
             );
           },
         ),
@@ -502,25 +631,41 @@ class _SecondaryFieldsRow extends StatelessWidget {
           label: 'Tax',
           value: calc.propertyTax,
           color: AppTheme.pitiButton,
-          onTap: () => _setFromDisplay(context, 'Tax/yr', (v) => calc.setPropertyTax(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'Tax/yr',
+            (v) => calc.setPropertyTax(value: v),
+          ),
         ),
         _RowChip(
           label: 'Ins',
           value: calc.homeInsurance,
           color: AppTheme.pitiButton,
-          onTap: () => _setFromDisplay(context, 'Ins/yr', (v) => calc.setHomeInsurance(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'Ins/yr',
+            (v) => calc.setHomeInsurance(value: v),
+          ),
         ),
         _RowChip(
           label: 'HOA',
           value: calc.monthlyExpenses,
           color: AppTheme.warningOrange,
-          onTap: () => _setFromDisplay(context, 'HOA/mo', (v) => calc.setMonthlyExpenses(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'HOA/mo',
+            (v) => calc.setMonthlyExpenses(value: v),
+          ),
         ),
       ],
     );
   }
 
-  void _setFromDisplay(BuildContext context, String label, void Function(double) setter) {
+  void _setFromDisplay(
+    BuildContext context,
+    String label,
+    void Function(double) setter,
+  ) {
     final parsed = double.tryParse(display.displayValue);
     if (parsed != null && parsed != 0) {
       display.clear();
@@ -570,7 +715,9 @@ class _RowChip extends StatelessWidget {
               decoration: BoxDecoration(
                 color: hasValue
                     ? color.withValues(alpha: isDark ? 0.15 : 0.1)
-                    : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade200),
+                    : (isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -585,11 +732,15 @@ class _RowChip extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    hasValue ? CurrencyFormatter.formatCompactCurrency(value) : '--',
+                    hasValue
+                        ? CurrencyFormatter.formatCompactCurrency(value)
+                        : '--',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: hasValue ? (isDark ? Colors.white : Colors.black87) : Colors.grey,
+                      color: hasValue
+                          ? (isDark ? Colors.white : Colors.black87)
+                          : Colors.grey,
                     ),
                   ),
                   if (subtitle != null)
@@ -624,7 +775,7 @@ class _ModernKeypad extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     final numBg = isDark ? const Color(0xFF374151) : Colors.white;
     final numFg = isDark ? Colors.white : Colors.black87;
     final opBg = AppTheme.primaryTeal;
@@ -674,10 +825,30 @@ class _ModernKeypad extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CalculatorButton(text: '7', onPressed: () => displayProvider.inputDigit('7'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '8', onPressed: () => displayProvider.inputDigit('8'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '9', onPressed: () => displayProvider.inputDigit('9'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '×', onPressed: () => displayProvider.performOperation('x'), backgroundColor: opBg, foregroundColor: opFg),
+                CalculatorButton(
+                  text: '7',
+                  onPressed: () => displayProvider.inputDigit('7'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '8',
+                  onPressed: () => displayProvider.inputDigit('8'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '9',
+                  onPressed: () => displayProvider.inputDigit('9'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '×',
+                  onPressed: () => displayProvider.performOperation('x'),
+                  backgroundColor: opBg,
+                  foregroundColor: opFg,
+                ),
               ],
             ),
           ),
@@ -685,10 +856,30 @@ class _ModernKeypad extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CalculatorButton(text: '4', onPressed: () => displayProvider.inputDigit('4'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '5', onPressed: () => displayProvider.inputDigit('5'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '6', onPressed: () => displayProvider.inputDigit('6'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '−', onPressed: () => displayProvider.performOperation('-'), backgroundColor: opBg, foregroundColor: opFg),
+                CalculatorButton(
+                  text: '4',
+                  onPressed: () => displayProvider.inputDigit('4'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '5',
+                  onPressed: () => displayProvider.inputDigit('5'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '6',
+                  onPressed: () => displayProvider.inputDigit('6'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '−',
+                  onPressed: () => displayProvider.performOperation('-'),
+                  backgroundColor: opBg,
+                  foregroundColor: opFg,
+                ),
               ],
             ),
           ),
@@ -696,10 +887,30 @@ class _ModernKeypad extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CalculatorButton(text: '1', onPressed: () => displayProvider.inputDigit('1'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '2', onPressed: () => displayProvider.inputDigit('2'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '3', onPressed: () => displayProvider.inputDigit('3'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '+', onPressed: () => displayProvider.performOperation('+'), backgroundColor: opBg, foregroundColor: opFg),
+                CalculatorButton(
+                  text: '1',
+                  onPressed: () => displayProvider.inputDigit('1'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '2',
+                  onPressed: () => displayProvider.inputDigit('2'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '3',
+                  onPressed: () => displayProvider.inputDigit('3'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '+',
+                  onPressed: () => displayProvider.performOperation('+'),
+                  backgroundColor: opBg,
+                  foregroundColor: opFg,
+                ),
               ],
             ),
           ),
@@ -707,10 +918,33 @@ class _ModernKeypad extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CalculatorButton(text: '00', onPressed: () { displayProvider.inputDigit('0'); displayProvider.inputDigit('0'); }, backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '0', onPressed: () => displayProvider.inputDigit('0'), backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '.', onPressed: displayProvider.inputDecimal, backgroundColor: numBg, foregroundColor: numFg),
-                CalculatorButton(text: '=', onPressed: displayProvider.calculateResult, backgroundColor: AppTheme.accentGold, foregroundColor: Colors.white),
+                CalculatorButton(
+                  text: '00',
+                  onPressed: () {
+                    displayProvider.inputDigit('0');
+                    displayProvider.inputDigit('0');
+                  },
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '0',
+                  onPressed: () => displayProvider.inputDigit('0'),
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '.',
+                  onPressed: displayProvider.inputDecimal,
+                  backgroundColor: numBg,
+                  foregroundColor: numFg,
+                ),
+                CalculatorButton(
+                  text: '=',
+                  onPressed: displayProvider.calculateResult,
+                  backgroundColor: AppTheme.accentGold,
+                  foregroundColor: Colors.white,
+                ),
               ],
             ),
           ),

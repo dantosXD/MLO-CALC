@@ -41,391 +41,422 @@ class _QualificationScreenState extends State<QualificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final calculatorProvider = Provider.of<CalculatorProvider>(context);
+    final calculatorProvider = context.read<CalculatorProvider>();
     final ratiosProvider = Provider.of<QualifyingRatiosProvider>(context);
 
     if (ratiosProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final selectedRatio = ratiosProvider.selectedRatio ?? 
-        DefaultQualifyingRatios.ratios.first;
+    final selectedRatio =
+        ratiosProvider.selectedRatio ?? DefaultQualifyingRatios.ratios.first;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Qualifying Ratios Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Qualifying Ratios',
-                        style: Theme.of(context).textTheme.titleLarge,
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        calculatorProvider.loanQuoteController,
+        calculatorProvider.qualificationController,
+      ]),
+      builder: (context, _) => SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Qualifying Ratios Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Qualifying Ratios',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              tooltip: 'Add Custom Ratio',
+                              onPressed: () => _showRatioEditor(context, null),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.list),
+                              tooltip: 'Manage Ratios',
+                              onPressed: () => _showRatiosList(context),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Ratio dropdown
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Select Ratio',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedRatio.id,
+                          isExpanded: true,
+                          isDense: true,
+                          items: ratiosProvider.allRatios.map((ratio) {
+                            return DropdownMenuItem<String>(
+                              value: ratio.id,
+                              child: Text(
+                                '${ratio.name} (${ratio.housingRatio.toInt()}/${ratio.debtRatio.toInt()})',
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (id) {
+                            if (id != null) {
+                              final ratio = ratiosProvider.getRatioById(id);
+                              if (ratio != null) {
+                                ratiosProvider.selectRatio(ratio);
+                                calculatorProvider.setQualRatio1(ratio);
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Selected ratio details
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            tooltip: 'Add Custom Ratio',
-                            onPressed: () => _showRatioEditor(context, null),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Front-end DTI (Housing):',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              Text(
+                                '${selectedRatio.housingRatio}%',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.list),
-                            tooltip: 'Manage Ratios',
-                            onPressed: () => _showRatiosList(context),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Back-end DTI (Total Debt):',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              Text(
+                                '${selectedRatio.debtRatio}%',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          if (selectedRatio.description != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              selectedRatio.description!,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    if (!selectedRatio.isBuiltIn) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton.icon(
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('Edit'),
+                            onPressed: () =>
+                                _showRatioEditor(context, selectedRatio),
                           ),
                         ],
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Ratio dropdown
-                  InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Select Ratio',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedRatio.id,
-                        isExpanded: true,
-                        isDense: true,
-                        items: ratiosProvider.allRatios.map((ratio) {
-                          return DropdownMenuItem<String>(
-                            value: ratio.id,
-                            child: Text('${ratio.name} (${ratio.housingRatio.toInt()}/${ratio.debtRatio.toInt()})'),
-                          );
-                        }).toList(),
-                        onChanged: (id) {
-                          if (id != null) {
-                            final ratio = ratiosProvider.getRatioById(id);
-                            if (ratio != null) {
-                              ratiosProvider.selectRatio(ratio);
-                              calculatorProvider.setQualRatio1(ratio);
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Selected ratio details
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Front-end DTI (Housing):',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            Text(
-                              '${selectedRatio.housingRatio}%',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Back-end DTI (Total Debt):',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            Text(
-                              '${selectedRatio.debtRatio}%',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (selectedRatio.description != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            selectedRatio.description!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  
-                  if (!selectedRatio.isBuiltIn) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.edit, size: 18),
-                          label: const Text('Edit'),
-                          onPressed: () => _showRatioEditor(context, selectedRatio),
-                        ),
-                      ],
-                    ),
                   ],
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Borrower Information Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Borrower Information',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _incomeController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Annual Income',
-                      prefixText: '\$',
-                      border: OutlineInputBorder(),
-                      helperText: 'Gross annual income',
-                    ),
-                    onChanged: (value) {
-                      final income = double.tryParse(value);
-                      calculatorProvider.setAnnualIncome(value: income);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _debtController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Monthly Debt Payments',
-                      prefixText: '\$',
-                      border: OutlineInputBorder(),
-                      helperText: 'Total monthly debt obligations',
-                    ),
-                    onChanged: (value) {
-                      final debt = double.tryParse(value);
-                      calculatorProvider.setMonthlyDebt(value: debt);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Loan Parameters Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Loan Parameters',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  _InfoRow(
-                    label: 'Interest Rate',
-                    value: calculatorProvider.interestRate != null
-                        ? '${calculatorProvider.interestRate!.toStringAsFixed(3)}%'
-                        : 'Not set',
-                  ),
-                  const SizedBox(height: 8),
-                  _InfoRow(
-                    label: 'Term',
-                    value: calculatorProvider.termYears != null
-                        ? '${calculatorProvider.termYears!.toStringAsFixed(0)} years'
-                        : 'Not set',
-                  ),
-                  const SizedBox(height: 8),
-                  _InfoRow(
-                    label: 'Loan Amount',
-                    value: calculatorProvider.loanAmount != null
-                        ? '\$${calculatorProvider.loanAmount!.toStringAsFixed(2)}'
-                        : 'Not set',
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Set these values in the Calculator tab',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Calculation Buttons
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: calculatorProvider.annualIncome != null &&
-                          calculatorProvider.interestRate != null &&
-                          calculatorProvider.termYears != null
-                      ? () {
-                          calculatorProvider.calculateMaxQualifyingLoan(
-                            useRatio1: true,
-                          );
-                          _showResultDialog(
-                            context,
-                            'Maximum Qualifying Loan',
-                            'Based on your income and debt ratios, you qualify for a maximum loan amount of:',
-                            calculatorProvider.loanAmount,
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.trending_up),
-                  label: const Text('Max Loan'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                  ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: calculatorProvider.loanAmount != null &&
-                          calculatorProvider.interestRate != null &&
-                          calculatorProvider.termYears != null
-                      ? () {
-                          calculatorProvider.calculateMinimumIncome(
-                            useRatio1: true,
-                          );
-                          _showResultDialog(
-                            context,
-                            'Minimum Required Income',
-                            'To qualify for this loan, you need a minimum annual income of:',
-                            calculatorProvider.annualIncome,
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.attach_money),
-                  label: const Text('Min Income'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-          // DTI & LTV Warnings
-          if (calculatorProvider.annualIncome != null && 
-              calculatorProvider.payment != null) ...[
-            Builder(builder: (context) {
-              final monthlyIncome = calculatorProvider.annualIncome! / 12;
-              final housingPayment = calculatorProvider.pitiPayment > 0
-                  ? calculatorProvider.pitiPayment
-                  : calculatorProvider.payment!;
-              final totalDebt = housingPayment + (calculatorProvider.monthlyDebt ?? 0);
-              
-              final frontEndDti = DtiValidator.calculateHousingDti(
-                monthlyHousingPayment: housingPayment,
-                monthlyGrossIncome: monthlyIncome,
-              );
-              final backEndDti = DtiValidator.calculateDti(
-                monthlyDebtPayments: totalDebt,
-                monthlyGrossIncome: monthlyIncome,
-              );
-              
-              final currentRatio = calculatorProvider.qualRatio1;
-              
-              final warnings = DtiValidator.getDtiWarnings(
-                frontEndDti: frontEndDti,
-                backEndDti: backEndDti,
-                frontEndLimit: currentRatio.housingRatio,
-                backEndLimit: currentRatio.debtRatio,
-              );
-              
-              if (warnings.isEmpty) return const SizedBox.shrink();
-              
-              return Column(
-                children: [
-                  ValidationWarningsDisplay(warnings: warnings),
-                  const SizedBox(height: 16),
-                ],
-              );
-            }),
-          ],
-
-          // Results Card
-          if (calculatorProvider.payment != null)
+            // Borrower Information Card
             Card(
-              color: Theme.of(context).colorScheme.primaryContainer,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Current Loan Summary',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          ),
+                      'Borrower Information',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    const SizedBox(height: 12),
-                    _InfoRow(
-                      label: 'Monthly P&I Payment',
-                      value: '\$${calculatorProvider.payment!.toStringAsFixed(2)}',
-                      valueColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                    if (calculatorProvider.pitiPayment > calculatorProvider.payment!)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: _InfoRow(
-                          label: 'Monthly PITI Payment',
-                          value: '\$${calculatorProvider.pitiPayment.toStringAsFixed(2)}',
-                          valueColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _incomeController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Annual Income',
+                        prefixText: '\$',
+                        border: OutlineInputBorder(),
+                        helperText: 'Gross annual income',
                       ),
+                      onChanged: (value) {
+                        final income = double.tryParse(value);
+                        calculatorProvider.setAnnualIncome(value: income);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _debtController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Monthly Debt Payments',
+                        prefixText: '\$',
+                        border: OutlineInputBorder(),
+                        helperText: 'Total monthly debt obligations',
+                      ),
+                      onChanged: (value) {
+                        final debt = double.tryParse(value);
+                        calculatorProvider.setMonthlyDebt(value: debt);
+                      },
+                    ),
                   ],
                 ),
               ),
             ),
-        ],
+
+            const SizedBox(height: 16),
+
+            // Loan Parameters Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Loan Parameters',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    _InfoRow(
+                      label: 'Interest Rate',
+                      value: calculatorProvider.interestRate != null
+                          ? '${calculatorProvider.interestRate!.toStringAsFixed(3)}%'
+                          : 'Not set',
+                    ),
+                    const SizedBox(height: 8),
+                    _InfoRow(
+                      label: 'Term',
+                      value: calculatorProvider.termYears != null
+                          ? '${calculatorProvider.termYears!.toStringAsFixed(0)} years'
+                          : 'Not set',
+                    ),
+                    const SizedBox(height: 8),
+                    _InfoRow(
+                      label: 'Loan Amount',
+                      value: calculatorProvider.loanAmount != null
+                          ? '\$${calculatorProvider.loanAmount!.toStringAsFixed(2)}'
+                          : 'Not set',
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Set these values in the Calculator tab',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Calculation Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        calculatorProvider.annualIncome != null &&
+                            calculatorProvider.interestRate != null &&
+                            calculatorProvider.termYears != null
+                        ? () {
+                            calculatorProvider.calculateMaxQualifyingLoan(
+                              useRatio1: true,
+                            );
+                            _showResultDialog(
+                              context,
+                              'Maximum Qualifying Loan',
+                              'Based on your income and debt ratios, you qualify for a maximum loan amount of:',
+                              calculatorProvider.loanAmount,
+                            );
+                          }
+                        : null,
+                    icon: const Icon(Icons.trending_up),
+                    label: const Text('Max Loan'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        calculatorProvider.loanAmount != null &&
+                            calculatorProvider.interestRate != null &&
+                            calculatorProvider.termYears != null
+                        ? () {
+                            calculatorProvider.calculateMinimumIncome(
+                              useRatio1: true,
+                            );
+                            _showResultDialog(
+                              context,
+                              'Minimum Required Income',
+                              'To qualify for this loan, you need a minimum annual income of:',
+                              calculatorProvider.annualIncome,
+                            );
+                          }
+                        : null,
+                    icon: const Icon(Icons.attach_money),
+                    label: const Text('Min Income'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // DTI & LTV Warnings
+            if (calculatorProvider.annualIncome != null &&
+                calculatorProvider.payment != null) ...[
+              Builder(
+                builder: (context) {
+                  final monthlyIncome = calculatorProvider.annualIncome! / 12;
+                  final housingPayment = calculatorProvider.pitiPayment > 0
+                      ? calculatorProvider.pitiPayment
+                      : calculatorProvider.payment!;
+                  final totalDebt =
+                      housingPayment + (calculatorProvider.monthlyDebt ?? 0);
+
+                  final frontEndDti = DtiValidator.calculateHousingDti(
+                    monthlyHousingPayment: housingPayment,
+                    monthlyGrossIncome: monthlyIncome,
+                  );
+                  final backEndDti = DtiValidator.calculateDti(
+                    monthlyDebtPayments: totalDebt,
+                    monthlyGrossIncome: monthlyIncome,
+                  );
+
+                  final currentRatio = calculatorProvider.qualRatio1;
+
+                  final warnings = DtiValidator.getDtiWarnings(
+                    frontEndDti: frontEndDti,
+                    backEndDti: backEndDti,
+                    frontEndLimit: currentRatio.housingRatio,
+                    backEndLimit: currentRatio.debtRatio,
+                  );
+
+                  if (warnings.isEmpty) return const SizedBox.shrink();
+
+                  return Column(
+                    children: [
+                      ValidationWarningsDisplay(warnings: warnings),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+              ),
+            ],
+
+            // Results Card
+            if (calculatorProvider.payment != null)
+              Card(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Current Loan Summary',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        label: 'Monthly P&I Payment',
+                        value:
+                            '\$${calculatorProvider.payment!.toStringAsFixed(2)}',
+                        valueColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryContainer,
+                      ),
+                      if (calculatorProvider.pitiPayment >
+                          calculatorProvider.payment!)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _InfoRow(
+                            label: 'Monthly PITI Payment',
+                            value:
+                                '\$${calculatorProvider.pitiPayment.toStringAsFixed(2)}',
+                            valueColor: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  void _showResultDialog(BuildContext context, String title, String message, double? value) {
+  void _showResultDialog(
+    BuildContext context,
+    String title,
+    String message,
+    double? value,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -438,9 +469,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
             Text(
               value != null ? '\$${value.toStringAsFixed(2)}' : 'N/A',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -457,7 +488,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
   void _showRatioEditor(BuildContext context, QualifyingRatio? ratio) {
     final isEditing = ratio != null;
     final nameController = TextEditingController(text: ratio?.name ?? '');
-    final descController = TextEditingController(text: ratio?.description ?? '');
+    final descController = TextEditingController(
+      text: ratio?.description ?? '',
+    );
     final housingController = TextEditingController(
       text: ratio?.housingRatio.toString() ?? '28',
     );
@@ -537,7 +570,8 @@ class _QualificationScreenState extends State<QualificationScreen> {
               // Parse with validation - only use defaults if text is empty
               final housing = housingText.isEmpty
                   ? (ratio?.housingRatio ?? 28.0)
-                  : (double.tryParse(housingText) ?? (ratio?.housingRatio ?? 28.0));
+                  : (double.tryParse(housingText) ??
+                        (ratio?.housingRatio ?? 28.0));
               final debt = debtText.isEmpty
                   ? (ratio?.debtRatio ?? 36.0)
                   : (double.tryParse(debtText) ?? (ratio?.debtRatio ?? 36.0));
@@ -552,14 +586,16 @@ class _QualificationScreenState extends State<QualificationScreen> {
               final provider = context.read<QualifyingRatiosProvider>();
 
               if (isEditing) {
-                await provider.updateRatio(ratio.copyWith(
-                  name: name,
-                  description: descController.text.trim().isEmpty
-                      ? null
-                      : descController.text.trim(),
-                  housingRatio: housing,
-                  debtRatio: debt,
-                ));
+                await provider.updateRatio(
+                  ratio.copyWith(
+                    name: name,
+                    description: descController.text.trim().isEmpty
+                        ? null
+                        : descController.text.trim(),
+                    housingRatio: housing,
+                    debtRatio: debt,
+                  ),
+                );
               } else {
                 await provider.addRatio(
                   name: name,
@@ -622,70 +658,83 @@ class _QualificationScreenState extends State<QualificationScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         child: Text(
                           'BUILT-IN RATIOS',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ),
-                      ...provider.builtInRatios.map((ratio) => _RatioListTile(
-                        ratio: ratio,
-                        isSelected: provider.selectedRatio?.id == ratio.id,
-                        onTap: () {
-                          provider.selectRatio(ratio);
-                          context.read<CalculatorProvider>().setQualRatio1(ratio);
-                          Navigator.pop(ctx);
-                        },
-                        onDuplicate: () async {
-                          await provider.duplicateRatio(ratio);
-                        },
-                      )),
-                      
+                      ...provider.builtInRatios.map(
+                        (ratio) => _RatioListTile(
+                          ratio: ratio,
+                          isSelected: provider.selectedRatio?.id == ratio.id,
+                          onTap: () {
+                            provider.selectRatio(ratio);
+                            context.read<CalculatorProvider>().setQualRatio1(
+                              ratio,
+                            );
+                            Navigator.pop(ctx);
+                          },
+                          onDuplicate: () async {
+                            await provider.duplicateRatio(ratio);
+                          },
+                        ),
+                      ),
+
                       // Custom ratios
                       if (provider.customRatios.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                           child: Text(
                             'CUSTOM RATIOS',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
+                                ),
                           ),
                         ),
-                        ...provider.customRatios.map((ratio) => _RatioListTile(
-                          ratio: ratio,
-                          isSelected: provider.selectedRatio?.id == ratio.id,
-                          onTap: () {
-                            provider.selectRatio(ratio);
-                            context.read<CalculatorProvider>().setQualRatio1(ratio);
-                            Navigator.pop(ctx);
-                          },
-                          onEdit: () {
-                            Navigator.pop(ctx);
-                            _showRatioEditor(context, ratio);
-                          },
-                          onDelete: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Delete Ratio?'),
-                                content: Text('Delete "${ratio.name}"?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              await provider.deleteRatio(ratio.id);
-                            }
-                          },
-                        )),
+                        ...provider.customRatios.map(
+                          (ratio) => _RatioListTile(
+                            ratio: ratio,
+                            isSelected: provider.selectedRatio?.id == ratio.id,
+                            onTap: () {
+                              provider.selectRatio(ratio);
+                              context.read<CalculatorProvider>().setQualRatio1(
+                                ratio,
+                              );
+                              Navigator.pop(ctx);
+                            },
+                            onEdit: () {
+                              Navigator.pop(ctx);
+                              _showRatioEditor(context, ratio);
+                            },
+                            onDelete: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete Ratio?'),
+                                  content: Text('Delete "${ratio.name}"?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await provider.deleteRatio(ratio.id);
+                              }
+                            },
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -704,27 +753,20 @@ class _InfoRow extends StatelessWidget {
   final String value;
   final Color? valueColor;
 
-  const _InfoRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _InfoRow({required this.label, required this.value, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: valueColor,
-              ),
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+          ),
         ),
       ],
     );
@@ -776,8 +818,7 @@ class _RatioListTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isSelected)
-            const Icon(Icons.check, color: Colors.green),
+          if (isSelected) const Icon(Icons.check, color: Colors.green),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {

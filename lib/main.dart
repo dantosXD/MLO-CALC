@@ -1,18 +1,19 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/core/navigation/feature_catalog.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/amortization_controller.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/qualification_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_display_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_layout_preview_screen.dart';
-import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/nlp_dialog.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/info_dialog.dart';
 import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
-import 'package:loan_ranger/src/features/history/presentation/screens/history_screen.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/loan_programs/application/providers/loan_programs_provider.dart';
-import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan_programs_screen.dart';
 import 'package:loan_ranger/src/core/utils/unit_conversion.dart';
 import 'package:loan_ranger/src/core/services/analytics_service.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
@@ -20,36 +21,45 @@ import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_serv
 import 'package:loan_ranger/src/features/share/application/providers/share_templates_provider.dart';
 import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
 import 'package:loan_ranger/src/features/share/presentation/dialogs/share_quote_dialog.dart';
-import 'package:loan_ranger/src/features/amortization/presentation/screens/amortization_screen.dart';
-import 'package:loan_ranger/src/features/analysis/presentation/screens/analysis_screen.dart';
-import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
-import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
+import 'package:loan_ranger/src/features/workspace/presentation/screens/workspace_dashboard_screen.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await configureDependencies();
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(create: (context) => LayoutPreferenceProvider()),
-        ChangeNotifierProvider(create: (context) => CalculatorDisplayNotifier()),
-        ChangeNotifierProvider(create: (context) => CalculatorProvider()),
-        ChangeNotifierProvider(create: (context) => ComparisonProvider()),
-        ChangeNotifierProvider(create: (context) => NlpSettingsProvider()),
-        ChangeNotifierProvider(create: (context) => LoanProgramsProvider()),
-        ChangeNotifierProvider(create: (context) => UnitConversionProvider()),
-        ChangeNotifierProvider(create: (context) => AnalyticsService()),
-        ChangeNotifierProvider(create: (context) => QualifyingRatiosProvider()),
-        ChangeNotifierProvider(create: (context) => ShareTemplatesProvider()),
-      ],
-      child: const LoanRangerApp(),
-    ),
+    MultiProvider(providers: buildAppProviders(), child: const LoanRangerApp()),
   );
 }
+
+List<SingleChildWidget> buildAppProviders() => [
+  ChangeNotifierProvider(create: (_) => ThemeProvider()),
+  ChangeNotifierProvider(create: (_) => LayoutPreferenceProvider()),
+  ChangeNotifierProvider(create: (_) => CalculatorDisplayNotifier()),
+  ChangeNotifierProvider(create: (_) => CalculatorProvider()),
+  ListenableProxyProvider<CalculatorProvider, LoanQuoteController>(
+    update: (_, calculator, __) => calculator.loanQuoteController,
+  ),
+  ListenableProxyProvider<CalculatorProvider, QualificationController>(
+    update: (_, calculator, __) => calculator.qualificationController,
+  ),
+  ListenableProxyProvider<CalculatorProvider, AmortizationController>(
+    update: (_, calculator, __) => calculator.amortizationController,
+  ),
+  ListenableProxyProvider<CalculatorProvider, HistoryController>(
+    update: (_, calculator, __) => calculator.historyController,
+  ),
+  ChangeNotifierProvider(create: (_) => ComparisonProvider()),
+  ChangeNotifierProvider(create: (_) => NlpSettingsProvider()),
+  ChangeNotifierProvider(create: (_) => LoanProgramsProvider()),
+  ChangeNotifierProvider(create: (_) => UnitConversionProvider()),
+  ChangeNotifierProvider(create: (_) => AnalyticsService()),
+  ChangeNotifierProvider(create: (_) => QualifyingRatiosProvider()),
+  ChangeNotifierProvider(create: (_) => ShareTemplatesProvider()),
+];
 
 class ThemeProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
@@ -95,75 +105,22 @@ class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
   final NLPCalculatorService _nlpService =
       serviceLocator<NLPCalculatorService>();
-  StreamSubscription<double>? _calculationSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final calcProvider = context.read<CalculatorProvider>();
-      final displayProvider = context.read<CalculatorDisplayNotifier>();
-      
-      _calculationSubscription = calcProvider.onCalculationResult.listen((value) {
-        displayProvider.setValue(value);
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _calculationSubscription?.cancel();
-    super.dispose();
-  }
   final stt.SpeechToText _speechToText = stt.SpeechToText();
+  final FeatureCatalog _featureCatalog = const FeatureCatalog();
+  final List<FeatureCatalogEntry> _primaryFeatures =
+      FeatureCatalog.primaryFeatures;
 
-  final List<Widget> _screens = const [
-    CalculatorScreen(),
-    AmortizationScreen(),
-    QualificationScreen(),
-    AnalysisScreen(),
-    HistoryScreen(),
-  ];
-
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.calculate_outlined),
-      selectedIcon: Icon(Icons.calculate),
-      label: 'Calculator',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.table_chart_outlined),
-      selectedIcon: Icon(Icons.table_chart),
-      label: 'Amortization',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Qualification',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.analytics_outlined),
-      selectedIcon: Icon(Icons.analytics),
-      label: 'Analysis',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.history_outlined),
-      selectedIcon: Icon(Icons.history),
-      label: 'History',
-    ),
-  ];
-
-  static const List<String> _screenNames = [
-    'Calculator',
-    'Amortization',
-    'Qualification',
-    'Analysis',
-    'History',
-  ];
+  List<NavigationDestination> get _destinations {
+    return _primaryFeatures
+        .map((FeatureCatalogEntry entry) => entry.toNavigationDestination())
+        .toList();
+  }
 
   void _trackScreenView(int index) {
-    if (index >= 0 && index < _screenNames.length) {
-      context.read<AnalyticsService>().trackScreenView(_screenNames[index]);
+    if (index >= 0 && index < _primaryFeatures.length) {
+      context.read<AnalyticsService>().trackScreenView(
+        _primaryFeatures[index].analyticsName,
+      );
     }
   }
 
@@ -177,14 +134,8 @@ class _MainNavigatorState extends State<MainNavigator> {
         final bool extendRail = constraints.maxWidth >= 1200;
         final bool compactAppBar = constraints.maxWidth < 700;
         final bool bootstrapLayout = constraints.maxWidth < 50;
-        final railDestinations = _destinations
-            .map(
-              (destination) => NavigationRailDestination(
-                icon: destination.icon,
-                selectedIcon: destination.selectedIcon,
-                label: Text(destination.label),
-              ),
-            )
+        final railDestinations = _primaryFeatures
+            .map((FeatureCatalogEntry entry) => entry.toRailDestination())
             .toList();
 
         void openShareQuote() {
@@ -199,7 +150,11 @@ class _MainNavigatorState extends State<MainNavigator> {
         final List<Widget> appBarActionChildren = [
           IconButton(
             icon: const Icon(Icons.ios_share),
-            onPressed: _selectedIndex == 0 ? openShareQuote : null,
+            onPressed:
+                _primaryFeatures[_selectedIndex].id ==
+                    FeatureCatalog.calculatorId
+                ? openShareQuote
+                : null,
             tooltip: 'Share quote',
           ),
           IconButton(
@@ -229,22 +184,17 @@ class _MainNavigatorState extends State<MainNavigator> {
                 case 'toggle_theme':
                   themeProvider.toggleTheme();
                   break;
+                case 'workspace':
+                  _openWorkspaceDashboard();
+                  break;
                 case 'api_key':
                   _showApiKeySheet(context);
                   break;
                 case 'loan_programs':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const LoanProgramsScreen(),
-                    ),
-                  );
+                  _openFeatureById(FeatureCatalog.loanProgramsId);
                   break;
                 case 'rent_vs_buy':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const RentVsBuyScreen(),
-                    ),
-                  );
+                  _openFeatureById(FeatureCatalog.rentVsBuyId);
                   break;
               }
             },
@@ -254,6 +204,14 @@ class _MainNavigatorState extends State<MainNavigator> {
                 child: ListTile(
                   leading: Icon(Icons.info_outline),
                   title: Text('How to Use'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'workspace',
+                child: ListTile(
+                  leading: Icon(Icons.space_dashboard_outlined),
+                  title: Text('Workspace Dashboard'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -306,8 +264,9 @@ class _MainNavigatorState extends State<MainNavigator> {
           const SizedBox(width: 8),
         ];
 
-        final List<Widget> appBarActions =
-            bootstrapLayout ? const <Widget>[] : appBarActionChildren;
+        final List<Widget> appBarActions = bootstrapLayout
+            ? const <Widget>[]
+            : appBarActionChildren;
 
         return Scaffold(
           appBar: AppBar(
@@ -345,7 +304,7 @@ class _MainNavigatorState extends State<MainNavigator> {
                     },
                     child: KeyedSubtree(
                       key: ValueKey<int>(_selectedIndex),
-                      child: _screens[_selectedIndex],
+                      child: _primaryFeatures[_selectedIndex].builder(context),
                     ),
                   ),
                 ),
@@ -455,5 +414,39 @@ class _MainNavigatorState extends State<MainNavigator> {
       builder: (context) =>
           NlpDialog(nlpService: _nlpService, speechToText: _speechToText),
     );
+  }
+
+  Future<void> _openWorkspaceDashboard() async {
+    final selectedFeatureId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const WorkspaceDashboardScreen()),
+    );
+    if (!mounted || selectedFeatureId == null) {
+      return;
+    }
+
+    await _openFeatureById(selectedFeatureId);
+  }
+
+  Future<void> _openFeatureById(String featureId) async {
+    final primaryIndex = _primaryFeatures.indexWhere(
+      (FeatureCatalogEntry entry) => entry.id == featureId,
+    );
+    if (primaryIndex != -1) {
+      setState(() {
+        _selectedIndex = primaryIndex;
+      });
+      _trackScreenView(primaryIndex);
+      return;
+    }
+
+    final feature = _featureCatalog.byId(featureId);
+    if (feature == null || !mounted) {
+      return;
+    }
+
+    context.read<AnalyticsService>().trackScreenView(feature.analyticsName);
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: feature.builder));
   }
 }

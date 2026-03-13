@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/core/models/calculation_history.dart';
+import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
+import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
+import 'package:loan_ranger/src/features/calculator/application/states/qualification_state.dart';
+import 'package:loan_ranger/src/features/calculator/domain/models/calculator_state.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
+
+class QualificationController with ChangeNotifier {
+  QualificationController({
+    QualificationService? qualificationService,
+    required LoanQuoteController quoteController,
+    required HistoryController historyController,
+  }) : _qualificationService =
+           qualificationService ?? serviceLocator<QualificationService>(),
+       _quoteController = quoteController,
+       _historyController = historyController;
+
+  final QualificationService _qualificationService;
+  final LoanQuoteController _quoteController;
+  final HistoryController _historyController;
+
+  QualificationState _state = QualificationState();
+
+  QualificationState get state => _state;
+  String? get inputError => _state.calculationError;
+  QualifyingRatio get qualRatio1 => _state.qualRatio1;
+  QualifyingRatio get qualRatio2 => _state.qualRatio2;
+  double? get annualIncome => _state.annualIncome;
+  double? get monthlyDebt => _state.monthlyDebt;
+
+  void hydrateFromSnapshot(CalculatorStateSnapshot snapshot) {
+    _state = _state.copyWith(
+      annualIncome: snapshot.annualIncome,
+      monthlyDebt: snapshot.monthlyDebt,
+      calculationError: null,
+    );
+    notifyListeners();
+  }
+
+  void restoreFromHistoryEntry(CalculationEntry entry) {
+    _state = _state.copyWith(
+      annualIncome: _toDouble(entry.inputs['annualIncome']),
+      monthlyDebt: _toDouble(entry.inputs['monthlyDebt']),
+      calculationError: null,
+    );
+    notifyListeners();
+  }
+
+  void setAnnualIncome({double? value}) {
+    _state = _state.copyWith(annualIncome: value, calculationError: null);
+    notifyListeners();
+  }
+
+  void setMonthlyDebt({double? value}) {
+    _state = _state.copyWith(monthlyDebt: value, calculationError: null);
+    notifyListeners();
+  }
+
+  void setQualRatio1(QualifyingRatio ratio) {
+    _state = _state.copyWith(qualRatio1: ratio);
+    notifyListeners();
+  }
+
+  void setQualRatio2(QualifyingRatio ratio) {
+    _state = _state.copyWith(qualRatio2: ratio);
+    notifyListeners();
+  }
+
+  void setRatio(QualifyingRatio ratio, {bool primary = true}) {
+    if (primary) {
+      setQualRatio1(ratio);
+    } else {
+      setQualRatio2(ratio);
+    }
+  }
+
+  void clearAll() {
+    _state = _state.copyWith(
+      annualIncome: null,
+      monthlyDebt: null,
+      calculationError: null,
+    );
+    notifyListeners();
+  }
+
+  void calculateMaxLoan({bool usePrimaryRatio = true}) {
+    if (_state.annualIncome == null ||
+        _quoteController.interestRate == null ||
+        _quoteController.termYears == null) {
+      _state = _state.copyWith(calculationError: 'Need income, rate, term');
+      notifyListeners();
+      return;
+    }
+
+    final ratio = usePrimaryRatio ? _state.qualRatio1 : _state.qualRatio2;
+    final result = _qualificationService.calculateMaxLoan(
+      ratio: ratio,
+      annualIncome: _state.annualIncome!,
+      interestRate: _quoteController.interestRate!,
+      termYears: _quoteController.termYears!,
+      monthlyDebt: _state.monthlyDebt ?? 0,
+      monthlyEscrows: _quoteController.monthlyEscrowExpenses,
+    );
+
+    if (!result.isSuccess || result.value == null) {
+      _state = _state.copyWith(
+        calculationError: result.error ?? 'Unable to qualify',
+      );
+      notifyListeners();
+      return;
+    }
+
+    final outcome = result.value!;
+    _state = _state.copyWith(calculationError: null);
+    _quoteController.applyQualificationResult(outcome);
+    _historyController.addQualificationEntry(
+      annualIncome: _state.annualIncome!,
+      monthlyDebt: _state.monthlyDebt ?? 0,
+      interestRate: _quoteController.interestRate!,
+      termYears: _quoteController.termYears!,
+      maxLoanAmount: outcome.loanAmount,
+    );
+    notifyListeners();
+  }
+
+  void calculateMinimumIncome({bool usePrimaryRatio = true}) {
+    if (_quoteController.loanAmount == null ||
+        _quoteController.interestRate == null ||
+        _quoteController.termYears == null) {
+      _state = _state.copyWith(calculationError: 'Need L/A, Rate, Term');
+      notifyListeners();
+      return;
+    }
+
+    if (_quoteController.payment == null) {
+      _quoteController.calculate();
+    }
+    if (_quoteController.payment == null) {
+      _state = _state.copyWith(
+        calculationError:
+            _quoteController.inputError ?? 'Unable to calculate income',
+      );
+      notifyListeners();
+      return;
+    }
+
+    final ratio = usePrimaryRatio ? _state.qualRatio1 : _state.qualRatio2;
+    final result = _qualificationService.calculateMinimumIncome(
+      ratio: ratio,
+      pitiPayment: _quoteController.pitiPayment,
+      monthlyDebt: _state.monthlyDebt ?? 0,
+    );
+
+    if (!result.isSuccess || result.value == null) {
+      _state = _state.copyWith(
+        calculationError: result.error ?? 'Unable to calculate income',
+      );
+      notifyListeners();
+      return;
+    }
+
+    _state = _state.copyWith(
+      annualIncome: result.value,
+      calculationError: null,
+    );
+    _quoteController.presentValue(result.value!);
+    notifyListeners();
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+}
