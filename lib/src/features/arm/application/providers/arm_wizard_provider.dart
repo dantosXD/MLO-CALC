@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loan_ranger/src/core/di/service_locator.dart';
 
 import '../../domain/models/arm_scenario.dart';
 import '../../domain/services/arm_calculator_service.dart';
@@ -7,12 +6,10 @@ import '../../domain/services/arm_preset_service.dart';
 
 class ArmWizardProvider extends ChangeNotifier {
   ArmWizardProvider({
-    ArmCalculatorService? calculator,
-    ArmPresetStorage? presetStorage,
-  })  : _calculator = calculator ?? serviceLocator<ArmCalculatorService>(),
-        _presetStorage = presetStorage ?? serviceLocator<ArmPresetStorage>() {
-    _loadPreset();
-  }
+    required ArmCalculatorService calculator,
+    required ArmPresetStorage presetStorage,
+  })  : _calculator = calculator,
+        _presetStorage = presetStorage;
 
   final ArmCalculatorService _calculator;
   final ArmPresetStorage _presetStorage;
@@ -53,7 +50,7 @@ class ArmWizardProvider extends ChangeNotifier {
     await _presetStorage.save(_scenario);
   }
 
-  Future<void> _loadPreset() async {
+  Future<void> loadPreset() async {
     final stored = await _presetStorage.load();
     if (stored != null) {
       _scenario = stored;

@@ -38,7 +38,7 @@ class _NlpDialogState extends State<NlpDialog> {
   @override
   void dispose() {
     _autoSubmitTimer?.cancel();
-    widget.speechToText.stop();
+    unawaited(widget.speechToText.stop());
     _controller.dispose();
     super.dispose();
   }
@@ -363,7 +363,7 @@ class _NlpDialogState extends State<NlpDialog> {
                 ) 
               : const Icon(Icons.send),
           onPressed: _isProcessing ? null : _runNlp,
-          color: Theme.of(context).primaryColor,
+          color: Theme.of(context).colorScheme.primary,
           tooltip: 'Process',
         ),
       ],

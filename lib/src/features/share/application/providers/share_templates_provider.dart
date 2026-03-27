@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 import '../../domain/models/share_template.dart';
 
@@ -12,12 +12,12 @@ enum ShareChannel {
 }
 
 class ShareTemplatesProvider with ChangeNotifier {
-  ShareTemplatesProvider() {
-    _load();
-  }
+  ShareTemplatesProvider({PreferenceStore? preferenceStore})
+      : _preferences = preferenceStore ?? PreferenceStore();
 
   static const String _customTemplatesKey = 'shareCustomTemplates';
   static const String _selectedTemplateKeyPrefix = 'shareSelectedTemplate_';
+  final PreferenceStore _preferences;
 
   final List<ShareTemplate> _customTemplates = <ShareTemplate>[];
   final Map<ShareChannel, String> _selectedTemplateIds =
@@ -62,8 +62,7 @@ class ShareTemplatesProvider with ChangeNotifier {
     _selectedTemplateIds[channel] = template.id;
     notifyListeners();
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
+    await _preferences.setString(
       '$_selectedTemplateKeyPrefix${channel.name}',
       template.id,
     );
@@ -105,11 +104,11 @@ class ShareTemplatesProvider with ChangeNotifier {
 
     await _persistCustomTemplates();
 
-    final prefs = await SharedPreferences.getInstance();
+    await _preferences.load();
     for (final channel in ShareChannel.values) {
       final key = '$_selectedTemplateKeyPrefix${channel.name}';
-      if (prefs.getString(key) == id) {
-        await prefs.remove(key);
+      if (_preferences.getString(key) == id) {
+        await _preferences.remove(key);
       }
     }
 
@@ -125,11 +124,11 @@ class ShareTemplatesProvider with ChangeNotifier {
     return 'custom_$slug';
   }
 
-  Future<void> _load() async {
+  Future<void> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      await _preferences.load();
 
-      final raw = prefs.getString(_customTemplatesKey);
+      final raw = _preferences.getString(_customTemplatesKey);
       if (raw != null && raw.isNotEmpty) {
         _customTemplates
           ..clear()
@@ -138,7 +137,7 @@ class ShareTemplatesProvider with ChangeNotifier {
 
       for (final channel in ShareChannel.values) {
         final selected =
-            prefs.getString('$_selectedTemplateKeyPrefix${channel.name}');
+            _preferences.getString('$_selectedTemplateKeyPrefix${channel.name}');
         if (selected != null && selected.isNotEmpty) {
           _selectedTemplateIds[channel] = selected;
         }
@@ -149,13 +148,13 @@ class ShareTemplatesProvider with ChangeNotifier {
   }
 
   Future<void> _persistCustomTemplates() async {
-    final prefs = await SharedPreferences.getInstance();
+    await _preferences.load();
     if (_customTemplates.isEmpty) {
-      await prefs.remove(_customTemplatesKey);
+      await _preferences.remove(_customTemplatesKey);
       return;
     }
 
-    await prefs.setString(
+    await _preferences.setString(
       _customTemplatesKey,
       ShareTemplate.encodeList(_customTemplates),
     );

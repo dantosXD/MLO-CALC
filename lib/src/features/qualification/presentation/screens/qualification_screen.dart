@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/core/validators/enhanced_validators.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
-import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
-import 'package:loan_ranger/src/core/validators/enhanced_validators.dart';
+import 'package:provider/provider.dart';
 
 class QualificationScreen extends StatefulWidget {
   const QualificationScreen({super.key});
@@ -329,7 +329,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
                     _InfoRow(
                       label: 'Loan Amount',
                       value: calculatorProvider.loanAmount != null
-                          ? '\$${calculatorProvider.loanAmount!.toStringAsFixed(2)}'
+                          ? CurrencyFormatter.formatCurrency(
+                              calculatorProvider.loanAmount,
+                            )
                           : 'Not set',
                     ),
                     const SizedBox(height: 16),
@@ -468,8 +470,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
                       const SizedBox(height: 12),
                       _InfoRow(
                         label: 'Monthly P&I Payment',
-                        value:
-                            '\$${calculatorProvider.payment!.toStringAsFixed(2)}',
+                        value: CurrencyFormatter.formatCurrency(
+                          calculatorProvider.payment,
+                        ),
                         valueColor: Theme.of(
                           context,
                         ).colorScheme.onPrimaryContainer,
@@ -480,8 +483,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
                           padding: const EdgeInsets.only(top: 8),
                           child: _InfoRow(
                             label: 'Monthly PITI Payment',
-                            value:
-                                '\$${calculatorProvider.pitiPayment.toStringAsFixed(2)}',
+                            value: CurrencyFormatter.formatCurrency(
+                              calculatorProvider.pitiPayment,
+                            ),
                             valueColor: Theme.of(
                               context,
                             ).colorScheme.onPrimaryContainer,
@@ -513,7 +517,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
             Text(message),
             const SizedBox(height: 16),
             Text(
-              value != null ? '\$${value.toStringAsFixed(2)}' : 'N/A',
+              value != null
+                  ? CurrencyFormatter.formatCurrency(value)
+                  : 'N/A',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
@@ -533,6 +539,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
 
   void _showRatioEditor(BuildContext context, QualifyingRatio? ratio) {
     final isEditing = ratio != null;
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final nameController = TextEditingController(text: ratio?.name ?? '');
     final descController = TextEditingController(
       text: ratio?.description ?? '',
@@ -623,7 +630,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
                   : (double.tryParse(debtText) ?? (ratio?.debtRatio ?? 36.0));
 
               if (name.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger?.showSnackBar(
                   const SnackBar(content: Text('Please enter a name')),
                 );
                 return;

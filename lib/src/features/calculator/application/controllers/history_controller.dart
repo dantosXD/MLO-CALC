@@ -8,7 +8,7 @@ class HistoryController with ChangeNotifier {
   List<CalculationEntry> get entries => _history.entries;
 
   void addQuoteEntry({
-    required String type,
+    required Object? type,
     double? loanAmount,
     double? interestRate,
     double? termYears,
@@ -46,6 +46,7 @@ class HistoryController with ChangeNotifier {
     required double interestRate,
     required double termYears,
     required double maxLoanAmount,
+    double? monthlyPiPayment,
     String? notes,
   }) {
     _history.addEntry(
@@ -55,6 +56,7 @@ class HistoryController with ChangeNotifier {
         interestRate: interestRate,
         termYears: termYears,
         maxLoanAmount: maxLoanAmount,
+        monthlyPiPayment: monthlyPiPayment,
         notes: notes,
       ),
     );

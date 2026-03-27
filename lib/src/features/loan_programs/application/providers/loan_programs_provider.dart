@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/models/loan_program.dart';
 
@@ -9,14 +9,14 @@ class LoanProgramsProvider with ChangeNotifier {
   static const String _selectedKey = 'loan_program_selected';
   
   final Uuid _uuid = const Uuid();
+  final PreferenceStore _preferences;
   
   List<LoanProgram> _customPrograms = [];
   LoanProgram? _selectedProgram;
   bool _isLoading = true;
 
-  LoanProgramsProvider() {
-    _loadPrograms();
-  }
+  LoanProgramsProvider({PreferenceStore? preferenceStore})
+      : _preferences = preferenceStore ?? PreferenceStore();
 
   /// All available programs (built-in + custom)
   List<LoanProgram> get allPrograms => [
@@ -37,12 +37,11 @@ class LoanProgramsProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   /// Load programs from storage
-  Future<void> _loadPrograms() async {
+  Future<void> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Load custom programs
-      final customJson = prefs.getString(_storageKey);
+      await _preferences.load();
+
+      final customJson = _preferences.getString(_storageKey);
       if (customJson != null) {
         final List<dynamic> decoded = jsonDecode(customJson);
         _customPrograms = decoded
@@ -50,8 +49,7 @@ class LoanProgramsProvider with ChangeNotifier {
             .toList();
       }
       
-      // Load selected program
-      final selectedId = prefs.getString(_selectedKey);
+      final selectedId = _preferences.getString(_selectedKey);
       if (selectedId != null) {
         _selectedProgram = allPrograms.firstWhere(
           (p) => p.id == selectedId,
@@ -71,9 +69,9 @@ class LoanProgramsProvider with ChangeNotifier {
   /// Save custom programs to storage
   Future<void> _savePrograms() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      await _preferences.load();
       final json = jsonEncode(_customPrograms.map((p) => p.toJson()).toList());
-      await prefs.setString(_storageKey, json);
+      await _preferences.setString(_storageKey, json);
     } catch (e) {
       debugPrint('Error saving loan programs: $e');
     }
@@ -82,11 +80,11 @@ class LoanProgramsProvider with ChangeNotifier {
   /// Save selected program to storage
   Future<void> _saveSelectedProgram() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      await _preferences.load();
       if (_selectedProgram != null) {
-        await prefs.setString(_selectedKey, _selectedProgram!.id);
+        await _preferences.setString(_selectedKey, _selectedProgram!.id);
       } else {
-        await prefs.remove(_selectedKey);
+        await _preferences.remove(_selectedKey);
       }
     } catch (e) {
       debugPrint('Error saving selected program: $e');

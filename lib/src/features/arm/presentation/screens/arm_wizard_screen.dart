@@ -1,17 +1,54 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import '../../application/providers/arm_wizard_provider.dart';
 import '../../domain/models/arm_scenario.dart';
+import '../../domain/services/arm_calculator_service.dart';
+import '../../domain/services/arm_preset_service.dart';
 
-class ArmWizardScreen extends StatelessWidget {
-  const ArmWizardScreen({super.key});
+final NumberFormat _currency = NumberFormat.simpleCurrency();
+
+class ArmWizardScreen extends StatefulWidget {
+  const ArmWizardScreen({
+    super.key,
+    required this.calculator,
+    required this.presetStorage,
+  });
+
+  final ArmCalculatorService calculator;
+  final ArmPresetStorage presetStorage;
+
+  @override
+  State<ArmWizardScreen> createState() => _ArmWizardScreenState();
+}
+
+class _ArmWizardScreenState extends State<ArmWizardScreen> {
+  late final ArmWizardProvider _provider;
+
+  @override
+  void initState() {
+    super.initState();
+    _provider = ArmWizardProvider(
+      calculator: widget.calculator,
+      presetStorage: widget.presetStorage,
+    );
+    unawaited(_provider.loadPreset());
+  }
+
+  @override
+  void dispose() {
+    _provider.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ArmWizardProvider(),
+    return ChangeNotifierProvider.value(
+      value: _provider,
       child: const _ArmWizardView(),
     );
   }
@@ -321,7 +358,6 @@ class _ArmResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency();
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -339,11 +375,11 @@ class _ArmResultCard extends StatelessWidget {
               children: [
                 _ResultChip(
                   label: 'Total Paid',
-                  value: currency.format(result.totalPaid),
+                  value: _currency.format(result.totalPaid),
                 ),
                 _ResultChip(
                   label: 'Total Interest',
-                  value: currency.format(result.totalInterest),
+                  value: _currency.format(result.totalInterest),
                 ),
                 _ResultChip(
                   label: 'Adjustments',
@@ -360,10 +396,10 @@ class _ArmResultCard extends StatelessWidget {
                   style: theme.textTheme.bodyLarge,
                 ),
                 subtitle: Text(
-                  'Rate ${period.rate.toStringAsFixed(2)}% • Payment ${currency.format(period.monthlyPayment)}',
+                  'Rate ${CurrencyFormatter.formatPercent(period.rate, decimals: 2)} • Payment ${_currency.format(period.monthlyPayment)}',
                 ),
                 trailing: Text(
-                  'Balance ${currency.format(period.endingBalance)}',
+                  'Balance ${_currency.format(period.endingBalance)}',
                   style: theme.textTheme.bodyMedium,
                 ),
               ),

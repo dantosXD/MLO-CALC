@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 
 class AmortizationChart extends StatelessWidget {
   final List<AmortizationEntry> data;
@@ -160,7 +161,7 @@ class AmortizationChart extends StatelessWidget {
                           final month = spot.x.toInt() + 1;
                           final isInterest = spot.barIndex == 1;
                           return LineTooltipItem(
-                            '${isInterest ? 'Interest' : 'Principal'}\nMonth $month: \$${spot.y.toStringAsFixed(2)}',
+                            '${isInterest ? 'Interest' : 'Principal'}\nMonth $month: ${CurrencyFormatter.formatCurrency(spot.y)}',
                             TextStyle(
                               color: spot.bar.color,
                               fontWeight: FontWeight.bold,

@@ -13,7 +13,7 @@ class CoreCalculationService {
   static const double _minTolerance = 1e-6;
   static const int _maxIterations = 75;
 
-  CalculationResult<double> calculatePayment({
+  CalcResult<double> calculatePayment({
     required double loanAmount,
     required double interestRate,
     required double termYears,
@@ -27,14 +27,14 @@ class CoreCalculationService {
     );
 
     if (payment <= 0 || payment.isNaN || payment.isInfinite) {
-      return CalculationResult.failure('Unable to calculate payment');
+      return CalcResult.failure('Unable to calculate payment');
     }
 
     // Round payment to cents for display
-    return CalculationResult.success(DecimalUtils.roundToCents(payment));
+    return CalcResult.success(DecimalUtils.roundToCents(payment));
   }
   
-  CalculationResult<double> calculateInterestOnlyPayment({
+  CalcResult<double> calculateInterestOnlyPayment({
     required double loanAmount,
     required double interestRate,
   }) {
@@ -44,14 +44,14 @@ class CoreCalculationService {
     );
 
     if (payment <= 0 || payment.isNaN || payment.isInfinite) {
-      return CalculationResult.failure('Unable to calculate interest-only payment');
+      return CalcResult.failure('Unable to calculate interest-only payment');
     }
 
     // Round payment to cents for display
-    return CalculationResult.success(DecimalUtils.roundToCents(payment));
+    return CalcResult.success(DecimalUtils.roundToCents(payment));
   }
 
-  CalculationResult<double> calculateLoanAmount({
+  CalcResult<double> calculateLoanAmount({
     required double payment,
     required double interestRate,
     required double termYears,
@@ -63,14 +63,14 @@ class CoreCalculationService {
     );
 
     if (loanAmount <= 0 || loanAmount.isNaN || loanAmount.isInfinite) {
-      return CalculationResult.failure('Unable to calculate loan amount');
+      return CalcResult.failure('Unable to calculate loan amount');
     }
 
     // Round loan amount to cents
-    return CalculationResult.success(DecimalUtils.roundToCents(loanAmount));
+    return CalcResult.success(DecimalUtils.roundToCents(loanAmount));
   }
 
-  CalculationResult<double> calculateTerm({
+  CalcResult<double> calculateTerm({
     required double loanAmount,
     required double payment,
     required double interestRate,
@@ -82,25 +82,25 @@ class CoreCalculationService {
     );
 
     if (termYears <= 0 || termYears.isNaN) {
-      return CalculationResult.failure('Payment too low for loan');
+      return CalcResult.failure('Payment too low for loan');
     }
 
-    return CalculationResult.success(termYears);
+    return CalcResult.success(termYears);
   }
 
-  CalculationResult<double> solveInterestRate({
+  CalcResult<double> solveInterestRate({
     required double loanAmount,
     required double payment,
     required double termYears,
   }) {
     final double totalMonths = termYears * 12;
     if (loanAmount <= 0 || payment <= 0 || termYears <= 0) {
-      return CalculationResult.failure('Provide positive loan, payment, and term');
+      return CalcResult.failure('Provide positive loan, payment, and term');
     }
 
     final double zeroInterestPayment = loanAmount / totalMonths;
     if (payment <= zeroInterestPayment + _minTolerance) {
-      return CalculationResult.failure('Payment too low for loan');
+      return CalcResult.failure('Payment too low for loan');
     }
 
     // Use heuristic for starting guess
@@ -177,13 +177,13 @@ class CoreCalculationService {
     }
 
     if (!converged) {
-      return CalculationResult.failure(
+      return CalcResult.failure(
         'Unable to converge on interest rate',
         converged: false,
       );
     }
 
     // Round interest rate to reasonable precision (3 decimal places for rates like 5.125%)
-    return CalculationResult.success(DecimalUtils.roundToDecimal(currentRate, 3));
+    return CalcResult.success(DecimalUtils.roundToDecimal(currentRate, 3));
   }
 }

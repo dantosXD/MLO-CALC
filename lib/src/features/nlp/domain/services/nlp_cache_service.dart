@@ -1,146 +1,142 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
+import 'package:loan_ranger/src/core/persistence/secure_store.dart';
+
 import 'nlp_calculator_service.dart';
 
-/// Cache service for NLP responses to enable offline functionality
+/// Cache service for NLP responses to enable offline functionality.
 class NlpCacheService {
+  NlpCacheService({
+    SecureStore? secureStore,
+    PreferenceStore? preferenceStore,
+  })  : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
+        _legacyStore = preferenceStore ?? PreferenceStore();
+
   static const String _cacheKey = 'nlp_response_cache';
   static const String _queueKey = 'nlp_pending_queue';
+  static const String _legacyCacheKey = 'nlp_response_cache';
+  static const String _legacyQueueKey = 'nlp_pending_queue';
   static const int _maxCacheSize = 50;
   static const Duration _cacheExpiry = Duration(days: 7);
 
-  /// Cached response with metadata
-  List<CachedNlpResponse> _cache = [];
-  List<PendingNlpRequest> _pendingQueue = [];
+  final SecureStore _secureStore;
+  final PreferenceStore _legacyStore;
+
+  List<CachedNlpResponse> _cache = <CachedNlpResponse>[];
+  List<PendingNlpRequest> _pendingQueue = <PendingNlpRequest>[];
   bool _isLoaded = false;
+  Future<void>? _loadFuture;
 
   List<CachedNlpResponse> get cache => List.unmodifiable(_cache);
   List<PendingNlpRequest> get pendingQueue => List.unmodifiable(_pendingQueue);
   int get pendingCount => _pendingQueue.length;
   bool get hasPendingRequests => _pendingQueue.isNotEmpty;
 
-  /// Load cache from storage
-  Future<void> load() async {
+  Future<void> load() {
+    return _loadFuture ??= _loadInternal();
+  }
+
+  Future<void> _loadInternal() async {
     if (_isLoaded) return;
-    
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Load cache
-      final cacheJson = prefs.getString(_cacheKey);
-      if (cacheJson != null) {
-        final List<dynamic> decoded = jsonDecode(cacheJson);
-        _cache = decoded
-            .map((e) => CachedNlpResponse.fromJson(e))
-            .where((e) => !e.isExpired)
-            .toList();
+      final secureCacheJson = await _secureStore.read(_cacheKey);
+      final secureQueueJson = await _secureStore.read(_queueKey);
+
+      if (secureCacheJson != null || secureQueueJson != null) {
+        _cache = _decodeCache(secureCacheJson);
+        _pendingQueue = _decodeQueue(secureQueueJson);
+      } else {
+        await _legacyStore.load();
+        _cache = _decodeCache(_legacyStore.getString(_legacyCacheKey));
+        _pendingQueue = _decodeQueue(_legacyStore.getString(_legacyQueueKey));
+        await _save();
+        await _legacyStore.remove(_legacyCacheKey);
+        await _legacyStore.remove(_legacyQueueKey);
       }
-      
-      // Load pending queue
-      final queueJson = prefs.getString(_queueKey);
-      if (queueJson != null) {
-        final List<dynamic> decoded = jsonDecode(queueJson);
-        _pendingQueue = decoded
-            .map((e) => PendingNlpRequest.fromJson(e))
-            .toList();
-      }
-      
-      _isLoaded = true;
-    } catch (e) {
-      _cache = [];
-      _pendingQueue = [];
+    } catch (_) {
+      _cache = <CachedNlpResponse>[];
+      _pendingQueue = <PendingNlpRequest>[];
+    } finally {
       _isLoaded = true;
     }
   }
 
-  /// Save cache to storage
   Future<void> _save() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Save cache
       final cacheJson = jsonEncode(_cache.map((e) => e.toJson()).toList());
-      await prefs.setString(_cacheKey, cacheJson);
-      
-      // Save queue
-      final queueJson = jsonEncode(_pendingQueue.map((e) => e.toJson()).toList());
-      await prefs.setString(_queueKey, queueJson);
-    } catch (e) {
-      // Silently fail
-    }
+      final queueJson =
+          jsonEncode(_pendingQueue.map((e) => e.toJson()).toList());
+      await _secureStore.write(key: _cacheKey, value: cacheJson);
+      await _secureStore.write(key: _queueKey, value: queueJson);
+    } catch (_) {}
   }
 
-  /// Get cached response for a query (fuzzy matching)
   CachedNlpResponse? getCachedResponse(String query) {
     final normalizedQuery = _normalizeQuery(query);
-    
+
     for (final cached in _cache) {
-      if (!cached.isExpired && _queriesMatch(cached.normalizedQuery, normalizedQuery)) {
+      if (!cached.isExpired &&
+          _queriesMatch(cached.normalizedQuery, normalizedQuery)) {
         return cached;
       }
     }
     return null;
   }
 
-  /// Cache a response
   Future<void> cacheResponse(String query, CalculationRequest response) async {
     await load();
-    
+
     final normalizedQuery = _normalizeQuery(query);
-    
-    // Remove existing cache for same query
     _cache.removeWhere((e) => _queriesMatch(e.normalizedQuery, normalizedQuery));
-    
-    // Add new cache entry
-    _cache.insert(0, CachedNlpResponse(
-      query: query,
-      normalizedQuery: normalizedQuery,
-      response: response,
-      cachedAt: DateTime.now(),
-    ));
-    
-    // Trim cache to max size
+    _cache.insert(
+      0,
+      CachedNlpResponse(
+        query: query,
+        normalizedQuery: normalizedQuery,
+        response: response,
+        cachedAt: DateTime.now(),
+      ),
+    );
+
     if (_cache.length > _maxCacheSize) {
       _cache = _cache.sublist(0, _maxCacheSize);
     }
-    
+
     await _save();
   }
 
-  /// Add a request to the pending queue (for offline processing later)
   Future<void> queueRequest(String query) async {
     await load();
-    
-    // Avoid duplicates
+
     if (_pendingQueue.any((p) => p.query == query)) return;
-    
-    _pendingQueue.add(PendingNlpRequest(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      query: query,
-      queuedAt: DateTime.now(),
-    ));
-    
+
+    _pendingQueue.add(
+      PendingNlpRequest(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        query: query,
+        queuedAt: DateTime.now(),
+      ),
+    );
+
     await _save();
   }
 
-  /// Remove a request from the pending queue
   Future<void> removeFromQueue(String id) async {
     _pendingQueue.removeWhere((p) => p.id == id);
     await _save();
   }
 
-  /// Clear the pending queue
   Future<void> clearQueue() async {
     _pendingQueue.clear();
     await _save();
   }
 
-  /// Get all pending requests for processing
   List<PendingNlpRequest> getPendingRequests() {
-    return List.from(_pendingQueue);
+    return List<PendingNlpRequest>.from(_pendingQueue);
   }
 
-  /// Normalize query for matching
   String _normalizeQuery(String query) {
     return query
         .toLowerCase()
@@ -149,34 +145,69 @@ class NlpCacheService {
         .trim();
   }
 
-  /// Check if two normalized queries are similar enough
   bool _queriesMatch(String a, String b) {
-    // Exact match
     if (a == b) return true;
-    
-    // Extract key numbers and check if they match
-    final numbersA = RegExp(r'\d+\.?\d*').allMatches(a).map((m) => m.group(0)).toSet();
-    final numbersB = RegExp(r'\d+\.?\d*').allMatches(b).map((m) => m.group(0)).toSet();
-    
+
+    final numbersA =
+        RegExp(r'\d+\.?\d*').allMatches(a).map((m) => m.group(0)).toSet();
+    final numbersB =
+        RegExp(r'\d+\.?\d*').allMatches(b).map((m) => m.group(0)).toSet();
+
     if (numbersA.isEmpty || numbersB.isEmpty) return false;
-    
-    // If all numbers match and queries have similar keywords, consider it a match
+
     if (numbersA.containsAll(numbersB) && numbersB.containsAll(numbersA)) {
-      // Check for similar intent keywords
-      final keywords = ['payment', 'loan', 'rate', 'term', 'income', 'qualify', 'max', 'min'];
+      const keywords = [
+        'payment',
+        'loan',
+        'rate',
+        'term',
+        'income',
+        'qualify',
+        'max',
+        'min',
+      ];
       final keywordsA = keywords.where((k) => a.contains(k)).toSet();
       final keywordsB = keywords.where((k) => b.contains(k)).toSet();
-      
       return keywordsA.intersection(keywordsB).isNotEmpty;
     }
-    
+
     return false;
   }
 
-  /// Clear all cache
   Future<void> clearCache() async {
     _cache.clear();
     await _save();
+  }
+
+  List<CachedNlpResponse> _decodeCache(String? jsonString) {
+    if (jsonString == null || jsonString.isEmpty) {
+      return <CachedNlpResponse>[];
+    }
+
+    try {
+      final decoded = jsonDecode(jsonString) as List<dynamic>;
+      return decoded
+          .map((e) => CachedNlpResponse.fromJson(Map<String, dynamic>.from(e)))
+          .where((e) => !e.isExpired)
+          .toList();
+    } catch (_) {
+      return <CachedNlpResponse>[];
+    }
+  }
+
+  List<PendingNlpRequest> _decodeQueue(String? jsonString) {
+    if (jsonString == null || jsonString.isEmpty) {
+      return <PendingNlpRequest>[];
+    }
+
+    try {
+      final decoded = jsonDecode(jsonString) as List<dynamic>;
+      return decoded
+          .map((e) => PendingNlpRequest.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (_) {
+      return <PendingNlpRequest>[];
+    }
   }
 }
 
@@ -193,22 +224,24 @@ class CachedNlpResponse {
     required this.cachedAt,
   });
 
-  bool get isExpired => 
+  bool get isExpired =>
       DateTime.now().difference(cachedAt) > NlpCacheService._cacheExpiry;
 
-  Map<String, dynamic> toJson() => {
-    'query': query,
-    'normalizedQuery': normalizedQuery,
-    'response': response.toJson(),
-    'cachedAt': cachedAt.toIso8601String(),
-  };
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'query': query,
+        'normalizedQuery': normalizedQuery,
+        'response': response.toJson(),
+        'cachedAt': cachedAt.toIso8601String(),
+      };
 
   factory CachedNlpResponse.fromJson(Map<String, dynamic> json) {
     return CachedNlpResponse(
-      query: json['query'],
-      normalizedQuery: json['normalizedQuery'],
-      response: CalculationRequest.fromJson(json['response']),
-      cachedAt: DateTime.parse(json['cachedAt']),
+      query: json['query'] as String,
+      normalizedQuery: json['normalizedQuery'] as String,
+      response: CalculationRequest.fromJson(
+        Map<String, dynamic>.from(json['response'] as Map),
+      ),
+      cachedAt: DateTime.parse(json['cachedAt'] as String),
     );
   }
 }
@@ -224,17 +257,17 @@ class PendingNlpRequest {
     required this.queuedAt,
   });
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'query': query,
-    'queuedAt': queuedAt.toIso8601String(),
-  };
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'query': query,
+        'queuedAt': queuedAt.toIso8601String(),
+      };
 
   factory PendingNlpRequest.fromJson(Map<String, dynamic> json) {
     return PendingNlpRequest(
-      id: json['id'],
-      query: json['query'],
-      queuedAt: DateTime.parse(json['queuedAt']),
+      id: json['id'] as String,
+      query: json['query'] as String,
+      queuedAt: DateTime.parse(json['queuedAt'] as String),
     );
   }
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import '../../domain/models/rent_vs_buy_calculation.dart';
 import '../../domain/services/rent_vs_buy_calculator.dart';
+
+final NumberFormat _currency = NumberFormat.simpleCurrency();
 
 class RentVsBuyScreen extends StatefulWidget {
   const RentVsBuyScreen({super.key});
@@ -13,7 +16,6 @@ class RentVsBuyScreen extends StatefulWidget {
 
 class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
   final _calculator = const RentVsBuyCalculator();
-  final _currency = NumberFormat.simpleCurrency();
   
   // Input Controllers
   final _homePriceController = TextEditingController(text: '400000');
@@ -63,7 +65,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
       homePrice: double.tryParse(_homePriceController.text) ?? 400000,
       downPaymentPercent: double.tryParse(_downPaymentController.text) ?? 20,
       interestRate: double.tryParse(_interestRateController.text) ?? 6.5,
-      termYears: int.tryParse(_termController.text) ?? 30,
+      termYears: double.tryParse(_termController.text) ?? 30,
       propertyTaxRate: double.tryParse(_propertyTaxController.text) ?? 1.2,
       homeInsuranceAnnual: double.tryParse(_homeInsuranceController.text) ?? 1800,
       hoaMonthly: double.tryParse(_hoaController.text) ?? 0,
@@ -502,12 +504,12 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                         showTitles: true,
                         reservedSize: 60,
                         getTitlesWidget: (value, meta) {
-                          if (value >= 1000000) {
-                            return Text('\$${(value / 1000000).toStringAsFixed(1)}M');
-                          } else if (value >= 1000) {
-                            return Text('\$${(value / 1000).toStringAsFixed(0)}K');
-                          }
-                          return Text('\$${value.toStringAsFixed(0)}');
+                          return Text(
+                            CurrencyFormatter.formatCompactCurrency(
+                              value,
+                              maxDigits: 7,
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -649,7 +651,6 @@ class _CostRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -660,7 +661,7 @@ class _CostRow extends StatelessWidget {
             style: isBold ? const TextStyle(fontWeight: FontWeight.bold) : null,
           ),
           Text(
-            isCredit ? '-${currency.format(value.abs())}' : currency.format(value),
+            isCredit ? '-${_currency.format(value.abs())}' : _currency.format(value),
             style: TextStyle(
               fontWeight: isBold ? FontWeight.bold : null,
               color: isCredit ? Colors.green : null,
@@ -705,14 +706,13 @@ class _MethodologyStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency();
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
       title: Row(
         children: [
           Expanded(child: Text(step.name)),
           Text(
-            currency.format(step.result),
+            _currency.format(step.result),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],

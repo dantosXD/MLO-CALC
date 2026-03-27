@@ -1,4 +1,3 @@
-import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/core/scenarios/scenario_catalog.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart';
@@ -8,9 +7,8 @@ import 'package:loan_ranger/src/features/calculator/domain/services/persistence_
 
 class CalculatorSessionRepository {
   CalculatorSessionRepository({
-    CalculatorPersistenceService? persistenceService,
-  }) : _persistenceService =
-           persistenceService ?? serviceLocator<CalculatorPersistenceService>();
+    required CalculatorPersistenceService persistenceService,
+  }) : _persistenceService = persistenceService;
 
   final CalculatorPersistenceService _persistenceService;
 

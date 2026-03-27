@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/navigation/app_router.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import '../../application/providers/loan_programs_provider.dart';
 import '../../domain/models/loan_program.dart';
-import '../widgets/loan_program_editor.dart';
 
 class LoanProgramsScreen extends StatelessWidget {
   const LoanProgramsScreen({super.key});
@@ -92,11 +92,7 @@ class LoanProgramsScreen extends StatelessWidget {
   }
 
   void _showProgramEditor(BuildContext context, LoanProgram? program) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LoanProgramEditor(program: program),
-      ),
-    );
+    context.read<AppRouter>().openLoanProgramEditor(program: program);
   }
 
   void _selectProgram(

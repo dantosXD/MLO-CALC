@@ -63,7 +63,7 @@ class InfoDialog extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
           ),
           const SizedBox(height: 4),

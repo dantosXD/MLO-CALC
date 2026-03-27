@@ -4,6 +4,8 @@
 /// realistic and safe values that prevent calculation errors.
 library;
 
+import 'package:loan_ranger/src/core/utils/formatters.dart';
+
 import '../utils/constants.dart';
 
 /// Validation result containing error message if validation fails
@@ -206,8 +208,8 @@ class FinancialValidators {
 
     if (payment <= minimumPayment) {
       return ValidationResult.invalid(
-        'Payment (\$${payment.toStringAsFixed(2)}) must exceed minimum interest '
-        '(\$${minimumPayment.toStringAsFixed(2)}) to pay off loan',
+        'Payment (${CurrencyFormatter.formatCurrency(payment)}) must exceed minimum interest '
+        '(${CurrencyFormatter.formatCurrency(minimumPayment)}) to pay off loan',
       );
     }
 

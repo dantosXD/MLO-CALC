@@ -3,9 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/utils/advanced_calculations.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
-import 'package:loan_ranger/src/features/arm/presentation/screens/arm_wizard_screen.dart';
+import 'package:loan_ranger/src/core/navigation/app_router.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing_costs_sheet.dart';
-import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -60,7 +59,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     _InfoRow(
                       label: 'Loan Amount',
                       value: calculatorProvider.loanAmount != null
-                          ? '\$${calculatorProvider.loanAmount!.toStringAsFixed(2)}'
+                          ? CurrencyFormatter.formatCurrency(
+                              calculatorProvider.loanAmount,
+                            )
                           : 'Not set',
                     ),
                     const SizedBox(height: 8),
@@ -77,27 +78,33 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     _InfoRow(
                       label: 'Term',
                       value: calculatorProvider.termYears != null
-                          ? '${calculatorProvider.termYears!.toStringAsFixed(0)} years'
+                          ? CurrencyFormatter.formatYears(
+                              calculatorProvider.termYears,
+                            )
                           : 'Not set',
                     ),
                     const SizedBox(height: 8),
                     _InfoRow(
                       label: 'Monthly Payment',
                       value: calculatorProvider.payment != null
-                          ? '\$${calculatorProvider.payment!.toStringAsFixed(2)}'
+                          ? CurrencyFormatter.formatCurrency(
+                              calculatorProvider.payment,
+                            )
                           : 'Not set',
                     ),
                     const SizedBox(height: 8),
                     _InfoRow(
                       label: 'Closing Costs',
-                      value:
-                          '\$${calculatorProvider.closingCosts.total.toStringAsFixed(2)}',
+                      value: CurrencyFormatter.formatCurrency(
+                        calculatorProvider.closingCosts.total,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     _InfoRow(
                       label: 'Cash to Close',
-                      value:
-                          '\$${calculatorProvider.cashToClose.toStringAsFixed(2)}',
+                      value: CurrencyFormatter.formatCurrency(
+                        calculatorProvider.cashToClose,
+                      ),
                     ),
                   ],
                 ),
@@ -207,7 +214,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '\$${_balloonBalance!.toStringAsFixed(2)}',
+                              CurrencyFormatter.formatCurrency(_balloonBalance),
                               style: Theme.of(context).textTheme.headlineMedium
                                   ?.copyWith(
                                     color: Theme.of(
@@ -297,22 +304,25 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                           children: [
                             _ResultRow(
                               label: 'Bi-Weekly Payment',
-                              value:
-                                  '\$${_biWeeklyResults!['biWeeklyPayment']!.toStringAsFixed(2)}',
+                              value: CurrencyFormatter.formatCurrency(
+                                _biWeeklyResults!['biWeeklyPayment'],
+                              ),
                               icon: Icons.payments,
                             ),
                             const Divider(height: 24),
                             _ResultRow(
                               label: 'New Loan Term',
-                              value:
-                                  '${_biWeeklyResults!['newTermYears']!.toStringAsFixed(1)} years',
+                              value: CurrencyFormatter.formatYears(
+                                _biWeeklyResults!['newTermYears'],
+                              ),
                               icon: Icons.schedule,
                             ),
                             const Divider(height: 24),
                             _ResultRow(
                               label: 'Interest Saved',
-                              value:
-                                  '\$${_biWeeklyResults!['interestSaved']!.toStringAsFixed(2)}',
+                              value: CurrencyFormatter.formatCurrency(
+                                _biWeeklyResults!['interestSaved'],
+                              ),
                               icon: Icons.savings,
                               valueColor: Colors.green,
                             ),
@@ -332,8 +342,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: Text(
-                                      'Paying bi-weekly reduces your term by ${(calculatorProvider.termYears! - _biWeeklyResults!['newTermYears']!).toStringAsFixed(1)} years!',
+                                  child: Text(
+                                      'Paying bi-weekly reduces your term by ${CurrencyFormatter.formatYears(calculatorProvider.termYears! - _biWeeklyResults!['newTermYears']!)}!',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: Colors.green,
@@ -372,19 +382,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
 
     final pdfData = await ReportService.generateLoanReport(provider: provider);
+    if (!context.mounted) return;
     await Printing.sharePdf(bytes: pdfData, filename: 'loan-estimate.pdf');
   }
 
   void _openArmWizard(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const ArmWizardScreen()));
+    context.read<AppRouter>().openArmWizard();
   }
 
   void _openRentVsBuy(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const RentVsBuyScreen()));
+    context.read<AppRouter>().openRentVsBuy();
   }
 
   void _openClosingCosts(BuildContext context) {
@@ -483,7 +490,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${result!.toStringAsFixed(2)}',
+                      CurrencyFormatter.formatCurrency(result),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),

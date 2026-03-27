@@ -1,6 +1,6 @@
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
-import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
 
 class QuoteShareData {
   const QuoteShareData({
@@ -31,7 +31,7 @@ class QuoteShareData {
   final double? price;
   final double? downPayment;
 
-  static QuoteShareData fromCalculatorProvider(CalculatorProvider provider) {
+  static QuoteShareData fromCalculatorProvider(LoanParametersReadModel provider) {
     final monthlyTax = (provider.propertyTax ?? 0) / 12;
     final monthlyInsurance = (provider.homeInsurance ?? 0) / 12;
     final monthlyMortgageInsurance = (provider.mortgageInsurance ?? 0) / 12;

@@ -36,8 +36,8 @@ class VoiceWaveform extends StatelessWidget {
                       width: 6,
                       height: height * (index % 2 == 0 ? 1.2 : 0.8),
                       decoration: BoxDecoration(
-                        color: active 
-                          ? Theme.of(context).primaryColor 
+                        color: active
+                          ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).disabledColor.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(10),
                       ),

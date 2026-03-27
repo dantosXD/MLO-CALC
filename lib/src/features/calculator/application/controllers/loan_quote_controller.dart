@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/core/validators/financial_validators.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
@@ -26,11 +25,10 @@ enum _ManualVar { loanAmount, interestRate, termYears, payment }
 
 class LoanQuoteController with ChangeNotifier {
   LoanQuoteController({
-    CoreCalculationService? coreCalculationService,
+    required CoreCalculationService coreCalculationService,
     required HistoryController historyController,
-  }) : _coreCalculationService =
-           coreCalculationService ?? serviceLocator<CoreCalculationService>(),
-       _historyController = historyController;
+  })  : _coreCalculationService = coreCalculationService,
+        _historyController = historyController;
 
   final CoreCalculationService _coreCalculationService;
   final HistoryController _historyController;
@@ -175,7 +173,7 @@ class LoanQuoteController with ChangeNotifier {
       homeInsurance: _toDouble(inputs['homeInsurance']),
       mortgageInsurance: _toDouble(inputs['mortgageInsurance']),
       monthlyExpenses: _toDouble(inputs['monthlyExpenses']),
-      calculationError: null,
+      clearCalculationError: true,
       presentedValue:
           _toDouble(results['payment']) ??
           _toDouble(inputs['payment']) ??
@@ -196,15 +194,21 @@ class LoanQuoteController with ChangeNotifier {
   void setLoanAmount({double? value}) {
     if (!_validateValue(value, FinancialValidators.validateLoanAmount)) return;
     if (value == null) {
-      _state = _state.copyWith(loanAmount: null, calculationError: null);
+      _state = _state.copyWith(
+        clearLoanAmount: true,
+        clearCalculationError: true,
+      );
       _unregisterManualInput(_ManualVar.loanAmount);
     } else {
-      _state = _state.copyWith(loanAmount: value, calculationError: null);
+      _state = _state.copyWith(
+        loanAmount: value,
+        clearCalculationError: true,
+      );
       _registerManualInput(_ManualVar.loanAmount);
     }
 
     if (!_manualVariables.contains(_ManualVar.payment)) {
-      _state = _state.copyWith(payment: null);
+      _state = _state.copyWith(clearPayment: true);
       _unregisterManualInput(_ManualVar.payment);
     }
 
@@ -219,15 +223,21 @@ class LoanQuoteController with ChangeNotifier {
       return;
     }
     if (value == null) {
-      _state = _state.copyWith(interestRate: null, calculationError: null);
+      _state = _state.copyWith(
+        clearInterestRate: true,
+        clearCalculationError: true,
+      );
       _unregisterManualInput(_ManualVar.interestRate);
     } else {
-      _state = _state.copyWith(interestRate: value, calculationError: null);
+      _state = _state.copyWith(
+        interestRate: value,
+        clearCalculationError: true,
+      );
       _registerManualInput(_ManualVar.interestRate);
     }
 
     if (!_manualVariables.contains(_ManualVar.payment)) {
-      _state = _state.copyWith(payment: null);
+      _state = _state.copyWith(clearPayment: true);
       _unregisterManualInput(_ManualVar.payment);
     }
 
@@ -240,15 +250,21 @@ class LoanQuoteController with ChangeNotifier {
   void setTermYears({double? value}) {
     if (!_validateValue(value, FinancialValidators.validateTermYears)) return;
     if (value == null) {
-      _state = _state.copyWith(termYears: null, calculationError: null);
+      _state = _state.copyWith(
+        clearTermYears: true,
+        clearCalculationError: true,
+      );
       _unregisterManualInput(_ManualVar.termYears);
     } else {
-      _state = _state.copyWith(termYears: value, calculationError: null);
+      _state = _state.copyWith(
+        termYears: value,
+        clearCalculationError: true,
+      );
       _registerManualInput(_ManualVar.termYears);
     }
 
     if (!_manualVariables.contains(_ManualVar.payment)) {
-      _state = _state.copyWith(payment: null);
+      _state = _state.copyWith(clearPayment: true);
       _unregisterManualInput(_ManualVar.payment);
     }
 
@@ -261,15 +277,21 @@ class LoanQuoteController with ChangeNotifier {
   void setPayment({double? value}) {
     if (!_validateValue(value, FinancialValidators.validatePayment)) return;
     if (value == null) {
-      _state = _state.copyWith(payment: null, calculationError: null);
+      _state = _state.copyWith(
+        clearPayment: true,
+        clearCalculationError: true,
+      );
       _unregisterManualInput(_ManualVar.payment);
     } else {
-      _state = _state.copyWith(payment: value, calculationError: null);
+      _state = _state.copyWith(
+        payment: value,
+        clearCalculationError: true,
+      );
       _registerManualInput(_ManualVar.payment);
     }
 
     if (!_manualVariables.contains(_ManualVar.loanAmount)) {
-      _state = _state.copyWith(loanAmount: null);
+      _state = _state.copyWith(clearLoanAmount: true);
       _unregisterManualInput(_ManualVar.loanAmount);
     }
 
@@ -281,7 +303,9 @@ class LoanQuoteController with ChangeNotifier {
 
   void setPrice({double? value}) {
     if (!_validateValue(value, FinancialValidators.validatePrice)) return;
-    _state = _state.copyWith(price: value, calculationError: null);
+    _state = value == null
+        ? _state.copyWith(clearPrice: true, clearCalculationError: true)
+        : _state.copyWith(price: value, clearCalculationError: true);
     final didCalculate = _calculateLoanAmountFromPrice();
     if (!didCalculate) {
       notifyListeners();
@@ -300,7 +324,9 @@ class LoanQuoteController with ChangeNotifier {
         return;
       }
     }
-    _state = _state.copyWith(downPayment: value, calculationError: null);
+    _state = value == null
+        ? _state.copyWith(clearDownPayment: true, clearCalculationError: true)
+        : _state.copyWith(downPayment: value, clearCalculationError: true);
     final didCalculate = _calculateLoanAmountFromPrice();
     if (!didCalculate) {
       notifyListeners();
@@ -308,22 +334,30 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void setPropertyTax({double? value}) {
-    _state = _state.copyWith(propertyTax: value);
+    _state = value == null
+        ? _state.copyWith(clearPropertyTax: true)
+        : _state.copyWith(propertyTax: value);
     notifyListeners();
   }
 
   void setHomeInsurance({double? value}) {
-    _state = _state.copyWith(homeInsurance: value);
+    _state = value == null
+        ? _state.copyWith(clearHomeInsurance: true)
+        : _state.copyWith(homeInsurance: value);
     notifyListeners();
   }
 
   void setMortgageInsurance({double? value}) {
-    _state = _state.copyWith(mortgageInsurance: value);
+    _state = value == null
+        ? _state.copyWith(clearMortgageInsurance: true)
+        : _state.copyWith(mortgageInsurance: value);
     notifyListeners();
   }
 
   void setMonthlyExpenses({double? value}) {
-    _state = _state.copyWith(monthlyExpenses: value);
+    _state = value == null
+        ? _state.copyWith(clearMonthlyExpenses: true)
+        : _state.copyWith(monthlyExpenses: value);
     notifyListeners();
   }
 
@@ -346,7 +380,7 @@ class LoanQuoteController with ChangeNotifier {
   void toggleInterestOnly() {
     _state = _state.copyWith(
       isInterestOnly: !_state.isInterestOnly,
-      calculationError: null,
+      clearCalculationError: true,
     );
     if (_state.loanAmount != null &&
         _state.interestRate != null &&
@@ -391,7 +425,10 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void clearLoanAmount() {
-    _state = _state.copyWith(loanAmount: null, calculationError: null);
+    _state = _state.copyWith(
+      clearLoanAmount: true,
+      clearCalculationError: true,
+    );
     _unregisterManualInput(_ManualVar.loanAmount);
     final didCalculate = calculate();
     if (!didCalculate) {
@@ -400,7 +437,10 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void clearInterestRate() {
-    _state = _state.copyWith(interestRate: null, calculationError: null);
+    _state = _state.copyWith(
+      clearInterestRate: true,
+      clearCalculationError: true,
+    );
     _unregisterManualInput(_ManualVar.interestRate);
     final didCalculate = calculate();
     if (!didCalculate) {
@@ -409,7 +449,10 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void clearTermYears() {
-    _state = _state.copyWith(termYears: null, calculationError: null);
+    _state = _state.copyWith(
+      clearTermYears: true,
+      clearCalculationError: true,
+    );
     _unregisterManualInput(_ManualVar.termYears);
     final didCalculate = calculate();
     if (!didCalculate) {
@@ -418,7 +461,10 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void clearPayment() {
-    _state = _state.copyWith(payment: null, calculationError: null);
+    _state = _state.copyWith(
+      clearPayment: true,
+      clearCalculationError: true,
+    );
     _unregisterManualInput(_ManualVar.payment);
     final didCalculate = calculate();
     if (!didCalculate) {
@@ -528,7 +574,7 @@ class LoanQuoteController with ChangeNotifier {
     _state = _state.copyWith(
       loanAmount: outcome.loanAmount,
       payment: outcome.monthlyPiPayment,
-      calculationError: null,
+      clearCalculationError: true,
       presentedValue: outcome.loanAmount,
     );
     _unregisterManualInput(_ManualVar.loanAmount);
@@ -572,7 +618,7 @@ class LoanQuoteController with ChangeNotifier {
         : _state.downPayment!;
     _state = _state.copyWith(
       loanAmount: _state.price! - downPaymentAmount,
-      calculationError: null,
+      clearCalculationError: true,
     );
     _unregisterManualInput(_ManualVar.loanAmount);
     return calculate();
@@ -600,12 +646,12 @@ class LoanQuoteController with ChangeNotifier {
 
     _state = _state.copyWith(
       payment: result.value,
-      calculationError: null,
+      clearCalculationError: true,
       presentedValue: result.value,
     );
     _unregisterManualInput(_ManualVar.payment);
     _historyController.addQuoteEntry(
-      type: 'payment',
+      type: CalculationEntryType.payment,
       loanAmount: _state.loanAmount,
       interestRate: _state.interestRate,
       termYears: _state.termYears,
@@ -641,12 +687,12 @@ class LoanQuoteController with ChangeNotifier {
 
     _state = _state.copyWith(
       loanAmount: result.value,
-      calculationError: null,
+      clearCalculationError: true,
       presentedValue: result.value,
     );
     _unregisterManualInput(_ManualVar.loanAmount);
     _historyController.addQuoteEntry(
-      type: 'loan_amount',
+      type: CalculationEntryType.loanAmount,
       loanAmount: _state.loanAmount,
       interestRate: _state.interestRate,
       termYears: _state.termYears,
@@ -682,12 +728,12 @@ class LoanQuoteController with ChangeNotifier {
 
     _state = _state.copyWith(
       termYears: result.value,
-      calculationError: null,
+      clearCalculationError: true,
       presentedValue: result.value,
     );
     _unregisterManualInput(_ManualVar.termYears);
     _historyController.addQuoteEntry(
-      type: 'term',
+      type: CalculationEntryType.term,
       loanAmount: _state.loanAmount,
       interestRate: _state.interestRate,
       termYears: _state.termYears,
@@ -723,12 +769,12 @@ class LoanQuoteController with ChangeNotifier {
 
     _state = _state.copyWith(
       interestRate: result.value,
-      calculationError: null,
+      clearCalculationError: true,
       presentedValue: result.value,
     );
     _unregisterManualInput(_ManualVar.interestRate);
     _historyController.addQuoteEntry(
-      type: 'interest_rate',
+      type: CalculationEntryType.interestRate,
       loanAmount: _state.loanAmount,
       interestRate: _state.interestRate,
       termYears: _state.termYears,

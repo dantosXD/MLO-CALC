@@ -132,7 +132,7 @@ class WorkspaceDashboardScreen extends StatelessWidget {
   }
 
   String _featureIdForEntry(CalculationEntry entry) {
-    if (entry.type == 'qualification') {
+    if (entry.type == CalculationEntryType.qualification) {
       return FeatureCatalog.qualificationId;
     }
     return FeatureCatalog.calculatorId;

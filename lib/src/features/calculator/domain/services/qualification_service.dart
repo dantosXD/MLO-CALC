@@ -11,7 +11,7 @@ class QualificationService {
 
   final LoanMath _loanMath;
 
-  CalculationResult<QualificationResult> calculateMaxLoan({
+  CalcResult<QualificationResult> calculateMaxLoan({
     required QualifyingRatio ratio,
     required double annualIncome,
     required double interestRate,
@@ -20,7 +20,7 @@ class QualificationService {
     double monthlyEscrows = 0,
   }) {
     if (annualIncome <= 0 || interestRate <= 0 || termYears <= 0) {
-      return CalculationResult.failure('Incomplete rate/term/income data');
+      return CalcResult.failure('Incomplete rate/term/income data');
     }
 
     final double monthlyIncome = annualIncome / 12;
@@ -32,7 +32,7 @@ class QualificationService {
     final double maxPi = maxPiti - monthlyEscrows;
 
     if (maxPi <= 0) {
-      return CalculationResult.failure('Insufficient income for housing');
+      return CalcResult.failure('Insufficient income for housing');
     }
 
     final double loanAmount = _loanMath.calculateLoanAmount(
@@ -42,10 +42,10 @@ class QualificationService {
     );
 
     if (loanAmount <= 0) {
-      return CalculationResult.failure('Unable to qualify with given data');
+      return CalcResult.failure('Unable to qualify with given data');
     }
 
-    return CalculationResult.success(
+    return CalcResult.success(
       QualificationResult(
         loanAmount: loanAmount,
         monthlyPiPayment: maxPi,
@@ -53,13 +53,13 @@ class QualificationService {
     );
   }
 
-  CalculationResult<double> calculateMinimumIncome({
+  CalcResult<double> calculateMinimumIncome({
     required QualifyingRatio ratio,
     required double pitiPayment,
     double monthlyDebt = 0,
   }) {
     if (pitiPayment <= 0) {
-      return CalculationResult.failure('No payment to evaluate');
+      return CalcResult.failure('No payment to evaluate');
     }
 
     final double minIncomeFront =
@@ -67,6 +67,6 @@ class QualificationService {
     final double totalDebt = pitiPayment + monthlyDebt;
     final double minIncomeBack = (totalDebt / (ratio.debtRatio / 100)) * 12;
 
-    return CalculationResult.success(max(minIncomeFront, minIncomeBack));
+    return CalcResult.success(max(minIncomeFront, minIncomeBack));
   }
 }

@@ -82,11 +82,11 @@ class AdvancedCalculations {
 
       double payment;
       if (monthlyRate <= 0) {
-        payment = currentBalance / remainingMonths;
+        payment = DecimalUtils.roundToCents(currentBalance / remainingMonths);
       } else {
-        payment = currentBalance *
+        payment = DecimalUtils.roundToCents(currentBalance *
             (monthlyRate * pow(1 + monthlyRate, remainingMonths)) /
-            (pow(1 + monthlyRate, remainingMonths) - 1);
+            (pow(1 + monthlyRate, remainingMonths) - 1));
       }
 
       // Determine how many months this rate applies
@@ -95,20 +95,25 @@ class AdvancedCalculations {
 
       // Amortize for this period
       for (int i = 0; i < monthsInPeriod && currentBalance > 0; i++) {
-        final double interestPaid = currentBalance * monthlyRate;
-        final double principalPaid = payment - interestPaid;
+        final double interestPaid =
+            DecimalUtils.roundToCents(currentBalance * monthlyRate);
+        final double principalPaid =
+            DecimalUtils.roundToCents(payment - interestPaid);
 
-        currentBalance -= principalPaid;
-        totalInterest += interestPaid;
-        totalPaid += payment;
+        currentBalance = DecimalUtils.ensureNonNegative(
+          DecimalUtils.roundToCents(currentBalance - principalPaid),
+        );
+        totalInterest = DecimalUtils.roundToCents(totalInterest + interestPaid);
+        totalPaid = DecimalUtils.roundToCents(totalPaid + payment);
       }
 
       periods.add(ARMPeriod(
         startMonth: currentMonth + 1,
         endMonth: periodEndMonth,
         interestRate: currentRate,
-        monthlyPayment: payment,
-        remainingBalance: currentBalance > 0 ? currentBalance : 0,
+        monthlyPayment: DecimalUtils.roundToCents(payment),
+        remainingBalance:
+            currentBalance > 0 ? DecimalUtils.roundToCents(currentBalance) : 0,
       ));
 
       currentMonth = periodEndMonth;
@@ -275,22 +280,28 @@ class AdvancedCalculations {
     final double monthlyRate = interestRate / 100 / 12;
     final int totalMonths = (termYears * 12).round();
 
-    final double monthlyPayment = loanAmount *
-        (monthlyRate * pow(1 + monthlyRate, totalMonths)) /
-        (pow(1 + monthlyRate, totalMonths) - 1);
+    final double monthlyPayment = monthlyRate <= 0
+        ? DecimalUtils.roundToCents(loanAmount / totalMonths)
+        : DecimalUtils.roundToCents(loanAmount *
+            (monthlyRate * pow(1 + monthlyRate, totalMonths)) /
+            (pow(1 + monthlyRate, totalMonths) - 1));
 
-    double balance = loanAmount;
+    double balance = DecimalUtils.roundToCents(loanAmount);
     final int monthsElapsed = (years * 12).round();
 
     for (int i = 0; i < monthsElapsed && i < totalMonths; i++) {
-      final double interest = balance * monthlyRate;
-      final double principal = monthlyPayment - interest;
-      balance -= principal;
+      final double interest = DecimalUtils.roundToCents(balance * monthlyRate);
+      final double principal =
+          DecimalUtils.roundToCents(monthlyPayment - interest);
+      balance = DecimalUtils.ensureNonNegative(
+        DecimalUtils.roundToCents(balance - principal),
+      );
     }
 
-    final double remainingBalance = balance > 0 ? balance : 0;
+    final double remainingBalance =
+        balance > 0 ? DecimalUtils.roundToCents(balance) : 0;
 
-    return futureValue - remainingBalance;
+    return DecimalUtils.roundToCents(futureValue - remainingBalance);
   }
 
   /// Calculate odd days interest

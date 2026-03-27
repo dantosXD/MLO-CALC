@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/amortization_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/qualification_controller.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 
 void main() {
   setUpAll(() async {
@@ -13,10 +17,13 @@ void main() {
   group('LoanQuoteController', () {
     late HistoryController historyController;
     late LoanQuoteController quoteController;
+    late CoreCalculationService coreCalculationService;
 
     setUp(() {
       historyController = HistoryController();
+      coreCalculationService = serviceLocator<CoreCalculationService>();
       quoteController = LoanQuoteController(
+        coreCalculationService: coreCalculationService,
         historyController: historyController,
       );
     });
@@ -28,7 +35,7 @@ void main() {
 
       expect(quoteController.payment, closeTo(1987.26, 0.01));
       expect(historyController.entries, isNotEmpty);
-      expect(historyController.entries.first.type, 'payment');
+      expect(historyController.entries.first.type, CalculationEntryType.payment);
     });
 
     test('restores quote inputs and results from history entry', () {
@@ -41,6 +48,7 @@ void main() {
 
       final restoredHistoryController = HistoryController();
       final restoredQuoteController = LoanQuoteController(
+        coreCalculationService: coreCalculationService,
         historyController: restoredHistoryController,
       );
 
@@ -58,13 +66,19 @@ void main() {
     late HistoryController historyController;
     late LoanQuoteController quoteController;
     late QualificationController qualificationController;
+    late CoreCalculationService coreCalculationService;
+    late QualificationService qualificationService;
 
     setUp(() {
       historyController = HistoryController();
+      coreCalculationService = serviceLocator<CoreCalculationService>();
+      qualificationService = serviceLocator<QualificationService>();
       quoteController = LoanQuoteController(
+        coreCalculationService: coreCalculationService,
         historyController: historyController,
       );
       qualificationController = QualificationController(
+        qualificationService: qualificationService,
         quoteController: quoteController,
         historyController: historyController,
       );
@@ -80,7 +94,10 @@ void main() {
 
       expect(quoteController.loanAmount, isNotNull);
       expect(quoteController.payment, isNotNull);
-      expect(historyController.entries.first.type, 'qualification');
+      expect(
+        historyController.entries.first.type,
+        CalculationEntryType.qualification,
+      );
     });
 
     test(
@@ -109,13 +126,19 @@ void main() {
     late HistoryController historyController;
     late LoanQuoteController quoteController;
     late AmortizationController amortizationController;
+    late CoreCalculationService coreCalculationService;
+    late AmortizationService amortizationService;
 
     setUp(() {
       historyController = HistoryController();
+      coreCalculationService = serviceLocator<CoreCalculationService>();
+      amortizationService = serviceLocator<AmortizationService>();
       quoteController = LoanQuoteController(
+        coreCalculationService: coreCalculationService,
         historyController: historyController,
       );
       amortizationController = AmortizationController(
+        amortizationService: amortizationService,
         quoteController: quoteController,
       );
     });

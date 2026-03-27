@@ -32,7 +32,7 @@ class RentVsBuyInputs {
   final double homePrice;
   final double downPaymentPercent;
   final double interestRate;
-  final int termYears;
+  final double termYears;
   
   // Buying Costs
   final double propertyTaxRate; // Annual rate as percentage of home value

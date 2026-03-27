@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loan_ranger/src/core/utils/constants.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_display_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
@@ -389,6 +390,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         ),
                         CalculatorButton(
                           text: 'Backspace',
+                          semanticLabel: 'Backspace',
                           icon: Icons.backspace_outlined,
                           onPressed: () => displayProvider.backspace(),
                           onLongPress: () {
@@ -704,7 +706,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     required bool isTotal,
   }) {
     final formatted = value != null && value > 0
-        ? '\$${value.toStringAsFixed(2)}'
+        ? CurrencyFormatter.formatCurrency(value)
         : '--';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),

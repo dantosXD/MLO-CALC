@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
+import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/amortization_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
@@ -20,12 +21,12 @@ import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_serv
 export 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart'
     show PaymentDisplayMode;
 
-class CalculatorProvider with ChangeNotifier {
+class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel {
   factory CalculatorProvider({
-    CoreCalculationService? coreCalculationService,
-    AmortizationService? amortizationService,
-    QualificationService? qualificationService,
-    CalculatorPersistenceService? persistenceService,
+    required CoreCalculationService coreCalculationService,
+    required AmortizationService amortizationService,
+    required QualificationService qualificationService,
+    required CalculatorPersistenceService persistenceService,
     CalculatorSessionRepository? sessionRepository,
     HistoryController? historyController,
     LoanQuoteController? loanQuoteController,
@@ -54,7 +55,9 @@ class CalculatorProvider with ChangeNotifier {
         );
     final repository =
         sessionRepository ??
-        CalculatorSessionRepository(persistenceService: persistenceService);
+        CalculatorSessionRepository(
+          persistenceService: persistenceService,
+        );
 
     return CalculatorProvider._(
       loanQuoteController: quote,
@@ -80,7 +83,6 @@ class CalculatorProvider with ChangeNotifier {
     _qualificationController.addListener(_handleChildChanged);
     _amortizationController.addListener(_handleChildChanged);
     _historyController.addListener(_handleChildChanged);
-    _loadState();
   }
 
   final LoanQuoteController _loanQuoteController;
@@ -91,6 +93,7 @@ class CalculatorProvider with ChangeNotifier {
 
   Timer? _saveTimer;
   bool _isHydrating = false;
+  Future<void>? _initializeFuture;
 
   LoanQuoteController get loanQuoteController => _loanQuoteController;
   QualificationController get qualificationController =>
@@ -101,36 +104,66 @@ class CalculatorProvider with ChangeNotifier {
   String? get inputError =>
       _loanQuoteController.inputError ?? _qualificationController.inputError;
 
+  @override
   double? get loanAmount => _loanQuoteController.loanAmount;
+  @override
   double? get interestRate => _loanQuoteController.interestRate;
+  @override
   double? get termYears => _loanQuoteController.termYears;
+  @override
   double? get payment => _loanQuoteController.payment;
+  @override
   double? get price => _loanQuoteController.price;
+  @override
   double? get downPayment => _loanQuoteController.downPayment;
+  @override
   double? get downPaymentPercentage =>
       _loanQuoteController.downPaymentPercentage;
+  @override
   double? get propertyTax => _loanQuoteController.propertyTax;
+  @override
   double? get homeInsurance => _loanQuoteController.homeInsurance;
+  @override
   double? get mortgageInsurance => _loanQuoteController.mortgageInsurance;
+  @override
   double? get monthlyExpenses => _loanQuoteController.monthlyExpenses;
+  @override
   ClosingCosts get closingCosts => _loanQuoteController.closingCosts;
+  @override
   double get cashToClose => _loanQuoteController.cashToClose;
   QualifyingRatio get qualRatio1 => _qualificationController.qualRatio1;
   QualifyingRatio get qualRatio2 => _qualificationController.qualRatio2;
+  @override
   double? get annualIncome => _qualificationController.annualIncome;
+  @override
   double? get monthlyDebt => _qualificationController.monthlyDebt;
+  @override
   List<AmortizationEntry> get amortizationData =>
       _amortizationController.amortizationData;
+  @override
   bool get isComputingAmortization =>
       _amortizationController.isComputingAmortization;
   double? get futureValue => null;
+  @override
   CalculationHistory get history => _historyController.history;
+  @override
   bool get isInterestOnly => _loanQuoteController.isInterestOnly;
+  @override
   PaymentDisplayMode get displayMode => _loanQuoteController.displayMode;
+  @override
   bool get hasPitiComponents => _loanQuoteController.hasPitiComponents;
+  @override
   double? get displayPayment => _loanQuoteController.displayPayment;
+  @override
   double get pitiPayment => _loanQuoteController.pitiPayment;
+  @override
   double get interestOnlyPayment => _loanQuoteController.interestOnlyPayment;
+  @override
+  double get monthlyEscrowExpenses => _loanQuoteController.monthlyEscrowExpenses;
+
+  Future<void> initialize() {
+    return _initializeFuture ??= _loadState();
+  }
 
   @override
   void dispose() {

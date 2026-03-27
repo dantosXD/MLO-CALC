@@ -6,6 +6,7 @@ enum ButtonAnimationType { none, pulse, wiggle }
 
 class CalculatorButton extends StatefulWidget {
   final String text;
+  final String? semanticLabel;
   final VoidCallback onPressed;
   final VoidCallback? onLongPress;
   final VoidCallback? onDoubleTap;
@@ -19,6 +20,7 @@ class CalculatorButton extends StatefulWidget {
   const CalculatorButton({
     super.key,
     required this.text,
+    this.semanticLabel,
     required this.onPressed,
     this.onLongPress,
     this.onDoubleTap,
@@ -130,6 +132,8 @@ class _CalculatorButtonState extends State<CalculatorButton>
 
   @override
   Widget build(BuildContext context) {
+    final semanticLabel = widget.semanticLabel ?? widget.text;
+
     Widget buttonChild = widget.icon != null
         ? Icon(widget.icon, size: widget.iconSize)
         : FittedBox(
@@ -217,11 +221,11 @@ class _CalculatorButtonState extends State<CalculatorButton>
               scale: _scaleAnimation,
               child: Semantics(
                 button: true,
-                label: widget.text,
                 enabled: true,
+                label: semanticLabel,
                 onTap: widget.onPressed,
                 onLongPress: widget.onLongPress,
-                child: button,
+                child: ExcludeSemantics(child: button),
               ),
             ),
             if (_usesImmediateTap)
@@ -233,6 +237,7 @@ class _CalculatorButtonState extends State<CalculatorButton>
             else
               GestureDetector(
                 behavior: HitTestBehavior.translucent,
+                excludeFromSemantics: true,
                 onTap: _handleTap,
                 onLongPress: widget.onLongPress != null ? _handleLongPress : null,
                 onDoubleTap: widget.onDoubleTap,

@@ -1,7 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
+
+CalculatorProvider buildCalculatorProvider() {
+  return CalculatorProvider(
+    coreCalculationService: serviceLocator<CoreCalculationService>(),
+    amortizationService: serviceLocator<AmortizationService>(),
+    qualificationService: serviceLocator<QualificationService>(),
+    persistenceService: serviceLocator<CalculatorPersistenceService>(),
+  );
+}
 
 /// Comprehensive test suite for Feature #16: Calculate Maximum Qualifying Loan
 ///
@@ -16,7 +30,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate max loan with standard inputs', () {
@@ -220,7 +234,7 @@ void main() {
 
       // Most recent entry should be a qualification type
       final latestEntry = provider.history.entries.last;
-      expect(latestEntry.type, contains('qualification'));
+      expect(latestEntry.type, CalculationEntryType.qualification);
       expect(latestEntry.results['maxLoanAmount'], provider.loanAmount);
     });
   });
@@ -229,7 +243,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Very low interest rate (1%)', () {

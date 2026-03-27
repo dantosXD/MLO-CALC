@@ -2,10 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+CalculatorProvider buildCalculatorProvider() {
+  return CalculatorProvider(
+    coreCalculationService: serviceLocator<CoreCalculationService>(),
+    amortizationService: serviceLocator<AmortizationService>(),
+    qualificationService: serviceLocator<QualificationService>(),
+    persistenceService: serviceLocator<CalculatorPersistenceService>(),
+  );
+}
 
 void main() {
   group('Feature #15: Widget Tests - Custom DTI Ratio UI', () {
@@ -19,7 +32,7 @@ void main() {
       return MultiProvider(
         providers: [
           ChangeNotifierProvider<CalculatorProvider>(
-            create: (_) => CalculatorProvider(),
+            create: (_) => buildCalculatorProvider(),
           ),
           ChangeNotifierProvider<QualifyingRatiosProvider>.value(
             value: provider,
@@ -90,6 +103,25 @@ void main() {
       expect(addedRatio.debtRatio, equals(43.0),
           reason: 'FAILING REGRESSION: Total DTI is ${addedRatio.debtRatio} instead of 43.0');
     });
+
+    testWidgets(
+      'Add custom ratio with empty name shows snackbar and does not throw',
+      (tester) async {
+        await tester.pumpWidget(buildTestApp());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Add Custom Ratio'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Add Custom Ratio'), findsOneWidget);
+
+        await tester.tap(find.text('Add'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Please enter a name'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets('Add custom ratio with 25/38 DTI values', (tester) async {
       // Arrange
@@ -228,7 +260,7 @@ void main() {
     testWidgets('Qualification inputs sync with provider updates', (
       tester,
     ) async {
-      final calculatorProvider = CalculatorProvider();
+      final calculatorProvider = buildCalculatorProvider();
       addTearDown(calculatorProvider.dispose);
 
       await tester.pumpWidget(

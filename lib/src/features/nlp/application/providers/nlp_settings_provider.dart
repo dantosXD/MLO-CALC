@@ -1,37 +1,82 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
+import 'package:loan_ranger/src/core/persistence/secure_store.dart';
 import 'package:loan_ranger/src/core/services/connectivity_service.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_cache_service.dart';
 
 class NlpSettingsProvider with ChangeNotifier {
   static const _keyName = 'geminiApiKey';
-  // Use secure storage for sensitive data like API keys
-  final _storage = const FlutterSecureStorage();
-  final ConnectivityService _connectivity = ConnectivityService();
-  final NlpCacheService _cache = NlpCacheService();
+
+  NlpSettingsProvider({
+    ConnectivityService? connectivity,
+    NlpCacheService? cache,
+    required NLPCalculatorService calculatorService,
+    SecureStore? secureStore,
+    PreferenceStore? preferenceStore,
+  })  : _connectivity = connectivity ?? ConnectivityService(),
+        _ownsConnectivity = connectivity == null,
+        _cache = cache ?? NlpCacheService(),
+        _calculatorService = calculatorService,
+        _secureStore = secureStore ?? FlutterSecureStoreBackend(),
+        _legacyStore = preferenceStore ?? PreferenceStore();
+
+  final ConnectivityService _connectivity;
+  final bool _ownsConnectivity;
+  final NlpCacheService _cache;
+  final NLPCalculatorService _calculatorService;
+  final SecureStore _secureStore;
+  final PreferenceStore _legacyStore;
 
   String? _apiKey;
   bool _loaded = false;
-
-  NlpSettingsProvider() {
-    _load();
-    _connectivity.addListener(_onConnectivityChanged);
-  }
+  Future<void>? _loadFuture;
 
   String? get apiKey => _apiKey;
   bool get isLoaded => _loaded;
-  bool get hasKey => (_apiKey != null && _apiKey!.isNotEmpty);
-  
-  // Connectivity status
+  bool get hasKey => _apiKey != null && _apiKey!.isNotEmpty;
+
   bool get isOnline => _connectivity.isOnline;
   bool get isOffline => _connectivity.isOffline;
-  
-  // Cache access
+
   NlpCacheService get cache => _cache;
+  NLPCalculatorService get calculatorService => _calculatorService;
   int get pendingRequestCount => _cache.pendingCount;
   bool get hasPendingRequests => _cache.hasPendingRequests;
+
+  Future<void> load() {
+    return _loadFuture ??= _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _connectivity.initialize();
+    _connectivity.addListener(_onConnectivityChanged);
+
+    try {
+      await _cache.load();
+
+      _apiKey = await _secureStore.read(_keyName);
+      if (_apiKey == null || _apiKey!.isEmpty) {
+        await _legacyStore.load();
+        final oldKey = _legacyStore.getString(_keyName);
+        if (oldKey != null && oldKey.isNotEmpty) {
+          _apiKey = oldKey;
+          await _secureStore.write(key: _keyName, value: oldKey);
+          await _legacyStore.remove(_keyName);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error loading API key: $e');
+      }
+      _apiKey = null;
+    } finally {
+      _loaded = true;
+      notifyListeners();
+    }
+  }
 
   void _onConnectivityChanged() {
     notifyListeners();
@@ -40,49 +85,30 @@ class NlpSettingsProvider with ChangeNotifier {
   Future<void> setApiKey(String? value) async {
     _apiKey = value?.trim();
     notifyListeners();
+
     try {
       if (_apiKey == null || _apiKey!.isEmpty) {
-        await _storage.delete(key: _keyName);
+        await _secureStore.delete(_keyName);
+        await _legacyStore.load();
+        await _legacyStore.remove(_keyName);
       } else {
-        await _storage.write(key: _keyName, value: _apiKey!);
+        await _secureStore.write(key: _keyName, value: _apiKey!);
+        await _legacyStore.load();
+        await _legacyStore.remove(_keyName);
       }
     } catch (e) {
-      debugPrint('Error saving API key: $e');
-    }
-  }
-
-  Future<void> _load() async {
-    try {
-      // Load cache
-      await _cache.load();
-      
-      // First try to load from secure storage
-      _apiKey = await _storage.read(key: _keyName);
-      
-      // Migration: If not found in secure storage, check SharedPreferences (old location)
-      if (_apiKey == null) {
-        final prefs = await SharedPreferences.getInstance();
-        final oldKey = prefs.getString(_keyName);
-        if (oldKey != null && oldKey.isNotEmpty) {
-          // Migrate to secure storage
-          _apiKey = oldKey;
-          await _storage.write(key: _keyName, value: oldKey);
-          await prefs.remove(_keyName); // Remove from insecure storage
-        }
+      if (kDebugMode) {
+        debugPrint('Error saving API key: $e');
       }
-    } catch (e) {
-      debugPrint('Error loading API key: $e');
-      _apiKey = null;
-    } finally {
-      _loaded = true;
-      notifyListeners();
     }
   }
 
   @override
   void dispose() {
     _connectivity.removeListener(_onConnectivityChanged);
-    _connectivity.dispose();
+    if (_ownsConnectivity) {
+      _connectivity.dispose();
+    }
     super.dispose();
   }
 }

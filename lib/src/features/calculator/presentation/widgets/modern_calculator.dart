@@ -433,7 +433,7 @@ class _DisplayCard extends StatelessWidget {
       setter(parsed);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$label = ${parsed.toStringAsFixed(2)}'),
+          content: Text('$label = ${CurrencyFormatter.formatCurrency(parsed)}'),
           duration: const Duration(milliseconds: 800),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
@@ -678,7 +678,7 @@ class _SecondaryFieldsRow extends StatelessWidget {
       setter(parsed);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$label = ${parsed.toStringAsFixed(2)}'),
+          content: Text('$label = ${CurrencyFormatter.formatCurrency(parsed)}'),
           duration: const Duration(milliseconds: 800),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
@@ -806,6 +806,7 @@ class _ModernKeypad extends StatelessWidget {
                 ),
                 CalculatorButton(
                   text: '⌫',
+                  semanticLabel: 'Backspace',
                   icon: Icons.backspace_outlined,
                   onPressed: displayProvider.backspace,
                   onLongPress: displayProvider.clear,

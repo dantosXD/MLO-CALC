@@ -1,7 +1,5 @@
 import 'package:loan_ranger/src/features/calculator/domain/models/closing_costs.dart';
 
-const Object _loanQuoteUnset = Object();
-
 enum PaymentDisplayMode { standardPI, interestOnly, piti }
 
 class LoanQuoteState {
@@ -40,66 +38,60 @@ class LoanQuoteState {
   final double? presentedValue;
 
   LoanQuoteState copyWith({
-    Object? loanAmount = _loanQuoteUnset,
-    Object? interestRate = _loanQuoteUnset,
-    Object? termYears = _loanQuoteUnset,
-    Object? payment = _loanQuoteUnset,
-    Object? price = _loanQuoteUnset,
-    Object? downPayment = _loanQuoteUnset,
-    Object? propertyTax = _loanQuoteUnset,
-    Object? homeInsurance = _loanQuoteUnset,
-    Object? mortgageInsurance = _loanQuoteUnset,
-    Object? monthlyExpenses = _loanQuoteUnset,
-    Object? closingCosts = _loanQuoteUnset,
-    Object? calculationError = _loanQuoteUnset,
-    Object? isInterestOnly = _loanQuoteUnset,
-    Object? displayMode = _loanQuoteUnset,
-    Object? presentedValue = _loanQuoteUnset,
+    double? loanAmount,
+    bool clearLoanAmount = false,
+    double? interestRate,
+    bool clearInterestRate = false,
+    double? termYears,
+    bool clearTermYears = false,
+    double? payment,
+    bool clearPayment = false,
+    double? price,
+    bool clearPrice = false,
+    double? downPayment,
+    bool clearDownPayment = false,
+    double? propertyTax,
+    bool clearPropertyTax = false,
+    double? homeInsurance,
+    bool clearHomeInsurance = false,
+    double? mortgageInsurance,
+    bool clearMortgageInsurance = false,
+    double? monthlyExpenses,
+    bool clearMonthlyExpenses = false,
+    ClosingCosts? closingCosts,
+    String? calculationError,
+    bool clearCalculationError = false,
+    bool? isInterestOnly,
+    PaymentDisplayMode? displayMode,
+    double? presentedValue,
+    bool clearPresentedValue = false,
   }) {
     return LoanQuoteState(
-      loanAmount: identical(loanAmount, _loanQuoteUnset)
-          ? this.loanAmount
-          : loanAmount as double?,
-      interestRate: identical(interestRate, _loanQuoteUnset)
-          ? this.interestRate
-          : interestRate as double?,
-      termYears: identical(termYears, _loanQuoteUnset)
-          ? this.termYears
-          : termYears as double?,
-      payment: identical(payment, _loanQuoteUnset)
-          ? this.payment
-          : payment as double?,
-      price: identical(price, _loanQuoteUnset) ? this.price : price as double?,
-      downPayment: identical(downPayment, _loanQuoteUnset)
-          ? this.downPayment
-          : downPayment as double?,
-      propertyTax: identical(propertyTax, _loanQuoteUnset)
-          ? this.propertyTax
-          : propertyTax as double?,
-      homeInsurance: identical(homeInsurance, _loanQuoteUnset)
-          ? this.homeInsurance
-          : homeInsurance as double?,
-      mortgageInsurance: identical(mortgageInsurance, _loanQuoteUnset)
-          ? this.mortgageInsurance
-          : mortgageInsurance as double?,
-      monthlyExpenses: identical(monthlyExpenses, _loanQuoteUnset)
-          ? this.monthlyExpenses
-          : monthlyExpenses as double?,
-      closingCosts: identical(closingCosts, _loanQuoteUnset)
-          ? this.closingCosts
-          : closingCosts as ClosingCosts,
-      calculationError: identical(calculationError, _loanQuoteUnset)
-          ? this.calculationError
-          : calculationError as String?,
-      isInterestOnly: identical(isInterestOnly, _loanQuoteUnset)
-          ? this.isInterestOnly
-          : isInterestOnly as bool,
-      displayMode: identical(displayMode, _loanQuoteUnset)
-          ? this.displayMode
-          : displayMode as PaymentDisplayMode,
-      presentedValue: identical(presentedValue, _loanQuoteUnset)
-          ? this.presentedValue
-          : presentedValue as double?,
+      loanAmount: clearLoanAmount ? null : (loanAmount ?? this.loanAmount),
+      interestRate:
+          clearInterestRate ? null : (interestRate ?? this.interestRate),
+      termYears: clearTermYears ? null : (termYears ?? this.termYears),
+      payment: clearPayment ? null : (payment ?? this.payment),
+      price: clearPrice ? null : (price ?? this.price),
+      downPayment: clearDownPayment ? null : (downPayment ?? this.downPayment),
+      propertyTax:
+          clearPropertyTax ? null : (propertyTax ?? this.propertyTax),
+      homeInsurance:
+          clearHomeInsurance ? null : (homeInsurance ?? this.homeInsurance),
+      mortgageInsurance: clearMortgageInsurance
+          ? null
+          : (mortgageInsurance ?? this.mortgageInsurance),
+      monthlyExpenses: clearMonthlyExpenses
+          ? null
+          : (monthlyExpenses ?? this.monthlyExpenses),
+      closingCosts: closingCosts ?? this.closingCosts,
+      calculationError: clearCalculationError
+          ? null
+          : (calculationError ?? this.calculationError),
+      isInterestOnly: isInterestOnly ?? this.isInterestOnly,
+      displayMode: displayMode ?? this.displayMode,
+      presentedValue:
+          clearPresentedValue ? null : (presentedValue ?? this.presentedValue),
     );
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/states/amortization_state.dart';
@@ -8,11 +7,10 @@ import 'package:loan_ranger/src/features/calculator/domain/services/amortization
 
 class AmortizationController with ChangeNotifier {
   AmortizationController({
-    AmortizationService? amortizationService,
+    required AmortizationService amortizationService,
     required LoanQuoteController quoteController,
-  }) : _amortizationService =
-           amortizationService ?? serviceLocator<AmortizationService>(),
-       _quoteController = quoteController;
+  })  : _amortizationService = amortizationService,
+        _quoteController = quoteController;
 
   final AmortizationService _amortizationService;
   final LoanQuoteController _quoteController;

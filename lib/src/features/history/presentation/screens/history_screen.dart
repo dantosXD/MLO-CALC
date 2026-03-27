@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/navigation/app_router.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
-import 'package:loan_ranger/src/features/comparison/presentation/screens/comparison_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -49,11 +49,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
 
     if (comparisonData != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => ComparisonScreen(data: comparisonData),
-        ),
-      );
+      context.read<AppRouter>().openComparison(comparisonData);
     }
   }
 
@@ -238,7 +234,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   List<CalculationEntry> _filtered(List<CalculationEntry> source) {
     Iterable<CalculationEntry> items = source;
-    if (_type != 'all') items = items.where((e) => e.type == _type);
+    if (_type != 'all') {
+      items = items.where((e) => e.type.storageName == _type);
+    }
     if (_query.isNotEmpty) {
       final q = _query.toLowerCase();
       items = items.where(
@@ -311,7 +309,7 @@ class _HistoryCard extends StatelessWidget {
         onTap: selectionMode ? onSelect : null,
         child: ListTile(
           leading: selectionMode
-              ? Checkbox(value: selected, onChanged: (_) => onSelect())
+                ? Checkbox(value: selected, onChanged: (_) => onSelect())
               : CircleAvatar(
                   backgroundColor: theme.colorScheme.primaryContainer,
                   child: Icon(
@@ -370,20 +368,18 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  static IconData _iconFor(String type) {
+  static IconData _iconFor(CalculationEntryType type) {
     switch (type) {
-      case 'payment':
+      case CalculationEntryType.payment:
         return Icons.payments_outlined;
-      case 'loan_amount':
+      case CalculationEntryType.loanAmount:
         return Icons.account_balance_outlined;
-      case 'term':
+      case CalculationEntryType.term:
         return Icons.schedule_outlined;
-      case 'interest_rate':
+      case CalculationEntryType.interestRate:
         return Icons.percent_outlined;
-      case 'qualification':
+      case CalculationEntryType.qualification:
         return Icons.verified_user_outlined;
-      default:
-        return Icons.calculate_outlined;
     }
   }
 

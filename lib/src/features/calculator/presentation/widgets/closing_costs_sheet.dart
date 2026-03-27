@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/domain/models/closing_costs.dart';
 import 'package:provider/provider.dart';
@@ -289,7 +290,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
             : Theme.of(context).textTheme.bodyLarge,
         ),
         Text(
-          '\$${value.toStringAsFixed(2)}',
+          CurrencyFormatter.formatCurrency(value),
           style: isTotal
             ? Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,

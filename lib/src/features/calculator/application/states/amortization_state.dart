@@ -1,7 +1,5 @@
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 
-const Object _amortizationUnset = Object();
-
 class AmortizationState {
   const AmortizationState({
     this.amortizationData = const <AmortizationEntry>[],
@@ -14,22 +12,19 @@ class AmortizationState {
   final String? activeFingerprint;
 
   AmortizationState copyWith({
-    Object? amortizationData = _amortizationUnset,
-    Object? isComputing = _amortizationUnset,
-    Object? activeFingerprint = _amortizationUnset,
+    List<AmortizationEntry>? amortizationData,
+    bool? isComputing,
+    String? activeFingerprint,
+    bool clearActiveFingerprint = false,
   }) {
     return AmortizationState(
-      amortizationData: identical(amortizationData, _amortizationUnset)
+      amortizationData: amortizationData == null
           ? List<AmortizationEntry>.unmodifiable(this.amortizationData)
-          : List<AmortizationEntry>.unmodifiable(
-              amortizationData as List<AmortizationEntry>,
-            ),
-      isComputing: identical(isComputing, _amortizationUnset)
-          ? this.isComputing
-          : isComputing as bool,
-      activeFingerprint: identical(activeFingerprint, _amortizationUnset)
-          ? this.activeFingerprint
-          : activeFingerprint as String?,
+          : List<AmortizationEntry>.unmodifiable(amortizationData),
+      isComputing: isComputing ?? this.isComputing,
+      activeFingerprint: clearActiveFingerprint
+          ? null
+          : (activeFingerprint ?? this.activeFingerprint),
     );
   }
 }

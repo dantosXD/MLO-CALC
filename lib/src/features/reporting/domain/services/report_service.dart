@@ -2,8 +2,8 @@
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
+import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
-import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -12,7 +12,7 @@ class ReportService {
   static final _currency = NumberFormat.simpleCurrency();
 
   static Future<Uint8List> generateLoanReport({
-    required CalculatorProvider provider,
+    required LoanParametersReadModel provider,
     String? clientName,
   }) async {
     final doc = pw.Document();
@@ -63,7 +63,7 @@ class ReportService {
     );
   }
 
-  static pw.Widget _buildLoanSummary(CalculatorProvider provider) {
+  static pw.Widget _buildLoanSummary(LoanParametersReadModel provider) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
@@ -83,7 +83,7 @@ class ReportService {
                 'Interest Rate',
                 CurrencyFormatter.formatPercent(provider.interestRate, decimals: 3),
               ),
-              _buildInfoColumn('Term', '${provider.termYears?.toStringAsFixed(0)} Years'),
+              _buildInfoColumn('Term', CurrencyFormatter.formatYears(provider.termYears)),
             ],
           ),
           pw.SizedBox(height: 10),
@@ -100,7 +100,7 @@ class ReportService {
     );
   }
 
-  static String _calculateLTV(CalculatorProvider provider) {
+  static String _calculateLTV(LoanParametersReadModel provider) {
     if (provider.price == null || provider.loanAmount == null || provider.price == 0) return '0%';
     return CurrencyFormatter.formatPercent(
       (provider.loanAmount! / provider.price!) * 100,
@@ -118,7 +118,7 @@ class ReportService {
     );
   }
 
-  static pw.Widget _buildMonthlyBreakdown(CalculatorProvider provider) {
+  static pw.Widget _buildMonthlyBreakdown(LoanParametersReadModel provider) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -157,7 +157,7 @@ class ReportService {
     );
   }
 
-  static pw.Widget _buildClosingCosts(CalculatorProvider provider) {
+  static pw.Widget _buildClosingCosts(LoanParametersReadModel provider) {
     final costs = provider.closingCosts;
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,

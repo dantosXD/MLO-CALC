@@ -17,10 +17,10 @@ class AmortizationScreen extends StatelessWidget {
     for (final entry in data) {
       buffer.writeln(
         '${entry.month},'
-        '${entry.payment.toStringAsFixed(2)},'
-        '${entry.principal.toStringAsFixed(2)},'
-        '${entry.interest.toStringAsFixed(2)},'
-        '${entry.balance.toStringAsFixed(2)}',
+        '${CurrencyFormatter.formatNumber(entry.payment, decimals: 2).replaceAll(',', '')},'
+        '${CurrencyFormatter.formatNumber(entry.principal, decimals: 2).replaceAll(',', '')},'
+        '${CurrencyFormatter.formatNumber(entry.interest, decimals: 2).replaceAll(',', '')},'
+        '${CurrencyFormatter.formatNumber(entry.balance, decimals: 2).replaceAll(',', '')}',
       );
     }
     return buffer.toString();
@@ -210,28 +210,28 @@ class AmortizationScreen extends StatelessWidget {
                             Expanded(
                               flex: 2,
                               child: Text(
-                                '\$${entry.payment.toStringAsFixed(2)}',
+                                CurrencyFormatter.formatCurrency(entry.payment),
                                 textAlign: TextAlign.right,
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
-                                '\$${entry.principal.toStringAsFixed(2)}',
+                                CurrencyFormatter.formatCurrency(entry.principal),
                                 textAlign: TextAlign.right,
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
-                                '\$${entry.interest.toStringAsFixed(2)}',
+                                CurrencyFormatter.formatCurrency(entry.interest),
                                 textAlign: TextAlign.right,
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
-                                '\$${entry.balance.toStringAsFixed(2)}',
+                                CurrencyFormatter.formatCurrency(entry.balance),
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,

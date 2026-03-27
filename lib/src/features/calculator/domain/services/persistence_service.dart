@@ -1,44 +1,80 @@
 import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
+import 'package:loan_ranger/src/core/persistence/secure_store.dart';
 
 import '../models/calculator_state.dart';
 
 class CalculatorPersistenceService {
+  CalculatorPersistenceService({
+    SecureStore? secureStore,
+    PreferenceStore? legacyStore,
+  })  : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
+        _legacyStore = legacyStore ?? PreferenceStore();
+
   static const String _scenarioSessionKey = 'scenarioSession';
+  static const List<String> _legacyKeys = <String>[
+    'loanAmount',
+    'interestRate',
+    'termYears',
+    'payment',
+    'price',
+    'downPayment',
+    'propertyTax',
+    'homeInsurance',
+    'mortgageInsurance',
+    'monthlyExpenses',
+    'annualIncome',
+    'monthlyDebt',
+    'calculationHistory',
+  ];
+
+  final SecureStore _secureStore;
+  final PreferenceStore _legacyStore;
 
   Future<CalculatorStateSnapshot> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final scenarioSession = prefs.getString(_scenarioSessionKey);
-    if (scenarioSession != null && scenarioSession.isNotEmpty) {
+    final sessionJson = await _secureStore.read(_scenarioSessionKey);
+    if (sessionJson != null && sessionJson.isNotEmpty) {
       try {
-        return CalculatorStateSnapshot.fromJsonString(scenarioSession);
+        return CalculatorStateSnapshot.fromJsonString(sessionJson);
       } on FormatException {
-        // Fall back to the legacy flat snapshot if the new session payload is corrupt.
+        // Fall back to the legacy flat snapshot if the secure payload is corrupt.
       } on TypeError {
-        // Fall back to the legacy flat snapshot if the new session payload shape changed.
+        // Fall back to the legacy flat snapshot if the secure payload shape changed.
       }
     }
 
-    return CalculatorStateSnapshot.fromLegacy(
-      loanAmount: prefs.getDouble('loanAmount'),
-      interestRate: prefs.getDouble('interestRate'),
-      termYears: prefs.getDouble('termYears'),
-      payment: prefs.getDouble('payment'),
-      price: prefs.getDouble('price'),
-      downPayment: prefs.getDouble('downPayment'),
-      propertyTax: prefs.getDouble('propertyTax'),
-      homeInsurance: prefs.getDouble('homeInsurance'),
-      mortgageInsurance: prefs.getDouble('mortgageInsurance'),
-      monthlyExpenses: prefs.getDouble('monthlyExpenses'),
-      annualIncome: prefs.getDouble('annualIncome'),
-      monthlyDebt: prefs.getDouble('monthlyDebt'),
-      historyJson: prefs.getString('calculationHistory'),
+    await _legacyStore.load();
+    final snapshot = CalculatorStateSnapshot.fromLegacy(
+      loanAmount: _legacyStore.getDouble('loanAmount'),
+      interestRate: _legacyStore.getDouble('interestRate'),
+      termYears: _legacyStore.getDouble('termYears'),
+      payment: _legacyStore.getDouble('payment'),
+      price: _legacyStore.getDouble('price'),
+      downPayment: _legacyStore.getDouble('downPayment'),
+      propertyTax: _legacyStore.getDouble('propertyTax'),
+      homeInsurance: _legacyStore.getDouble('homeInsurance'),
+      mortgageInsurance: _legacyStore.getDouble('mortgageInsurance'),
+      monthlyExpenses: _legacyStore.getDouble('monthlyExpenses'),
+      annualIncome: _legacyStore.getDouble('annualIncome'),
+      monthlyDebt: _legacyStore.getDouble('monthlyDebt'),
+      historyJson: _legacyStore.getString('calculationHistory'),
     );
+
+    await save(snapshot);
+    await _removeLegacyKeys();
+    return snapshot;
   }
 
   Future<void> save(CalculatorStateSnapshot snapshot) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_scenarioSessionKey, jsonEncode(snapshot.toJson()));
+    final encoded = jsonEncode(snapshot.toJson());
+    await _secureStore.write(key: _scenarioSessionKey, value: encoded);
+  }
+
+  Future<void> _removeLegacyKeys() async {
+    for (final key in _legacyKeys) {
+      await _legacyStore.remove(key);
+    }
+    await _legacyStore.remove(_scenarioSessionKey);
   }
 }

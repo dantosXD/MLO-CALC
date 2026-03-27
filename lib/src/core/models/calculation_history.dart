@@ -5,27 +5,297 @@ import 'dart:convert';
 
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 
+enum CalculationEntryType {
+  payment,
+  loanAmount,
+  term,
+  interestRate,
+  qualification;
+
+  static CalculationEntryType fromJsonValue(Object? value) {
+    if (value is CalculationEntryType) {
+      return value;
+    }
+
+    final raw = value?.toString().trim();
+    switch (raw) {
+      case 'payment':
+        return CalculationEntryType.payment;
+      case 'loan_amount':
+      case 'loanAmount':
+        return CalculationEntryType.loanAmount;
+      case 'term':
+        return CalculationEntryType.term;
+      case 'interest_rate':
+      case 'interestRate':
+        return CalculationEntryType.interestRate;
+      case 'qualification':
+        return CalculationEntryType.qualification;
+      default:
+        return CalculationEntryType.payment;
+    }
+  }
+
+  String get storageName {
+    switch (this) {
+      case CalculationEntryType.payment:
+        return 'payment';
+      case CalculationEntryType.loanAmount:
+        return 'loan_amount';
+      case CalculationEntryType.term:
+        return 'term';
+      case CalculationEntryType.interestRate:
+        return 'interest_rate';
+      case CalculationEntryType.qualification:
+        return 'qualification';
+    }
+  }
+
+  String get title {
+    switch (this) {
+      case CalculationEntryType.payment:
+        return 'Monthly Payment Calculation';
+      case CalculationEntryType.loanAmount:
+        return 'Loan Amount Calculation';
+      case CalculationEntryType.term:
+        return 'Loan Term Calculation';
+      case CalculationEntryType.interestRate:
+        return 'Interest Rate Calculation';
+      case CalculationEntryType.qualification:
+        return 'Qualification Analysis';
+    }
+  }
+}
+
+class CalculationEntryInputs {
+  const CalculationEntryInputs({
+    this.loanAmount,
+    this.interestRate,
+    this.termYears,
+    this.payment,
+    this.propertyTax,
+    this.homeInsurance,
+    this.mortgageInsurance,
+    this.monthlyExpenses,
+    this.price,
+    this.downPayment,
+    this.annualIncome,
+    this.monthlyDebt,
+  });
+
+  final double? loanAmount;
+  final double? interestRate;
+  final double? termYears;
+  final double? payment;
+  final double? propertyTax;
+  final double? homeInsurance;
+  final double? mortgageInsurance;
+  final double? monthlyExpenses;
+  final double? price;
+  final double? downPayment;
+  final double? annualIncome;
+  final double? monthlyDebt;
+
+  factory CalculationEntryInputs.fromJson(Object? raw) {
+    return CalculationEntryInputs(
+      loanAmount: _readDouble(raw, 'loanAmount'),
+      interestRate: _readDouble(raw, 'interestRate'),
+      termYears: _readDouble(raw, 'termYears'),
+      payment: _readDouble(raw, 'payment'),
+      propertyTax: _readDouble(raw, 'propertyTax'),
+      homeInsurance: _readDouble(raw, 'homeInsurance'),
+      mortgageInsurance: _readDouble(raw, 'mortgageInsurance'),
+      monthlyExpenses: _readDouble(raw, 'monthlyExpenses'),
+      price: _readDouble(raw, 'price'),
+      downPayment: _readDouble(raw, 'downPayment'),
+      annualIncome: _readDouble(raw, 'annualIncome'),
+      monthlyDebt: _readDouble(raw, 'monthlyDebt'),
+    );
+  }
+
+  Map<String, double?> toJson() {
+    return <String, double?>{
+      if (loanAmount != null) 'loanAmount': loanAmount,
+      if (interestRate != null) 'interestRate': interestRate,
+      if (termYears != null) 'termYears': termYears,
+      if (payment != null) 'payment': payment,
+      if (propertyTax != null) 'propertyTax': propertyTax,
+      if (homeInsurance != null) 'homeInsurance': homeInsurance,
+      if (mortgageInsurance != null) 'mortgageInsurance': mortgageInsurance,
+      if (monthlyExpenses != null) 'monthlyExpenses': monthlyExpenses,
+      if (price != null) 'price': price,
+      if (downPayment != null) 'downPayment': downPayment,
+      if (annualIncome != null) 'annualIncome': annualIncome,
+      if (monthlyDebt != null) 'monthlyDebt': monthlyDebt,
+    };
+  }
+
+  double? operator [](String key) {
+    switch (key) {
+      case 'loanAmount':
+        return loanAmount;
+      case 'interestRate':
+        return interestRate;
+      case 'termYears':
+        return termYears;
+      case 'payment':
+        return payment;
+      case 'propertyTax':
+        return propertyTax;
+      case 'homeInsurance':
+        return homeInsurance;
+      case 'mortgageInsurance':
+        return mortgageInsurance;
+      case 'monthlyExpenses':
+        return monthlyExpenses;
+      case 'price':
+        return price;
+      case 'downPayment':
+        return downPayment;
+      case 'annualIncome':
+        return annualIncome;
+      case 'monthlyDebt':
+        return monthlyDebt;
+      default:
+        return null;
+    }
+  }
+
+  CalculationEntryInputs copyWith({
+    double? loanAmount,
+    double? interestRate,
+    double? termYears,
+    double? payment,
+    double? propertyTax,
+    double? homeInsurance,
+    double? mortgageInsurance,
+    double? monthlyExpenses,
+    double? price,
+    double? downPayment,
+    double? annualIncome,
+    double? monthlyDebt,
+  }) {
+    return CalculationEntryInputs(
+      loanAmount: loanAmount ?? this.loanAmount,
+      interestRate: interestRate ?? this.interestRate,
+      termYears: termYears ?? this.termYears,
+      payment: payment ?? this.payment,
+      propertyTax: propertyTax ?? this.propertyTax,
+      homeInsurance: homeInsurance ?? this.homeInsurance,
+      mortgageInsurance: mortgageInsurance ?? this.mortgageInsurance,
+      monthlyExpenses: monthlyExpenses ?? this.monthlyExpenses,
+      price: price ?? this.price,
+      downPayment: downPayment ?? this.downPayment,
+      annualIncome: annualIncome ?? this.annualIncome,
+      monthlyDebt: monthlyDebt ?? this.monthlyDebt,
+    );
+  }
+}
+
+class CalculationEntryResults {
+  const CalculationEntryResults({
+    this.payment,
+    this.loanAmount,
+    this.termYears,
+    this.interestRate,
+    this.maxLoanAmount,
+    this.monthlyPiPayment,
+  });
+
+  final double? payment;
+  final double? loanAmount;
+  final double? termYears;
+  final double? interestRate;
+  final double? maxLoanAmount;
+  final double? monthlyPiPayment;
+
+  factory CalculationEntryResults.fromJson(Object? raw) {
+    return CalculationEntryResults(
+      payment: _readDouble(raw, 'payment'),
+      loanAmount: _readDouble(raw, 'loanAmount'),
+      termYears: _readDouble(raw, 'termYears'),
+      interestRate: _readDouble(raw, 'interestRate'),
+      maxLoanAmount: _readDouble(raw, 'maxLoanAmount'),
+      monthlyPiPayment: _readDouble(raw, 'monthlyPiPayment'),
+    );
+  }
+
+  Map<String, double?> toJson() {
+    return <String, double?>{
+      if (payment != null) 'payment': payment,
+      if (loanAmount != null) 'loanAmount': loanAmount,
+      if (termYears != null) 'termYears': termYears,
+      if (interestRate != null) 'interestRate': interestRate,
+      if (maxLoanAmount != null) 'maxLoanAmount': maxLoanAmount,
+      if (monthlyPiPayment != null) 'monthlyPiPayment': monthlyPiPayment,
+    };
+  }
+
+  double? operator [](String key) {
+    switch (key) {
+      case 'payment':
+        return payment;
+      case 'loanAmount':
+        return loanAmount;
+      case 'termYears':
+        return termYears;
+      case 'interestRate':
+        return interestRate;
+      case 'maxLoanAmount':
+        return maxLoanAmount;
+      case 'monthlyPiPayment':
+        return monthlyPiPayment;
+      default:
+        return null;
+    }
+  }
+
+  CalculationEntryResults copyWith({
+    double? payment,
+    double? loanAmount,
+    double? termYears,
+    double? interestRate,
+    double? maxLoanAmount,
+    double? monthlyPiPayment,
+  }) {
+    return CalculationEntryResults(
+      payment: payment ?? this.payment,
+      loanAmount: loanAmount ?? this.loanAmount,
+      termYears: termYears ?? this.termYears,
+      interestRate: interestRate ?? this.interestRate,
+      maxLoanAmount: maxLoanAmount ?? this.maxLoanAmount,
+      monthlyPiPayment: monthlyPiPayment ?? this.monthlyPiPayment,
+    );
+  }
+}
+
 /// Represents a single calculation in history
 class CalculationEntry {
   final String id;
   final DateTime timestamp;
-  final String type; // 'payment', 'loan_amount', 'term', 'interest_rate', 'qualification'
-  final Map<String, dynamic> inputs;
-  final Map<String, dynamic> results;
+  final CalculationEntryType type;
+  final CalculationEntryInputs inputs;
+  final CalculationEntryResults results;
   final String? notes;
 
   CalculationEntry({
     required this.id,
     required this.timestamp,
-    required this.type,
-    required this.inputs,
-    required this.results,
+    required Object? type,
+    required Object? inputs,
+    required Object? results,
     this.notes,
-  });
+  })  : type = CalculationEntryType.fromJsonValue(type),
+        inputs = inputs is CalculationEntryInputs
+            ? inputs
+            : CalculationEntryInputs.fromJson(inputs),
+        results = results is CalculationEntryResults
+            ? results
+            : CalculationEntryResults.fromJson(results);
 
   /// Create from loan calculation
   factory CalculationEntry.fromLoanCalculation({
-    required String type,
+    required Object? type,
     double? loanAmount,
     double? interestRate,
     double? termYears,
@@ -39,40 +309,32 @@ class CalculationEntry {
     String? notes,
   }) {
     final now = DateTime.now();
-    final id = '${now.millisecondsSinceEpoch}';
+    final id = now.millisecondsSinceEpoch.toString();
+    final entryType = CalculationEntryType.fromJsonValue(type);
 
-    final inputs = <String, dynamic>{};
-    final results = <String, dynamic>{};
+    final inputs = CalculationEntryInputs(
+      loanAmount: loanAmount,
+      interestRate: interestRate,
+      termYears: termYears,
+      payment: entryType == CalculationEntryType.loanAmount ? payment : null,
+      propertyTax: propertyTax,
+      homeInsurance: homeInsurance,
+      mortgageInsurance: mortgageInsurance,
+      monthlyExpenses: monthlyExpenses,
+      price: price,
+      downPayment: downPayment,
+    );
 
-    // Store inputs
-    if (loanAmount != null) inputs['loanAmount'] = loanAmount;
-    if (interestRate != null) inputs['interestRate'] = interestRate;
-    if (termYears != null) inputs['termYears'] = termYears;
-    if (payment != null && type == 'loan_amount') {
-      inputs['payment'] = payment;
-    }
-    if (propertyTax != null) inputs['propertyTax'] = propertyTax;
-    if (homeInsurance != null) inputs['homeInsurance'] = homeInsurance;
-    if (mortgageInsurance != null) inputs['mortgageInsurance'] = mortgageInsurance;
-    if (monthlyExpenses != null) inputs['monthlyExpenses'] = monthlyExpenses;
-    if (price != null) inputs['price'] = price;
-    if (downPayment != null) inputs['downPayment'] = downPayment;
-
-    // Store results based on type
-    switch (type) {
-      case 'payment':
-        if (payment != null) results['payment'] = payment;
-        break;
-      case 'loan_amount':
-        if (loanAmount != null) results['loanAmount'] = loanAmount;
-        break;
-      case 'term':
-        if (termYears != null) results['termYears'] = termYears;
-        break;
-      case 'interest_rate':
-        if (interestRate != null) results['interestRate'] = interestRate;
-        break;
-    }
+    final results = switch (entryType) {
+      CalculationEntryType.payment => CalculationEntryResults(payment: payment),
+      CalculationEntryType.loanAmount =>
+        CalculationEntryResults(loanAmount: loanAmount),
+      CalculationEntryType.term => CalculationEntryResults(termYears: termYears),
+      CalculationEntryType.interestRate =>
+        CalculationEntryResults(interestRate: interestRate),
+      CalculationEntryType.qualification =>
+        CalculationEntryResults(maxLoanAmount: loanAmount),
+    };
 
     return CalculationEntry(
       id: id,
@@ -91,36 +353,38 @@ class CalculationEntry {
     required double interestRate,
     required double termYears,
     required double maxLoanAmount,
+    double? monthlyPiPayment,
     String? notes,
   }) {
     final now = DateTime.now();
-    final id = '${now.millisecondsSinceEpoch}';
+    final id = now.millisecondsSinceEpoch.toString();
 
     return CalculationEntry(
       id: id,
       timestamp: now,
-      type: 'qualification',
-      inputs: {
-        'annualIncome': annualIncome,
-        'monthlyDebt': monthlyDebt,
-        'interestRate': interestRate,
-        'termYears': termYears,
-      },
-      results: {
-        'maxLoanAmount': maxLoanAmount,
-      },
+      type: CalculationEntryType.qualification,
+      inputs: CalculationEntryInputs(
+        annualIncome: annualIncome,
+        monthlyDebt: monthlyDebt,
+        interestRate: interestRate,
+        termYears: termYears,
+      ),
+      results: CalculationEntryResults(
+        maxLoanAmount: maxLoanAmount,
+        monthlyPiPayment: monthlyPiPayment,
+      ),
       notes: notes,
     );
   }
 
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'id': id,
       'timestamp': timestamp.toIso8601String(),
-      'type': type,
-      'inputs': inputs,
-      'results': results,
+      'type': type.storageName,
+      'inputs': inputs.toJson(),
+      'results': results.toJson(),
       'notes': notes,
     };
   }
@@ -130,70 +394,57 @@ class CalculationEntry {
     return CalculationEntry(
       id: json['id'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
-      type: json['type'] as String,
-      inputs: Map<String, dynamic>.from(json['inputs'] as Map),
-      results: Map<String, dynamic>.from(json['results'] as Map),
+      type: CalculationEntryType.fromJsonValue(json['type']),
+      inputs: CalculationEntryInputs.fromJson(json['inputs']),
+      results: CalculationEntryResults.fromJson(json['results']),
       notes: json['notes'] as String?,
     );
   }
 
   /// Get a human-readable title for this calculation
-  String get title {
-    switch (type) {
-      case 'payment':
-        return 'Monthly Payment Calculation';
-      case 'loan_amount':
-        return 'Loan Amount Calculation';
-      case 'term':
-        return 'Loan Term Calculation';
-      case 'interest_rate':
-        return 'Interest Rate Calculation';
-      case 'qualification':
-        return 'Qualification Analysis';
-      default:
-        return 'Calculation';
-    }
-  }
+  String get title => type.title;
 
   /// Get a summary of the calculation
   String get summary {
     final buffer = StringBuffer();
 
     switch (type) {
-      case 'payment':
-        final loan = inputs['loanAmount'];
-        final rate = inputs['interestRate'];
-        final term = inputs['termYears'];
-        final payment = results['payment'];
+      case CalculationEntryType.payment:
         buffer.write(
-          '${CurrencyFormatter.formatCurrency((loan as num?)?.toDouble(), showDecimals: false)} '
-          'at ${CurrencyFormatter.formatPercent((rate as num?)?.toDouble(), decimals: 3)} '
-          'for ${CurrencyFormatter.formatYears((term as num?)?.toDouble())} '
-          '→ ${CurrencyFormatter.formatCurrency((payment as num?)?.toDouble())}/mo',
+          '${CurrencyFormatter.formatCurrency(loanAmount, showDecimals: false)} '
+          'at ${CurrencyFormatter.formatPercent(interestRate, decimals: 3)} '
+          'for ${CurrencyFormatter.formatYears(termYears)} '
+          '→ ${CurrencyFormatter.formatCurrency(monthlyPayment)}/mo',
         );
         break;
-      case 'loan_amount':
-        final payment = inputs['payment'];
-        final rate = inputs['interestRate'];
-        final term = inputs['termYears'];
-        final loan = results['loanAmount'];
+      case CalculationEntryType.loanAmount:
         buffer.write(
-          '${CurrencyFormatter.formatCurrency((payment as num?)?.toDouble())}/mo '
-          'at ${CurrencyFormatter.formatPercent((rate as num?)?.toDouble(), decimals: 3)} '
-          'for ${CurrencyFormatter.formatYears((term as num?)?.toDouble())} '
-          '→ ${CurrencyFormatter.formatCurrency((loan as num?)?.toDouble(), showDecimals: false)} loan',
+          '${CurrencyFormatter.formatCurrency(inputs.payment)}/mo '
+          'at ${CurrencyFormatter.formatPercent(interestRate, decimals: 3)} '
+          'for ${CurrencyFormatter.formatYears(termYears)} '
+          '→ ${CurrencyFormatter.formatCurrency(loanAmount, showDecimals: false)} loan',
         );
         break;
-      case 'qualification':
-        final income = inputs['annualIncome'];
-        final maxLoan = results['maxLoanAmount'];
+      case CalculationEntryType.term:
         buffer.write(
-          'Income: ${CurrencyFormatter.formatCurrency((income as num?)?.toDouble(), showDecimals: false)} '
-          '→ Max loan: ${CurrencyFormatter.formatCurrency((maxLoan as num?)?.toDouble(), showDecimals: false)}',
+          '${CurrencyFormatter.formatCurrency(loanAmount, showDecimals: false)} '
+          'loan at ${CurrencyFormatter.formatPercent(interestRate, decimals: 3)} '
+          '→ ${CurrencyFormatter.formatYears(termYears)}',
         );
         break;
-      default:
-        buffer.write('Calculation');
+      case CalculationEntryType.interestRate:
+        buffer.write(
+          '${CurrencyFormatter.formatCurrency(loanAmount, showDecimals: false)} '
+          'loan at ${CurrencyFormatter.formatCurrency(monthlyPayment)}/mo '
+          '→ ${CurrencyFormatter.formatPercent(interestRate, decimals: 3)}',
+        );
+        break;
+      case CalculationEntryType.qualification:
+        buffer.write(
+          'Income: ${CurrencyFormatter.formatCurrency(annualIncome, showDecimals: false)} '
+          '→ Max loan: ${CurrencyFormatter.formatCurrency(results.maxLoanAmount, showDecimals: false)}',
+        );
+        break;
     }
 
     return buffer.toString();
@@ -213,23 +464,22 @@ class CalculationEntry {
 
   /// Get loan amount for comparison (from inputs or results)
   double? get loanAmount {
-    return (inputs['loanAmount'] ?? results['loanAmount']) as double?;
+    return inputs.loanAmount ?? results.loanAmount ?? results.maxLoanAmount;
   }
 
   /// Get interest rate for comparison
   double? get interestRate {
-    return (inputs['interestRate'] ?? results['interestRate']) as double?;
+    return inputs.interestRate ?? results.interestRate;
   }
 
   /// Get term in years for comparison
   double? get termYears {
-    final term = (inputs['termYears'] ?? results['termYears']);
-    return term != null ? (term as num).toDouble() : null;
+    return inputs.termYears ?? results.termYears;
   }
 
   /// Get monthly payment for comparison
   double? get monthlyPayment {
-    return (inputs['payment'] ?? results['payment']) as double?;
+    return inputs.payment ?? results.payment ?? results.monthlyPiPayment;
   }
 
   /// Calculate total amount paid over loan life
@@ -260,12 +510,14 @@ class CalculationEntry {
   }
 
   /// Get PITI components
-  double? get propertyTax => inputs['propertyTax'] as double?;
-  double? get homeInsurance => inputs['homeInsurance'] as double?;
-  double? get mortgageInsurance => inputs['mortgageInsurance'] as double?;
-  double? get monthlyExpenses => inputs['monthlyExpenses'] as double?;
-  double? get price => inputs['price'] as double?;
-  double? get downPayment => inputs['downPayment'] as double?;
+  double? get propertyTax => inputs.propertyTax;
+  double? get homeInsurance => inputs.homeInsurance;
+  double? get mortgageInsurance => inputs.mortgageInsurance;
+  double? get monthlyExpenses => inputs.monthlyExpenses;
+  double? get price => inputs.price;
+  double? get downPayment => inputs.downPayment;
+  double? get annualIncome => inputs.annualIncome;
+  double? get monthlyDebt => inputs.monthlyDebt;
 
   /// Calculate total monthly PITI payment
   double? get pitiPayment {
@@ -292,14 +544,13 @@ class CalculationEntry {
 
 /// Manages calculation history storage and retrieval
 class CalculationHistory {
-  final List<CalculationEntry> _entries = [];
+  final List<CalculationEntry> _entries = <CalculationEntry>[];
   static const int maxEntries = 100;
 
   /// Add a new calculation to history
   void addEntry(CalculationEntry entry) {
-    _entries.insert(0, entry); // Add to beginning (most recent first)
+    _entries.insert(0, entry);
 
-    // Limit history size
     if (_entries.length > maxEntries) {
       _entries.removeRange(maxEntries, _entries.length);
     }
@@ -309,7 +560,7 @@ class CalculationHistory {
   List<CalculationEntry> get entries => List.unmodifiable(_entries);
 
   /// Get entries of a specific type
-  List<CalculationEntry> getEntriesByType(String type) {
+  List<CalculationEntry> getEntriesByType(CalculationEntryType type) {
     return _entries.where((e) => e.type == type).toList();
   }
 
@@ -345,9 +596,8 @@ class CalculationHistory {
       for (final json in jsonList) {
         _entries.add(CalculationEntry.fromJson(json as Map<String, dynamic>));
       }
-    } catch (e) {
-      // Handle parse errors gracefully
-      // print('Error parsing calculation history: $e');
+    } catch (_) {
+      // Keep the app usable if history parsing fails.
     }
   }
 
@@ -360,4 +610,19 @@ class CalculationHistory {
       return notesMatch || summaryMatch;
     }).toList();
   }
+}
+
+double? _readDouble(Object? raw, String key) {
+  if (raw is! Map) {
+    return null;
+  }
+
+  final value = raw[key];
+  if (value is num) {
+    return value.toDouble();
+  }
+  if (value is String) {
+    return double.tryParse(value);
+  }
+  return null;
 }

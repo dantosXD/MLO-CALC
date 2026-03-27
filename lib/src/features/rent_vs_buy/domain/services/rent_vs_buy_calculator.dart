@@ -1,4 +1,5 @@
-import 'dart:math';
+import 'package:loan_ranger/src/core/math/loan_math.dart';
+import 'package:loan_ranger/src/core/utils/decimal_utils.dart';
 import '../models/rent_vs_buy_calculation.dart';
 
 /// Calculator service for Rent vs Buy analysis
@@ -7,6 +8,8 @@ import '../models/rent_vs_buy_calculation.dart';
 /// each step is documented with formula, inputs, and explanation.
 class RentVsBuyCalculator {
   const RentVsBuyCalculator();
+
+  static const LoanMath _loanMath = LoanMath();
 
   RentVsBuyCalculation calculate(RentVsBuyInputs inputs) {
     final steps = <CalculationStep>[];
@@ -31,7 +34,9 @@ class RentVsBuyCalculator {
     ));
 
     // Step 2: Calculate Monthly Property Tax
-    final monthlyPropertyTax = (inputs.homePrice * inputs.propertyTaxRate / 100) / 12;
+    final monthlyPropertyTax = DecimalUtils.roundToCents(
+      (inputs.homePrice * inputs.propertyTaxRate / 100) / 12,
+    );
     steps.add(CalculationStep(
       name: 'Monthly Property Tax',
       formula: '(Home Price × Tax Rate) / 12',
@@ -44,7 +49,9 @@ class RentVsBuyCalculator {
     ));
 
     // Step 3: Calculate Monthly Home Insurance
-    final monthlyHomeInsurance = inputs.homeInsuranceAnnual / 12;
+    final monthlyHomeInsurance = DecimalUtils.roundToCents(
+      inputs.homeInsuranceAnnual / 12,
+    );
     steps.add(CalculationStep(
       name: 'Monthly Home Insurance',
       formula: 'Annual Insurance / 12',
@@ -58,7 +65,9 @@ class RentVsBuyCalculator {
     // Step 4: Calculate Monthly PMI (if applicable)
     double monthlyPmi = 0;
     if (inputs.ltv > 80) {
-      monthlyPmi = (inputs.loanAmount * inputs.pmiRate / 100) / 12;
+      monthlyPmi = DecimalUtils.roundToCents(
+        (inputs.loanAmount * inputs.pmiRate / 100) / 12,
+      );
       steps.add(CalculationStep(
         name: 'Monthly PMI',
         formula: '(Loan Amount × PMI Rate) / 12',
@@ -74,7 +83,9 @@ class RentVsBuyCalculator {
     }
 
     // Step 5: Calculate Monthly Maintenance
-    final monthlyMaintenance = (inputs.homePrice * inputs.maintenancePercent / 100) / 12;
+    final monthlyMaintenance = DecimalUtils.roundToCents(
+      (inputs.homePrice * inputs.maintenancePercent / 100) / 12,
+    );
     steps.add(CalculationStep(
       name: 'Monthly Maintenance',
       formula: '(Home Price × Maintenance Rate) / 12',
@@ -89,8 +100,12 @@ class RentVsBuyCalculator {
 
     // Step 6: Calculate Tax Benefit (Mortgage Interest Deduction)
     // First year interest approximation (actual varies as loan amortizes)
-    final firstYearInterest = inputs.loanAmount * (inputs.interestRate / 100);
-    final monthlyTaxBenefit = (firstYearInterest * inputs.marginalTaxRate / 100) / 12;
+    final firstYearInterest = DecimalUtils.roundToCents(
+      inputs.loanAmount * (inputs.interestRate / 100),
+    );
+    final monthlyTaxBenefit = DecimalUtils.roundToCents(
+      (firstYearInterest * inputs.marginalTaxRate / 100) / 12,
+    );
     steps.add(CalculationStep(
       name: 'Monthly Tax Benefit',
       formula: '(Annual Interest × Tax Rate) / 12',
@@ -106,9 +121,10 @@ class RentVsBuyCalculator {
 
     // Step 7: Calculate Opportunity Cost for Renter
     // The renter could invest the down payment and closing costs
-    final investableAmount = inputs.totalUpfrontCost;
-    final monthlyOpportunityCost = 
-        (investableAmount * inputs.investmentReturnRate / 100) / 12;
+    final investableAmount = DecimalUtils.roundToCents(inputs.totalUpfrontCost);
+    final monthlyOpportunityCost = DecimalUtils.roundToCents(
+      (investableAmount * inputs.investmentReturnRate / 100) / 12,
+    );
     steps.add(CalculationStep(
       name: 'Monthly Opportunity Cost',
       formula: '(Down Payment + Closing Costs) × Return Rate / 12',
@@ -140,7 +156,8 @@ class RentVsBuyCalculator {
     );
 
     // Step 8: Calculate Break-Even Point
-    final monthlySavings = rentingCosts.total - buyingCosts.total;
+    final monthlySavings =
+        DecimalUtils.roundToCents(rentingCosts.total - buyingCosts.total);
     int breakEvenMonths = 0;
     
     if (monthlySavings > 0) {
@@ -186,14 +203,21 @@ class RentVsBuyCalculator {
   double _calculateMonthlyPayment({
     required double principal,
     required double annualRate,
-    required int years,
+    required double years,
   }) {
-    if (annualRate <= 0) {
-      return principal / (years * 12);
+    if (principal <= 0 || years <= 0) {
+      return 0;
     }
-    final r = annualRate / 100 / 12;
-    final n = years * 12;
-    return principal * (r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
+    if (annualRate <= 0) {
+      return DecimalUtils.roundToCents(principal / (years * 12));
+    }
+    return DecimalUtils.roundToCents(
+      _loanMath.calculatePayment(
+        loanAmount: principal,
+        interestRate: annualRate,
+        termYears: years,
+      ),
+    );
   }
 
   int _calculateBreakEvenWithEquity(
@@ -201,12 +225,12 @@ class RentVsBuyCalculator {
     MonthlyBuyingCosts buyingCosts,
     MonthlyRentingCosts rentingCosts,
   ) {
-    double homeValue = inputs.homePrice;
-    double loanBalance = inputs.loanAmount;
-    double totalBuyingCost = inputs.totalUpfrontCost;
+    double homeValue = DecimalUtils.roundToCents(inputs.homePrice);
+    double loanBalance = DecimalUtils.roundToCents(inputs.loanAmount);
+    double totalBuyingCost = DecimalUtils.roundToCents(inputs.totalUpfrontCost);
     double totalRentingCost = 0;
-    double investmentValue = inputs.totalUpfrontCost;
-    double currentRent = inputs.monthlyRent;
+    double investmentValue = DecimalUtils.roundToCents(inputs.totalUpfrontCost);
+    double currentRent = DecimalUtils.roundToCents(inputs.monthlyRent);
     
     final monthlyRate = inputs.interestRate / 100 / 12;
     final monthlyAppreciation = inputs.homeAppreciationRate / 100 / 12;
@@ -215,22 +239,34 @@ class RentVsBuyCalculator {
 
     for (int month = 1; month <= inputs.analysisYears * 12; month++) {
       // Update home value
-      homeValue *= (1 + monthlyAppreciation);
+      homeValue = DecimalUtils.roundToCents(homeValue * (1 + monthlyAppreciation));
       
       // Calculate interest portion and principal paydown
-      final interestPortion = loanBalance * monthlyRate;
-      final principalPortion = buyingCosts.principalAndInterest - interestPortion;
-      loanBalance -= principalPortion;
+      final interestPortion = DecimalUtils.roundToCents(loanBalance * monthlyRate);
+      final principalPortion = DecimalUtils.roundToCents(
+        buyingCosts.principalAndInterest - interestPortion,
+      );
+      loanBalance = DecimalUtils.ensureNonNegative(
+        DecimalUtils.roundToCents(loanBalance - principalPortion),
+      );
       
       // Update costs
-      totalBuyingCost += buyingCosts.total;
-      totalRentingCost += currentRent + inputs.rentersInsuranceMonthly;
+      totalBuyingCost = DecimalUtils.roundToCents(
+        totalBuyingCost + buyingCosts.total,
+      );
+      totalRentingCost = DecimalUtils.roundToCents(
+        totalRentingCost + currentRent + inputs.rentersInsuranceMonthly,
+      );
       
       // Rent increases
-      currentRent *= (1 + monthlyRentIncrease);
+      currentRent = DecimalUtils.roundToCents(
+        currentRent * (1 + monthlyRentIncrease),
+      );
       
       // Investment grows
-      investmentValue *= (1 + monthlyInvestReturn);
+      investmentValue = DecimalUtils.roundToCents(
+        investmentValue * (1 + monthlyInvestReturn),
+      );
       
       // Check if buying is ahead
       final equity = homeValue - loanBalance;
@@ -251,14 +287,14 @@ class RentVsBuyCalculator {
     MonthlyRentingCosts rentingCosts,
   ) {
     final projections = <YearlyProjection>[];
-    
-    double homeValue = inputs.homePrice;
-    double loanBalance = inputs.loanAmount;
-    double totalBuyingCost = inputs.totalUpfrontCost;
+
+    double homeValue = DecimalUtils.roundToCents(inputs.homePrice);
+    double loanBalance = DecimalUtils.roundToCents(inputs.loanAmount);
+    double totalBuyingCost = DecimalUtils.roundToCents(inputs.totalUpfrontCost);
     double totalRentingCost = 0;
-    double investmentValue = inputs.totalUpfrontCost;
-    double currentRent = inputs.monthlyRent;
-    
+    double investmentValue = DecimalUtils.roundToCents(inputs.totalUpfrontCost);
+    double currentRent = DecimalUtils.roundToCents(inputs.monthlyRent);
+
     final monthlyRate = inputs.interestRate / 100 / 12;
     final monthlyAppreciation = inputs.homeAppreciationRate / 100 / 12;
     final monthlyInvestReturn = inputs.investmentReturnRate / 100 / 12;
@@ -266,25 +302,39 @@ class RentVsBuyCalculator {
     for (int year = 1; year <= inputs.analysisYears; year++) {
       // Process 12 months
       for (int month = 0; month < 12; month++) {
-        homeValue *= (1 + monthlyAppreciation);
-        
-        final interestPortion = loanBalance * monthlyRate;
-        final principalPortion = buyingCosts.principalAndInterest - interestPortion;
-        loanBalance = max(0, loanBalance - principalPortion);
-        
-        totalBuyingCost += buyingCosts.total;
-        totalRentingCost += currentRent + inputs.rentersInsuranceMonthly;
-        
+        homeValue = DecimalUtils.roundToCents(
+          homeValue * (1 + monthlyAppreciation),
+        );
+
+        final interestPortion = DecimalUtils.roundToCents(loanBalance * monthlyRate);
+        final principalPortion = DecimalUtils.roundToCents(
+          buyingCosts.principalAndInterest - interestPortion,
+        );
+        loanBalance = DecimalUtils.ensureNonNegative(
+          DecimalUtils.roundToCents(loanBalance - principalPortion),
+        );
+
+        totalBuyingCost = DecimalUtils.roundToCents(
+          totalBuyingCost + buyingCosts.total,
+        );
+        totalRentingCost = DecimalUtils.roundToCents(
+          totalRentingCost + currentRent + inputs.rentersInsuranceMonthly,
+        );
+
         // Annual rent increase applied monthly
         if (month == 11) {
-          currentRent *= (1 + inputs.annualRentIncrease / 100);
+          currentRent = DecimalUtils.roundToCents(
+            currentRent * (1 + inputs.annualRentIncrease / 100),
+          );
         }
-        
-        investmentValue *= (1 + monthlyInvestReturn);
+
+        investmentValue = DecimalUtils.roundToCents(
+          investmentValue * (1 + monthlyInvestReturn),
+        );
       }
-      
-      final equity = homeValue - loanBalance;
-      
+
+      final equity = DecimalUtils.roundToCents(homeValue - loanBalance);
+
       projections.add(YearlyProjection(
         year: year,
         homeValue: homeValue,
@@ -294,8 +344,12 @@ class RentVsBuyCalculator {
         totalRentingCostToDate: totalRentingCost,
         rentAtYear: currentRent,
         investmentValueIfRenting: investmentValue,
-        netWorthBuying: equity - totalBuyingCost + inputs.totalUpfrontCost,
-        netWorthRenting: investmentValue - totalRentingCost,
+        netWorthBuying: DecimalUtils.roundToCents(
+          equity - totalBuyingCost + inputs.totalUpfrontCost,
+        ),
+        netWorthRenting: DecimalUtils.roundToCents(
+          investmentValue - totalRentingCost,
+        ),
       ));
     }
     

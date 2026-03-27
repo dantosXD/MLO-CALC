@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
@@ -6,6 +7,7 @@ import 'package:flutter/foundation.dart';
 class ConnectivityService with ChangeNotifier {
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
+  Future<void>? _initializeFuture;
   
   bool _isOnline = true;
   bool _isInitialized = false;
@@ -14,32 +16,34 @@ class ConnectivityService with ChangeNotifier {
   bool get isOffline => !_isOnline;
   bool get isInitialized => _isInitialized;
 
-  ConnectivityService() {
-    _init();
+  ConnectivityService();
+
+  Future<void> initialize() {
+    return _initializeFuture ??= _init();
   }
 
   Future<void> _init() async {
-    // Get initial status
+    if (_isInitialized) return;
     final results = await _connectivity.checkConnectivity();
-    _updateStatus(results);
     _isInitialized = true;
+    _updateStatus(results, notify: false);
     
-    // Listen for changes
     _subscription = _connectivity.onConnectivityChanged.listen(_updateStatus);
     notifyListeners();
   }
 
-  void _updateStatus(List<ConnectivityResult> results) {
+  void _updateStatus(List<ConnectivityResult> results, {bool notify = true}) {
     final wasOnline = _isOnline;
     
-    // Consider online if any non-none connection exists
-    _isOnline = results.any((result) => 
-      result != ConnectivityResult.none
-    );
+    _isOnline = results.any((result) => result != ConnectivityResult.none);
     
     if (wasOnline != _isOnline) {
-      debugPrint('Connectivity changed: ${_isOnline ? "Online" : "Offline"}');
-      notifyListeners();
+      if (kDebugMode) {
+        debugPrint('Connectivity changed: ${_isOnline ? "Online" : "Offline"}');
+      }
+      if (notify) {
+        notifyListeners();
+      }
     }
   }
 

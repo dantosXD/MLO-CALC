@@ -1,4 +1,6 @@
-import '../../application/providers/comparison_provider.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
+
+import '../models/comparison_data.dart';
 
 class ComparisonExporter {
   static String buildCsv(ComparisonData data) {
@@ -8,11 +10,23 @@ class ComparisonExporter {
     for (final view in data.views) {
       buffer.writeln([
         view.entry.summary.replaceAll(',', ';'),
-        view.monthlyPayment?.toStringAsFixed(2) ?? '',
-        view.totalCost?.toStringAsFixed(2) ?? '',
-        view.totalInterest?.toStringAsFixed(2) ?? '',
+        view.monthlyPayment == null
+            ? ''
+            : CurrencyFormatter.formatNumber(view.monthlyPayment, decimals: 2)
+                .replaceAll(',', ''),
+        view.totalCost == null
+            ? ''
+            : CurrencyFormatter.formatNumber(view.totalCost, decimals: 2)
+                .replaceAll(',', ''),
+        view.totalInterest == null
+            ? ''
+            : CurrencyFormatter.formatNumber(view.totalInterest, decimals: 2)
+                .replaceAll(',', ''),
         view.miDropMonth?.toString() ?? '',
-        view.breakEvenMonths?.toStringAsFixed(1) ?? '',
+        view.breakEvenMonths == null
+            ? ''
+            : CurrencyFormatter.formatNumber(view.breakEvenMonths, decimals: 1)
+                .replaceAll(',', ''),
       ].join(','));
     }
     return buffer.toString();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 /// Unit conversion modes for various calculator inputs
 enum TimeUnit { monthly, annual }
@@ -12,13 +12,14 @@ class UnitConversionProvider with ChangeNotifier {
   static const String _downPaymentKey = 'unit_down_payment';
   static const String _termKey = 'unit_term';
 
+  UnitConversionProvider({PreferenceStore? preferenceStore})
+      : _preferences = preferenceStore ?? PreferenceStore();
+
+  final PreferenceStore _preferences;
+
   TimeUnit _taxInsuranceUnit = TimeUnit.annual;
   AmountUnit _downPaymentUnit = AmountUnit.percentage;
   TermUnit _termUnit = TermUnit.years;
-
-  UnitConversionProvider() {
-    _load();
-  }
 
   // Getters
   TimeUnit get taxInsuranceUnit => _taxInsuranceUnit;
@@ -130,17 +131,17 @@ class UnitConversionProvider with ChangeNotifier {
   String get termLabel => 
       _termUnit == TermUnit.years ? 'years' : 'months';
 
-  Future<void> _load() async {
+  Future<void> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      final taxIns = prefs.getString(_taxInsuranceKey);
+      await _preferences.load();
+
+      final taxIns = _preferences.getString(_taxInsuranceKey);
       if (taxIns == 'monthly') _taxInsuranceUnit = TimeUnit.monthly;
       
-      final downPmt = prefs.getString(_downPaymentKey);
+      final downPmt = _preferences.getString(_downPaymentKey);
       if (downPmt == 'dollar') _downPaymentUnit = AmountUnit.dollar;
       
-      final term = prefs.getString(_termKey);
+      final term = _preferences.getString(_termKey);
       if (term == 'months') _termUnit = TermUnit.months;
       
       notifyListeners();
@@ -149,13 +150,18 @@ class UnitConversionProvider with ChangeNotifier {
 
   Future<void> _save() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_taxInsuranceKey, 
+      await _preferences.load();
+      await _preferences.setString(
+        _taxInsuranceKey,
           _taxInsuranceUnit == TimeUnit.monthly ? 'monthly' : 'annual');
-      await prefs.setString(_downPaymentKey,
-          _downPaymentUnit == AmountUnit.dollar ? 'dollar' : 'percentage');
-      await prefs.setString(_termKey,
-          _termUnit == TermUnit.months ? 'months' : 'years');
+      await _preferences.setString(
+        _downPaymentKey,
+        _downPaymentUnit == AmountUnit.dollar ? 'dollar' : 'percentage',
+      );
+      await _preferences.setString(
+        _termKey,
+        _termUnit == TermUnit.months ? 'months' : 'years',
+      );
     } catch (_) {}
   }
 }

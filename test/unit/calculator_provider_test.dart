@@ -1,6 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
+import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
+
+CalculatorProvider buildCalculatorProvider() {
+  return CalculatorProvider(
+    coreCalculationService: serviceLocator<CoreCalculationService>(),
+    amortizationService: serviceLocator<AmortizationService>(),
+    qualificationService: serviceLocator<QualificationService>(),
+    persistenceService: serviceLocator<CalculatorPersistenceService>(),
+  );
+}
 
 void main() {
   setUpAll(() async {
@@ -10,7 +23,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate monthly payment - standard 30-year mortgage', () {
@@ -55,7 +68,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate loan amount from payment', () {
@@ -93,7 +106,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate term from loan amount and payment', () {
@@ -127,7 +140,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate interest rate using Newton\'s method', () {
@@ -166,7 +179,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate PITI payment with all components', () {
@@ -198,7 +211,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate loan amount from price and percentage down payment', () {
@@ -222,7 +235,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Generate amortization schedule - verify length', () async {
@@ -295,7 +308,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate remaining balance after 5 years', () {
@@ -325,7 +338,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Bi-weekly payment should be half of monthly', () {
@@ -358,7 +371,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Calculate maximum qualifying loan amount', () {
@@ -393,7 +406,7 @@ void main() {
     late CalculatorProvider provider;
 
     setUp(() {
-      provider = CalculatorProvider();
+      provider = buildCalculatorProvider();
     });
 
     test('Clear all resets all state', () {

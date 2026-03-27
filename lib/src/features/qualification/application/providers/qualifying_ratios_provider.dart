@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:uuid/uuid.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 
@@ -10,14 +10,14 @@ class QualifyingRatiosProvider with ChangeNotifier {
   static const String _selectedKey = 'qualifying_ratio_selected';
   
   final Uuid _uuid = const Uuid();
+  final PreferenceStore _preferences;
   
   List<QualifyingRatio> _customRatios = [];
   QualifyingRatio? _selectedRatio;
   bool _isLoading = true;
 
-  QualifyingRatiosProvider() {
-    _loadRatios();
-  }
+  QualifyingRatiosProvider({PreferenceStore? preferenceStore})
+      : _preferences = preferenceStore ?? PreferenceStore();
 
   // Getters
   bool get isLoading => _isLoading;
@@ -27,12 +27,11 @@ class QualifyingRatiosProvider with ChangeNotifier {
   QualifyingRatio? get selectedRatio => _selectedRatio;
   
   /// Load custom ratios from storage
-  Future<void> _loadRatios() async {
+  Future<void> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Load custom ratios
-      final ratiosJson = prefs.getString(_storageKey);
+      await _preferences.load();
+
+      final ratiosJson = _preferences.getString(_storageKey);
       if (ratiosJson != null) {
         final List<dynamic> decoded = jsonDecode(ratiosJson);
         _customRatios = decoded
@@ -40,8 +39,7 @@ class QualifyingRatiosProvider with ChangeNotifier {
             .toList();
       }
       
-      // Load selected ratio
-      final selectedId = prefs.getString(_selectedKey);
+      final selectedId = _preferences.getString(_selectedKey);
       if (selectedId != null) {
         _selectedRatio = allRatios.firstWhere(
           (r) => r.id == selectedId,
@@ -62,9 +60,9 @@ class QualifyingRatiosProvider with ChangeNotifier {
   /// Save custom ratios to storage
   Future<void> _saveRatios() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      await _preferences.load();
       final ratiosJson = jsonEncode(_customRatios.map((r) => r.toJson()).toList());
-      await prefs.setString(_storageKey, ratiosJson);
+      await _preferences.setString(_storageKey, ratiosJson);
     } catch (e) {
       debugPrint('Error saving qualifying ratios: $e');
     }
@@ -76,8 +74,8 @@ class QualifyingRatiosProvider with ChangeNotifier {
     notifyListeners();
     
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_selectedKey, ratio.id);
+      await _preferences.load();
+      await _preferences.setString(_selectedKey, ratio.id);
     } catch (e) {
       debugPrint('Error saving selected ratio: $e');
     }
@@ -137,8 +135,8 @@ class QualifyingRatiosProvider with ChangeNotifier {
     // If deleted ratio was selected, select first built-in
     if (_selectedRatio?.id == ratioId) {
       _selectedRatio = builtInRatios.first;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_selectedKey, _selectedRatio!.id);
+      await _preferences.load();
+      await _preferences.setString(_selectedKey, _selectedRatio!.id);
     }
     
     notifyListeners();

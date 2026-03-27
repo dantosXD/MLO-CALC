@@ -1,11 +1,16 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 enum CalculatorLayout { classic, modern }
 
 class LayoutPreferenceProvider extends ChangeNotifier {
   static const String _layoutKey = 'calculator_layout';
-  
+
+  LayoutPreferenceProvider({PreferenceStore? preferenceStore})
+      : _preferences = preferenceStore ?? PreferenceStore();
+
+  final PreferenceStore _preferences;
+
   CalculatorLayout _layout = CalculatorLayout.classic;
   bool _isLoaded = false;
 
@@ -13,14 +18,10 @@ class LayoutPreferenceProvider extends ChangeNotifier {
   bool get isModern => _layout == CalculatorLayout.modern;
   bool get isLoaded => _isLoaded;
 
-  LayoutPreferenceProvider() {
-    _loadPreference();
-  }
-
-  Future<void> _loadPreference() async {
+  Future<void> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedLayout = prefs.getString(_layoutKey);
+      await _preferences.load();
+      final savedLayout = _preferences.getString(_layoutKey);
       if (savedLayout == 'modern') {
         _layout = CalculatorLayout.modern;
       } else {
@@ -35,13 +36,16 @@ class LayoutPreferenceProvider extends ChangeNotifier {
 
   Future<void> setLayout(CalculatorLayout layout) async {
     if (_layout == layout) return;
-    
+
     _layout = layout;
     notifyListeners();
-    
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_layoutKey, layout == CalculatorLayout.modern ? 'modern' : 'classic');
+      await _preferences.load();
+      await _preferences.setString(
+        _layoutKey,
+        layout == CalculatorLayout.modern ? 'modern' : 'classic',
+      );
     } catch (e) {
       debugPrint('Error saving layout preference: $e');
     }

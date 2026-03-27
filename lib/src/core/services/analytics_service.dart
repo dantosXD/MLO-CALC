@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 /// Analytics event types for tracking feature usage
 enum AnalyticsEventType {
@@ -9,7 +11,7 @@ enum AnalyticsEventType {
   loanAmountCalculation,
   termCalculation,
   interestRateCalculation,
-  
+
   // Feature events
   amortizationGenerated,
   biWeeklyAnalysis,
@@ -17,18 +19,18 @@ enum AnalyticsEventType {
   armWizardUsed,
   rentVsBuyAnalysis,
   comparisonUsed,
-  
+
   // NLP events
   nlpQuerySubmitted,
   nlpQueryFromCache,
   nlpQueryQueued,
   voiceInputUsed,
-  
+
   // Program events
   programSelected,
   programCreated,
   programDuplicated,
-  
+
   // UI events
   screenViewed,
   exportUsed,
@@ -39,7 +41,7 @@ enum AnalyticsEventType {
 class AnalyticsEvent {
   final AnalyticsEventType type;
   final DateTime timestamp;
-  final Map<String, dynamic>? metadata;
+  final Map<String, Object?>? metadata;
 
   AnalyticsEvent({
     required this.type,
@@ -47,11 +49,11 @@ class AnalyticsEvent {
     this.metadata,
   });
 
-  Map<String, dynamic> toJson() => {
-    'type': type.name,
-    'timestamp': timestamp.toIso8601String(),
-    'metadata': metadata,
-  };
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'type': type.name,
+        'timestamp': timestamp.toIso8601String(),
+        'metadata': metadata,
+      };
 
   factory AnalyticsEvent.fromJson(Map<String, dynamic> json) {
     return AnalyticsEvent(
@@ -59,8 +61,8 @@ class AnalyticsEvent {
         (e) => e.name == json['type'],
         orElse: () => AnalyticsEventType.screenViewed,
       ),
-      timestamp: DateTime.parse(json['timestamp']),
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      metadata: _metadataFromJson(json['metadata']),
     );
   }
 }
@@ -85,7 +87,6 @@ class UsageStats {
     required this.totalCalculations,
   });
 
-  /// Most used feature
   String? get mostUsedFeature {
     if (eventCounts.isEmpty) return null;
     final sorted = eventCounts.entries.toList()
@@ -93,7 +94,6 @@ class UsageStats {
     return sorted.first.key.name;
   }
 
-  /// Most common calculation type
   String? get mostCommonCalculation {
     if (calculationTypes.isEmpty) return null;
     final sorted = calculationTypes.entries.toList()
@@ -101,151 +101,154 @@ class UsageStats {
     return sorted.first.key;
   }
 
-  /// Average calculations per session
   double get averageCalculationsPerSession {
     if (totalSessions == 0) return 0;
     return totalCalculations / totalSessions;
   }
 }
 
-/// Analytics service for tracking feature usage
-/// 
+/// Analytics service for tracking feature usage.
+///
 /// All data is stored locally - no external tracking.
-class AnalyticsService with ChangeNotifier {
+class AnalyticsService {
+  AnalyticsService({PreferenceStore? preferenceStore})
+      : _preferences = preferenceStore ?? PreferenceStore();
+
   static const String _eventsKey = 'analytics_events';
   static const String _statsKey = 'analytics_stats';
   static const int _maxStoredEvents = 500;
   static const Duration _sessionTimeout = Duration(minutes: 30);
+  static const Set<String> _allowedMetadataKeys = <String>{
+    'screen',
+    'calculationType',
+    'feature',
+    'featureId',
+    'channel',
+    'status',
+    'action',
+  };
 
-  List<AnalyticsEvent> _events = [];
+  final PreferenceStore _preferences;
+
+  List<AnalyticsEvent> _events = <AnalyticsEvent>[];
   DateTime? _lastActivity;
   bool _isLoaded = false;
   bool _analyticsEnabled = true;
-
-  // Aggregated stats
   int _totalSessions = 0;
   DateTime? _firstUseDate;
+  Future<void>? _loadFuture;
 
   List<AnalyticsEvent> get events => List.unmodifiable(_events);
   bool get isLoaded => _isLoaded;
   bool get analyticsEnabled => _analyticsEnabled;
 
-  AnalyticsService() {
-    _load();
+  Future<void> initialize() {
+    return _loadFuture ??= _load();
   }
 
-  /// Load stored analytics data
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Load events
-      final eventsJson = prefs.getString(_eventsKey);
-      if (eventsJson != null) {
-        final List<dynamic> decoded = jsonDecode(eventsJson);
+      await _preferences.load();
+
+      final eventsJson = _preferences.getString(_eventsKey);
+      if (eventsJson != null && eventsJson.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(eventsJson) as List<dynamic>;
         _events = decoded
-            .map((e) => AnalyticsEvent.fromJson(e))
+            .map((e) => AnalyticsEvent.fromJson(Map<String, dynamic>.from(e)))
             .toList();
       }
-      
-      // Load stats
-      final statsJson = prefs.getString(_statsKey);
-      if (statsJson != null) {
-        final stats = jsonDecode(statsJson);
-        _totalSessions = stats['totalSessions'] ?? 0;
+
+      final statsJson = _preferences.getString(_statsKey);
+      if (statsJson != null && statsJson.isNotEmpty) {
+        final Map<String, dynamic> stats =
+            Map<String, dynamic>.from(jsonDecode(statsJson) as Map);
+        _totalSessions = (stats['totalSessions'] as num?)?.toInt() ?? 0;
         _firstUseDate = stats['firstUseDate'] != null
-            ? DateTime.parse(stats['firstUseDate'])
+            ? DateTime.parse(stats['firstUseDate'] as String)
             : null;
       }
-      
-      // Start new session
+
       _startSession();
-      
     } catch (e) {
-      debugPrint('Error loading analytics: $e');
+      if (kDebugMode) {
+        debugPrint('Error loading analytics: $e');
+      }
     } finally {
       _isLoaded = true;
-      notifyListeners();
     }
   }
 
-  /// Save analytics data
   Future<void> _save() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Save events (trim to max size)
+      await _preferences.load();
+
       final trimmedEvents = _events.length > _maxStoredEvents
           ? _events.sublist(_events.length - _maxStoredEvents)
           : _events;
-      final eventsJson = jsonEncode(trimmedEvents.map((e) => e.toJson()).toList());
-      await prefs.setString(_eventsKey, eventsJson);
-      
-      // Save stats
-      final statsJson = jsonEncode({
+      final eventsJson =
+          jsonEncode(trimmedEvents.map((e) => e.toJson()).toList());
+      await _preferences.setString(_eventsKey, eventsJson);
+
+      final statsJson = jsonEncode(<String, Object?>{
         'totalSessions': _totalSessions,
         'firstUseDate': _firstUseDate?.toIso8601String(),
       });
-      await prefs.setString(_statsKey, statsJson);
-      
+      await _preferences.setString(_statsKey, statsJson);
     } catch (e) {
-      debugPrint('Error saving analytics: $e');
+      if (kDebugMode) {
+        debugPrint('Error saving analytics: $e');
+      }
     }
   }
 
-  /// Start a new session
   void _startSession() {
     final now = DateTime.now();
-    
-    // Check if this is a new session
-    if (_lastActivity == null || 
+
+    if (_lastActivity == null ||
         now.difference(_lastActivity!) > _sessionTimeout) {
       _totalSessions++;
       _firstUseDate ??= now;
     }
-    
+
     _lastActivity = now;
   }
 
-  /// Track an analytics event
   void trackEvent(
     AnalyticsEventType type, {
-    Map<String, dynamic>? metadata,
+    Map<String, Object?>? metadata,
   }) {
     if (!_analyticsEnabled) return;
-    
+
     final event = AnalyticsEvent(
       type: type,
       timestamp: DateTime.now(),
-      metadata: metadata,
+      metadata: _sanitizeMetadata(metadata),
     );
-    
+
     _events.add(event);
     _lastActivity = DateTime.now();
-    
-    // Save periodically (not on every event to reduce I/O)
+
     if (_events.length % 10 == 0) {
-      _save();
+      unawaited(_save());
     }
-    
-    notifyListeners();
   }
 
-  /// Track a screen view
   void trackScreenView(String screenName) {
     trackEvent(
       AnalyticsEventType.screenViewed,
-      metadata: {'screen': screenName},
+      metadata: <String, Object?>{'screen': screenName},
     );
   }
 
-  /// Track a calculation
-  void trackCalculation(String calculationType, {Map<String, dynamic>? params}) {
+  void trackCalculation(String calculationType,
+      {Map<String, Object?>? params}) {
     final eventType = _calculationTypeToEvent(calculationType);
-    trackEvent(eventType, metadata: {
-      'calculationType': calculationType,
-      ...?params,
-    });
+    final metadata = <String, Object?>{'calculationType': calculationType};
+    final sanitized = _sanitizeMetadata(params);
+    if (sanitized != null) {
+      metadata.addAll(sanitized);
+    }
+    trackEvent(eventType, metadata: metadata);
   }
 
   AnalyticsEventType _calculationTypeToEvent(String type) {
@@ -265,7 +268,6 @@ class AnalyticsService with ChangeNotifier {
     }
   }
 
-  /// Get aggregated usage statistics
   UsageStats getStats() {
     final eventCounts = <AnalyticsEventType, int>{};
     final screenViews = <String, int>{};
@@ -273,19 +275,16 @@ class AnalyticsService with ChangeNotifier {
     int totalCalculations = 0;
 
     for (final event in _events) {
-      // Count by event type
       eventCounts[event.type] = (eventCounts[event.type] ?? 0) + 1;
-      
-      // Count screen views
+
       if (event.type == AnalyticsEventType.screenViewed) {
         final screen = event.metadata?['screen'] as String? ?? 'unknown';
         screenViews[screen] = (screenViews[screen] ?? 0) + 1;
       }
-      
-      // Count calculation types
+
       if (_isCalculationEvent(event.type)) {
         totalCalculations++;
-        final calcType = event.metadata?['calculationType'] as String? ?? 
+        final calcType = event.metadata?['calculationType'] as String? ??
             event.type.name;
         calculationTypes[calcType] = (calculationTypes[calcType] ?? 0) + 1;
       }
@@ -303,7 +302,7 @@ class AnalyticsService with ChangeNotifier {
   }
 
   bool _isCalculationEvent(AnalyticsEventType type) {
-    return [
+    return <AnalyticsEventType>[
       AnalyticsEventType.paymentCalculation,
       AnalyticsEventType.loanAmountCalculation,
       AnalyticsEventType.termCalculation,
@@ -312,13 +311,11 @@ class AnalyticsService with ChangeNotifier {
     ].contains(type);
   }
 
-  /// Get events from the last N days
   List<AnalyticsEvent> getRecentEvents(int days) {
     final cutoff = DateTime.now().subtract(Duration(days: days));
     return _events.where((e) => e.timestamp.isAfter(cutoff)).toList();
   }
 
-  /// Get event count by type for a time period
   Map<AnalyticsEventType, int> getEventCountsByPeriod({
     DateTime? start,
     DateTime? end,
@@ -338,23 +335,46 @@ class AnalyticsService with ChangeNotifier {
     return counts;
   }
 
-  /// Toggle analytics on/off
   void setAnalyticsEnabled(bool enabled) {
     _analyticsEnabled = enabled;
-    notifyListeners();
   }
 
-  /// Clear all analytics data
   Future<void> clearAnalytics() async {
     _events.clear();
     _totalSessions = 0;
     _firstUseDate = null;
     await _save();
-    notifyListeners();
   }
 
-  /// Force save (call on app pause/close)
   Future<void> flush() async {
     await _save();
   }
+
+  Map<String, Object?>? _sanitizeMetadata(Map<String, Object?>? metadata) {
+    if (metadata == null || metadata.isEmpty) {
+      return null;
+    }
+
+    final sanitized = <String, Object?>{};
+    metadata.forEach((key, value) {
+      if (_allowedMetadataKeys.contains(key)) {
+        sanitized[key] = value;
+      }
+    });
+
+    return sanitized.isEmpty ? null : sanitized;
+  }
+}
+
+Map<String, Object?>? _metadataFromJson(Object? raw) {
+  if (raw is! Map) {
+    return null;
+  }
+
+  return raw.map<String, Object?>(
+    (Object? key, Object? value) => MapEntry<String, Object?>(
+      key.toString(),
+      value,
+    ),
+  );
 }

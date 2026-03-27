@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
@@ -10,13 +9,12 @@ import 'package:loan_ranger/src/features/calculator/domain/services/qualificatio
 
 class QualificationController with ChangeNotifier {
   QualificationController({
-    QualificationService? qualificationService,
+    required QualificationService qualificationService,
     required LoanQuoteController quoteController,
     required HistoryController historyController,
-  }) : _qualificationService =
-           qualificationService ?? serviceLocator<QualificationService>(),
-       _quoteController = quoteController,
-       _historyController = historyController;
+  })  : _qualificationService = qualificationService,
+        _quoteController = quoteController,
+        _historyController = historyController;
 
   final QualificationService _qualificationService;
   final LoanQuoteController _quoteController;
@@ -35,7 +33,7 @@ class QualificationController with ChangeNotifier {
     _state = _state.copyWith(
       annualIncome: snapshot.annualIncome,
       monthlyDebt: snapshot.monthlyDebt,
-      calculationError: null,
+      clearCalculationError: true,
     );
     notifyListeners();
   }
@@ -44,18 +42,34 @@ class QualificationController with ChangeNotifier {
     _state = _state.copyWith(
       annualIncome: _toDouble(entry.inputs['annualIncome']),
       monthlyDebt: _toDouble(entry.inputs['monthlyDebt']),
-      calculationError: null,
+      clearCalculationError: true,
     );
     notifyListeners();
   }
 
   void setAnnualIncome({double? value}) {
-    _state = _state.copyWith(annualIncome: value, calculationError: null);
+    _state = value == null
+        ? _state.copyWith(
+            clearAnnualIncome: true,
+            clearCalculationError: true,
+          )
+        : _state.copyWith(
+            annualIncome: value,
+            clearCalculationError: true,
+          );
     notifyListeners();
   }
 
   void setMonthlyDebt({double? value}) {
-    _state = _state.copyWith(monthlyDebt: value, calculationError: null);
+    _state = value == null
+        ? _state.copyWith(
+            clearMonthlyDebt: true,
+            clearCalculationError: true,
+          )
+        : _state.copyWith(
+            monthlyDebt: value,
+            clearCalculationError: true,
+          );
     notifyListeners();
   }
 
@@ -79,9 +93,9 @@ class QualificationController with ChangeNotifier {
 
   void clearAll() {
     _state = _state.copyWith(
-      annualIncome: null,
-      monthlyDebt: null,
-      calculationError: null,
+      clearAnnualIncome: true,
+      clearMonthlyDebt: true,
+      clearCalculationError: true,
     );
     notifyListeners();
   }
@@ -114,7 +128,7 @@ class QualificationController with ChangeNotifier {
     }
 
     final outcome = result.value!;
-    _state = _state.copyWith(calculationError: null);
+    _state = _state.copyWith(clearCalculationError: true);
     _quoteController.applyQualificationResult(outcome);
     _historyController.addQualificationEntry(
       annualIncome: _state.annualIncome!,
@@ -122,6 +136,7 @@ class QualificationController with ChangeNotifier {
       interestRate: _quoteController.interestRate!,
       termYears: _quoteController.termYears!,
       maxLoanAmount: outcome.loanAmount,
+      monthlyPiPayment: outcome.monthlyPiPayment,
     );
     notifyListeners();
   }
@@ -164,7 +179,7 @@ class QualificationController with ChangeNotifier {
 
     _state = _state.copyWith(
       annualIncome: result.value,
-      calculationError: null,
+      clearCalculationError: true,
     );
     _quoteController.presentValue(result.value!);
     notifyListeners();

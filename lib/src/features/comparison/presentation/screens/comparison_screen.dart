@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/math/loan_math.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/features/comparison/domain/models/comparison_data.dart';
 import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
 import 'package:loan_ranger/src/features/share/presentation/dialogs/share_quote_dialog.dart';
 
 import '../../application/providers/comparison_provider.dart';
 import '../../domain/export/comparison_exporter.dart';
+
+final NumberFormat _currency = NumberFormat.simpleCurrency();
 
 class ComparisonScreen extends StatefulWidget {
   const ComparisonScreen({super.key, required this.data});
@@ -22,11 +26,11 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   double _rateDelta = 0;
   double _termDelta = 0;
   double _downPaymentDelta = 0;
+  final Map<String, _AdjustedProjection> _projectionCache =
+      <String, _AdjustedProjection>{};
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scenario Comparison'),
@@ -104,7 +108,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             const SizedBox(height: 24),
             _ComparisonSummaryView(summary: widget.data.summary),
             const SizedBox(height: 24),
-            _buildSensitivitySection(currency),
+            _buildSensitivitySection(_currency),
           ],
         ),
       ),
@@ -124,26 +128,34 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             ),
             const SizedBox(height: 16),
             _SliderTile(
-              title: 'Interest Rate Δ (${_rateDelta.toStringAsFixed(2)}%)',
+              title:
+                  'Interest Rate Δ (${CurrencyFormatter.formatPercent(_rateDelta, decimals: 2)})',
               min: -2,
               max: 2,
               value: _rateDelta,
-              onChanged: (value) => setState(() => _rateDelta = value),
-            ),
-            _SliderTile(
-              title: 'Term Δ (${_termDelta.toStringAsFixed(1)} yrs)',
-              min: -5,
-              max: 5,
-              value: _termDelta,
-              onChanged: (value) => setState(() => _termDelta = value),
+              onChanged: (value) => setState(() {
+                _rateDelta = value;
+              }),
             ),
             _SliderTile(
               title:
-                  'Down Payment Δ (${_downPaymentDelta.toStringAsFixed(1)} pts)',
+                  'Term Δ (${CurrencyFormatter.formatYears(_termDelta)})',
+              min: -5,
+              max: 5,
+              value: _termDelta,
+              onChanged: (value) => setState(() {
+                _termDelta = value;
+              }),
+            ),
+            _SliderTile(
+              title:
+                  'Down Payment Δ (${CurrencyFormatter.formatNumber(_downPaymentDelta, decimals: 1)} pts)',
               min: -10,
               max: 10,
               value: _downPaymentDelta,
-              onChanged: (value) => setState(() => _downPaymentDelta = value),
+              onChanged: (value) => setState(() {
+                _downPaymentDelta = value;
+              }),
             ),
             const SizedBox(height: 16),
             SingleChildScrollView(
@@ -157,13 +169,13 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   DataColumn(label: Text('Adj Loan')),
                 ],
                 rows: widget.data.views
-                    .map(
-                      (view) => _buildSensitivityRow(
-                        view,
-                        currency,
-                      ),
-                    )
-                    .toList(),
+                  .map(
+                    (view) => _buildSensitivityRow(
+                      view,
+                      _currency,
+                    ),
+                  )
+                  .toList(),
               ),
             ),
           ],
@@ -186,10 +198,14 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
               : '—',
         )),
         DataCell(Text(
-          projection.adjustedRate?.toStringAsFixed(2) ?? '—',
+          projection.adjustedRate == null
+              ? '—'
+              : CurrencyFormatter.formatPercent(projection.adjustedRate, decimals: 2),
         )),
         DataCell(Text(
-          projection.adjustedTerm?.toStringAsFixed(1) ?? '—',
+          projection.adjustedTerm == null
+              ? '—'
+              : CurrencyFormatter.formatYears(projection.adjustedTerm),
         )),
         DataCell(Text(
           projection.adjustedLoan != null
@@ -201,6 +217,17 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   _AdjustedProjection _project(ComparisonEntryView view) {
+    final cacheKey = [
+      view.entry.id,
+      _rateDelta.toStringAsFixed(3),
+      _termDelta.toStringAsFixed(3),
+      _downPaymentDelta.toStringAsFixed(3),
+    ].join('|');
+    final cached = _projectionCache[cacheKey];
+    if (cached != null) {
+      return cached;
+    }
+
     final double? baseRate = view.entry.interestRate;
     final double? baseTerm = view.termYears;
     final double? baseLoan = view.entry.loanAmount;
@@ -235,7 +262,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       adjustedRate: adjustedRate,
       adjustedTerm: adjustedTerm,
       adjustedLoan: adjustedLoan,
-    );
+    ).._cacheTo(_projectionCache, cacheKey);
   }
 
   double _calculatePayment(double principal, double rate, double termYears) {
@@ -306,7 +333,6 @@ class _ComparisonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency();
     final theme = Theme.of(context);
     final double? delta = (view.monthlyPayment != null &&
             baselinePayment != null &&
@@ -350,20 +376,20 @@ class _ComparisonCard extends StatelessWidget {
               _MetricRow(
                 label: 'Monthly Payment',
                 value: view.monthlyPayment != null
-                    ? currency.format(view.monthlyPayment)
+                    ? _currency.format(view.monthlyPayment)
                     : '—',
                 highlight: delta,
               ),
               _MetricRow(
                 label: 'Total Cost',
                 value: view.totalCost != null
-                    ? currency.format(view.totalCost)
+                    ? _currency.format(view.totalCost)
                     : '—',
               ),
               _MetricRow(
                 label: 'Total Interest',
                 value: view.totalInterest != null
-                    ? currency.format(view.totalInterest)
+                    ? _currency.format(view.totalInterest)
                     : '—',
               ),
               _MetricRow(
@@ -372,7 +398,9 @@ class _ComparisonCard extends StatelessWidget {
               ),
               _MetricRow(
                 label: 'Break-even (mo)',
-                value: view.breakEvenMonths?.toStringAsFixed(1) ?? '—',
+                value: view.breakEvenMonths == null
+                    ? '—'
+                    : CurrencyFormatter.formatNumber(view.breakEvenMonths, decimals: 1),
               ),
             ],
           ),
@@ -400,7 +428,7 @@ class _MetricRow extends StatelessWidget {
     if (highlight != null) {
       color = highlight! < 0 ? Colors.green : Colors.red;
       deltaLabel =
-          '${highlight! > 0 ? '+' : ''}${highlight!.toStringAsFixed(2)} /mo';
+          '${highlight! > 0 ? '+' : '-'}${CurrencyFormatter.formatCurrency(highlight!.abs())} /mo';
     }
 
     return Padding(
@@ -466,8 +494,7 @@ class _ComparisonSummaryView extends StatelessWidget {
 
   String _formatCurrency(double? value) {
     if (value == null) return '—';
-    final currency = NumberFormat.simpleCurrency();
-    return currency.format(value);
+    return _currency.format(value);
   }
 }
 
@@ -528,7 +555,7 @@ class _SliderTile extends StatelessWidget {
           max: max,
           divisions: 40,
           value: value,
-          label: value.toStringAsFixed(2),
+          label: CurrencyFormatter.formatNumber(value, decimals: 2),
           onChanged: onChanged,
         ),
       ],
@@ -548,4 +575,11 @@ class _AdjustedProjection {
   final double? adjustedRate;
   final double? adjustedTerm;
   final double? adjustedLoan;
+
+  void _cacheTo(
+    Map<String, _AdjustedProjection> cache,
+    String key,
+  ) {
+    cache[key] = this;
+  }
 }
