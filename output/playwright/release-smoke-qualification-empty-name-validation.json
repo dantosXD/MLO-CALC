@@ -1,0 +1,7 @@
+{
+  "step": "qualification empty-name validation",
+  "url": "http://127.0.0.1:4173/",
+  "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('Please enter a name', { exact: true }).first() to be visible\u001b[22m\n\n    at ensureVisible (C:\\Users\\207ds\\Desktop\\Apps\\MLO-CALC\\tool\\browser_smoke\\release_smoke.cjs:29:25)\n    at C:\\Users\\207ds\\Desktop\\Apps\\MLO-CALC\\tool\\browser_smoke\\release_smoke.cjs:282:13\n    at async step (C:\\Users\\207ds\\Desktop\\Apps\\MLO-CALC\\tool\\browser_smoke\\release_smoke.cjs:238:7)\n    at async main (C:\\Users\\207ds\\Desktop\\Apps\\MLO-CALC\\tool\\browser_smoke\\release_smoke.cjs:267:5)",
+  "pageErrors": [],
+  "consoleErrors": []
+}

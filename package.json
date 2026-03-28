@@ -1,0 +1,26 @@
+{
+  "name": "mlo-calc",
+  "version": "1.0.0",
+  "description": "A professional Flutter application for mortgage and real estate financial calculations.",
+  "main": "get_feature12.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dantosXD/MLO-CALC.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dantosXD/MLO-CALC/issues"
+  },
+  "homepage": "https://github.com/dantosXD/MLO-CALC#readme"
+}
