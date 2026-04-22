@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/theme/calculator_palette.dart';
+
+// Record holding only the fields AnimatedDisplay actually renders.
+// context.select re-renders only when one of these changes, not on any
+// unrelated CalculatorProvider mutation (e.g. closingCosts, errors).
+typedef _DisplaySnapshot = ({
+  double? loanAmount,
+  double? interestRate,
+  double? termYears,
+  double? displayPayment,
+  PaymentDisplayMode displayMode,
+  double? propertyTax,
+  double? homeInsurance,
+  double? mortgageInsurance,
+  double? monthlyExpenses,
+});
 
 class AnimatedDisplay extends StatelessWidget {
   final String displayValue;
@@ -18,7 +34,20 @@ class AnimatedDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final calculatorProvider = context.watch<CalculatorProvider>();
+    final s = context.select<CalculatorProvider, _DisplaySnapshot>(
+      (p) => (
+        loanAmount: p.loanAmount,
+        interestRate: p.interestRate,
+        termYears: p.termYears,
+        displayPayment: p.displayPayment,
+        displayMode: p.displayMode,
+        propertyTax: p.propertyTax,
+        homeInsurance: p.homeInsurance,
+        mortgageInsurance: p.mortgageInsurance,
+        monthlyExpenses: p.monthlyExpenses,
+      ),
+    );
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final palette = theme.extension<CalculatorPalette>();
@@ -38,14 +67,12 @@ class AnimatedDisplay extends StatelessWidget {
 
     return GestureDetector(
       onVerticalDragEnd: (details) {
-        // Swipe up = forward, Swipe down = reverse
         if (details.primaryVelocity != null) {
+          final provider = context.read<CalculatorProvider>();
           if (details.primaryVelocity! < -500) {
-            // Swipe up
-            calculatorProvider.cycleDisplayMode();
+            provider.cycleDisplayMode();
           } else if (details.primaryVelocity! > 500) {
-            // Swipe down
-            calculatorProvider.cycleDisplayMode(reverse: true);
+            provider.cycleDisplayMode(reverse: true);
           }
         }
       },
@@ -129,7 +156,7 @@ class AnimatedDisplay extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          subtitle ?? _getDisplayLabel(calculatorProvider),
+                          subtitle ?? _labelFor(s.displayMode),
                           style: TextStyle(
                             fontSize: 9,
                             color: accentOn,
@@ -152,84 +179,87 @@ class AnimatedDisplay extends StatelessWidget {
                     context,
                     'L/A',
                     CurrencyFormatter.formatCompactCurrency(
-                      calculatorProvider.loanAmount,
+                      s.loanAmount,
                       maxDigits: 7,
                     ),
-                    calculatorProvider.loanAmount != null,
+                    s.loanAmount != null,
                   ),
                   _buildCompactStatusItem(
                     context,
                     'Rate',
-                    calculatorProvider.interestRate != null
+                    s.interestRate != null
                         ? CurrencyFormatter.formatPercent(
-                            calculatorProvider.interestRate,
+                            s.interestRate,
                             decimals: 3,
                           )
                         : '--',
-                    calculatorProvider.interestRate != null,
+                    s.interestRate != null,
                   ),
                   _buildCompactStatusItem(
                     context,
                     'Term',
-                    calculatorProvider.termYears != null
-                        ? '${calculatorProvider.termYears!.toStringAsFixed(1)}y'
+                    s.termYears != null
+                        ? '${s.termYears!.toStringAsFixed(1)}y'
                         : '--',
-                    calculatorProvider.termYears != null,
+                    s.termYears != null,
                   ),
                   _buildCompactStatusItem(
                     context,
                     'Pmt',
                     CurrencyFormatter.formatCompactCurrency(
-                      calculatorProvider.displayPayment,
+                      s.displayPayment,
                       maxDigits: 7,
                     ),
-                    calculatorProvider.displayPayment != null,
+                    s.displayPayment != null,
                   ),
                 ],
               ),
 
               // PITI Components Row - Only show if any are set
-              if (_hasPitiComponents(calculatorProvider)) ...[
+              if (s.propertyTax != null ||
+                  s.homeInsurance != null ||
+                  s.mortgageInsurance != null ||
+                  s.monthlyExpenses != null) ...[
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    if (calculatorProvider.propertyTax != null)
+                    if (s.propertyTax != null)
                       _buildCompactStatusItem(
                         context,
                         'Tax',
                         CurrencyFormatter.formatCompactCurrency(
-                          calculatorProvider.propertyTax! / 12,
+                          s.propertyTax! / 12,
                           maxDigits: 7,
                         ),
                         true,
                       ),
-                    if (calculatorProvider.homeInsurance != null)
+                    if (s.homeInsurance != null)
                       _buildCompactStatusItem(
                         context,
                         'Ins',
                         CurrencyFormatter.formatCompactCurrency(
-                          calculatorProvider.homeInsurance! / 12,
+                          s.homeInsurance! / 12,
                           maxDigits: 7,
                         ),
                         true,
                       ),
-                    if (calculatorProvider.mortgageInsurance != null)
+                    if (s.mortgageInsurance != null)
                       _buildCompactStatusItem(
                         context,
                         'PMI',
                         CurrencyFormatter.formatCompactCurrency(
-                          calculatorProvider.mortgageInsurance! / 12,
+                          s.mortgageInsurance! / 12,
                           maxDigits: 7,
                         ),
                         true,
                       ),
-                    if (calculatorProvider.monthlyExpenses != null)
+                    if (s.monthlyExpenses != null)
                       _buildCompactStatusItem(
                         context,
                         'HOA',
                         CurrencyFormatter.formatCompactCurrency(
-                          calculatorProvider.monthlyExpenses,
+                          s.monthlyExpenses,
                           maxDigits: 7,
                         ),
                         true,
@@ -244,26 +274,13 @@ class AnimatedDisplay extends StatelessWidget {
     );
   }
 
-  bool _hasPitiComponents(CalculatorProvider provider) {
-    return provider.propertyTax != null ||
-        provider.homeInsurance != null ||
-        provider.mortgageInsurance != null ||
-        provider.monthlyExpenses != null;
-  }
-
-  String _getDisplayLabel(CalculatorProvider provider) {
-    switch (provider.displayMode) {
-      case PaymentDisplayMode.interestOnly:
-        return 'INTEREST ONLY';
-      case PaymentDisplayMode.piti:
-        return 'MONTHLY PITI';
-      case PaymentDisplayMode.standardPI:
-        return 'MONTHLY P&I';
-    }
-  }
+  static String _labelFor(PaymentDisplayMode mode) => switch (mode) {
+    PaymentDisplayMode.interestOnly => 'INTEREST ONLY',
+    PaymentDisplayMode.piti => 'MONTHLY PITI',
+    PaymentDisplayMode.standardPI => 'MONTHLY P&I',
+  };
 
   String _formatDisplayValue(String rawValue) {
-    // Try to parse and format the display value
     final double? numValue = double.tryParse(rawValue);
     if (numValue != null && !isError) {
       return CurrencyFormatter.formatNumber(numValue, decimals: 2);

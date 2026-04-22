@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
@@ -12,6 +14,8 @@ class ClosingCostsSheet extends StatefulWidget {
 }
 
 class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
+  Timer? _debounce;
+
   // Controllers
   final _originationController = TextEditingController();
   final _pointsController = TextEditingController();
@@ -83,6 +87,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _originationController.dispose();
     _pointsController.dispose();
     _processingController.dispose();
@@ -239,10 +244,10 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
               ),
 
               // Footer Summary
-              Consumer<CalculatorProvider>(
-                builder: (context, provider, child) {
-                  final closingCosts = provider.closingCosts.total;
-                  final cashToClose = provider.cashToClose;
+              Selector<CalculatorProvider, (double, double)>(
+                selector: (_, p) => (p.closingCosts.total, p.cashToClose),
+                builder: (context, totals, child) {
+                  final (closingCosts, cashToClose) = totals;
 
                   return Container(
                     padding: const EdgeInsets.all(20),
@@ -306,7 +311,10 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
             vertical: 12,
           ),
         ),
-        onChanged: (_) => _updateCosts(),
+        onChanged: (_) {
+          _debounce?.cancel();
+          _debounce = Timer(const Duration(milliseconds: 400), _updateCosts);
+        },
       ),
     );
   }

@@ -147,10 +147,13 @@ class _MainNavigatorState extends State<MainNavigator> {
   final FeatureCatalog _featureCatalog = const FeatureCatalog();
   final List<FeatureCatalogEntry> _primaryFeatures =
       FeatureCatalog.primaryFeatures;
+  late final List<NavigationDestination> _destinations;
 
-  List<NavigationDestination> get _destinations {
-    return _primaryFeatures
-        .map((FeatureCatalogEntry entry) => entry.toNavigationDestination())
+  @override
+  void initState() {
+    super.initState();
+    _destinations = _primaryFeatures
+        .map((e) => e.toNavigationDestination())
         .toList();
   }
 

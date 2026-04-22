@@ -3,28 +3,64 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 
-class AmortizationChart extends StatelessWidget {
+class AmortizationChart extends StatefulWidget {
   final List<AmortizationEntry> data;
 
   const AmortizationChart({super.key, required this.data});
 
   @override
+  State<AmortizationChart> createState() => _AmortizationChartState();
+}
+
+class _AmortizationChartState extends State<AmortizationChart> {
+  late List<FlSpot> _principalSpots;
+  late List<FlSpot> _interestSpots;
+  late double _maxY;
+
+  @override
+  void initState() {
+    super.initState();
+    _buildCache(widget.data);
+  }
+
+  @override
+  void didUpdateWidget(AmortizationChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.data, widget.data)) {
+      _buildCache(widget.data);
+    }
+  }
+
+  void _buildCache(List<AmortizationEntry> data) {
+    _principalSpots = List.unmodifiable(
+      data.asMap().entries.map(
+        (e) => FlSpot(e.key.toDouble(), e.value.principal),
+      ),
+    );
+    _interestSpots = List.unmodifiable(
+      data.asMap().entries.map(
+        (e) => FlSpot(e.key.toDouble(), e.value.interest),
+      ),
+    );
+
+    double maxPrincipal = 0;
+    double maxInterest = 0;
+    for (final entry in data) {
+      if (entry.principal > maxPrincipal) maxPrincipal = entry.principal;
+      if (entry.interest > maxInterest) maxInterest = entry.interest;
+    }
+    final maxValue = maxPrincipal > maxInterest ? maxPrincipal : maxInterest;
+    _maxY = (maxValue * 1.2).ceilToDouble();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final data = widget.data;
     if (data.isEmpty) {
       return const SizedBox.shrink();
     }
 
     final colorScheme = Theme.of(context).colorScheme;
-
-    // Sample data for chart (every 12 months to reduce clutter)
-    final sampledData = <AmortizationEntry>[];
-    for (int i = 0; i < data.length; i += 12) {
-      sampledData.add(data[i]);
-    }
-    // Always add the last entry
-    if (data.last != sampledData.last) {
-      sampledData.add(data.last);
-    }
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -114,16 +150,10 @@ class AmortizationChart extends StatelessWidget {
                   minX: 0,
                   maxX: data.length.toDouble() - 1,
                   minY: 0,
-                  maxY: _getMaxY(),
+                  maxY: _maxY,
                   lineBarsData: [
-                    // Principal line
                     LineChartBarData(
-                      spots: data.asMap().entries.map((entry) {
-                        return FlSpot(
-                          entry.key.toDouble(),
-                          entry.value.principal,
-                        );
-                      }).toList(),
+                      spots: _principalSpots,
                       isCurved: true,
                       color: colorScheme.primary,
                       barWidth: 3,
@@ -134,14 +164,8 @@ class AmortizationChart extends StatelessWidget {
                         color: colorScheme.primary.withValues(alpha: 0.20),
                       ),
                     ),
-                    // Interest line
                     LineChartBarData(
-                      spots: data.asMap().entries.map((entry) {
-                        return FlSpot(
-                          entry.key.toDouble(),
-                          entry.value.interest,
-                        );
-                      }).toList(),
+                      spots: _interestSpots,
                       isCurved: true,
                       color: colorScheme.secondary,
                       barWidth: 3,
@@ -188,19 +212,6 @@ class AmortizationChart extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  double _getMaxY() {
-    double maxPrincipal = 0;
-    double maxInterest = 0;
-
-    for (final entry in data) {
-      if (entry.principal > maxPrincipal) maxPrincipal = entry.principal;
-      if (entry.interest > maxInterest) maxInterest = entry.interest;
-    }
-
-    final maxValue = maxPrincipal > maxInterest ? maxPrincipal : maxInterest;
-    return (maxValue * 1.2).ceilToDouble();
   }
 }
 

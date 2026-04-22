@@ -232,6 +232,9 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     if (cached != null) {
       return cached;
     }
+    if (_projectionCache.length >= 200) {
+      _projectionCache.remove(_projectionCache.keys.first);
+    }
 
     final double? baseRate = view.entry.interestRate;
     final double? baseTerm = view.termYears;
