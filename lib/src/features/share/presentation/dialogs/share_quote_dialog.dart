@@ -154,7 +154,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     );
     final bodyController = TextEditingController(text: current.body);
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompactDialog = screenWidth < 600;
 
     final result = await showDialog<_TemplateEditResult>(
@@ -449,7 +449,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     }
 
     final ui.Image image = await boundary.toImage(
-      pixelRatio: MediaQuery.of(context).devicePixelRatio,
+      pixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     if (byteData == null) {
@@ -465,7 +465,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
 
     final title = widget.title ?? 'Share Quote';
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 600;
 
     return AlertDialog(
@@ -663,20 +663,13 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     );
   }
 
-  String _buttonLabel(ShareChannel channel) {
-    switch (channel) {
-      case ShareChannel.sms:
-        return 'Text';
-      case ShareChannel.email:
-        return 'Email';
-      case ShareChannel.shareSheet:
-        return 'Share';
-      case ShareChannel.copy:
-        return 'Copy';
-      case ShareChannel.screenshot:
-        return 'Share Image';
-    }
-  }
+  String _buttonLabel(ShareChannel channel) => switch (channel) {
+    ShareChannel.sms => 'Text',
+    ShareChannel.email => 'Email',
+    ShareChannel.shareSheet => 'Share',
+    ShareChannel.copy => 'Copy',
+    ShareChannel.screenshot => 'Share Image',
+  };
 }
 
 class _ChannelPicker extends StatelessWidget {

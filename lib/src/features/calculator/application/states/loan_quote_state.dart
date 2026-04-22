@@ -147,12 +147,10 @@ class LoanQuoteState {
 
   double? get displayPayment {
     if (payment == null) return null;
-    switch (displayMode) {
-      case PaymentDisplayMode.standardPI:
-      case PaymentDisplayMode.interestOnly:
-        return payment;
-      case PaymentDisplayMode.piti:
-        return pitiPayment;
-    }
+    return switch (displayMode) {
+      PaymentDisplayMode.standardPI ||
+      PaymentDisplayMode.interestOnly => payment,
+      PaymentDisplayMode.piti => pitiPayment,
+    };
   }
 }

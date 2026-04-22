@@ -814,12 +814,12 @@ class _MemoryButton extends StatelessWidget {
     return value.toStringAsFixed(0);
   }
 
-  void _showMemoryMenu(
+  Future<void> _showMemoryMenu(
     BuildContext context,
     CalculatorDisplayNotifier provider,
     bool hasMemory,
     double? memory,
-  ) {
+  ) async {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay =
         Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
@@ -828,7 +828,7 @@ class _MemoryButton extends StatelessWidget {
       ancestor: overlay,
     );
 
-    showMenu<String>(
+    final value = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
         position.dx,
@@ -901,23 +901,22 @@ class _MemoryButton extends StatelessWidget {
           ),
         ],
       ],
-    ).then((value) {
-      if (value == null) return;
-      switch (value) {
-        case 'M+':
-          provider.memoryAdd();
-          break;
-        case 'M-':
-          provider.memorySubtract();
-          break;
-        case 'MR':
-          provider.memoryRecall();
-          break;
-        case 'MC':
-          provider.memoryClear();
-          break;
-      }
-    });
+    );
+    if (value == null || !context.mounted) return;
+    switch (value) {
+      case 'M+':
+        provider.memoryAdd();
+        break;
+      case 'M-':
+        provider.memorySubtract();
+        break;
+      case 'MR':
+        provider.memoryRecall();
+        break;
+      case 'MC':
+        provider.memoryClear();
+        break;
+    }
   }
 }
 
@@ -955,7 +954,7 @@ class _ZeroButton extends StatelessWidget {
     );
   }
 
-  void _showZeroMenu(BuildContext context) {
+  Future<void> _showZeroMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay =
         Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
@@ -964,7 +963,7 @@ class _ZeroButton extends StatelessWidget {
       ancestor: overlay,
     );
 
-    showMenu<String>(
+    final value = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
         position.dx,
@@ -1006,16 +1005,15 @@ class _ZeroButton extends StatelessWidget {
           ),
         ),
       ],
-    ).then((value) {
-      if (value == null) return;
-      switch (value) {
-        case '00':
-          provider.inputDoubleZero();
-          break;
-        case '000':
-          provider.inputTripleZero();
-          break;
-      }
-    });
+    );
+    if (value == null || !context.mounted) return;
+    switch (value) {
+      case '00':
+        provider.inputDoubleZero();
+        break;
+      case '000':
+        provider.inputTripleZero();
+        break;
+    }
   }
 }

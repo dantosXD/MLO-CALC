@@ -262,7 +262,7 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withAlpha(200),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -321,7 +321,7 @@ class _ProgramCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _getTypeColor(program.type).withAlpha(30),
+                  color: _getTypeColor(program.type).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(

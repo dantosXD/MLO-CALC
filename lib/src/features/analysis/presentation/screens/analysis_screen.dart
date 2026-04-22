@@ -330,7 +330,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.green.withAlpha(51),
+                                color: Colors.green.withValues(alpha: 0.20),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
@@ -430,7 +430,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -531,7 +531,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -762,7 +762,7 @@ class _ToolButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     // On mobile, use full width minus padding; on larger screens, use fixed width
     final buttonWidth = screenWidth < 600 ? double.infinity : 320.0;
 

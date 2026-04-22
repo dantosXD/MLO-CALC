@@ -249,7 +249,7 @@ class _NlpDialogState extends State<NlpDialog> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withAlpha(50),
+                  color: Colors.orange.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(

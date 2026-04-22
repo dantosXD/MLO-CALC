@@ -48,7 +48,7 @@ class AmortizationChart extends StatelessWidget {
                     horizontalInterval: 50000,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
-                        color: colorScheme.outline.withAlpha(51),
+                        color: colorScheme.outline.withValues(alpha: 0.20),
                         strokeWidth: 1,
                       );
                     },
@@ -76,7 +76,9 @@ class AmortizationChart extends StatelessWidget {
                             child: Text(
                               'Yr $year',
                               style: TextStyle(
-                                color: colorScheme.onSurface.withAlpha(179),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.70,
+                                ),
                                 fontSize: 12,
                               ),
                             ),
@@ -92,7 +94,9 @@ class AmortizationChart extends StatelessWidget {
                           return Text(
                             '\$${(value / 1000).toStringAsFixed(0)}k',
                             style: TextStyle(
-                              color: colorScheme.onSurface.withAlpha(179),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.70,
+                              ),
                               fontSize: 12,
                             ),
                           );
@@ -127,7 +131,7 @@ class AmortizationChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: colorScheme.primary.withAlpha(51),
+                        color: colorScheme.primary.withValues(alpha: 0.20),
                       ),
                     ),
                     // Interest line
@@ -145,7 +149,7 @@ class AmortizationChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: colorScheme.secondary.withAlpha(51),
+                        color: colorScheme.secondary.withValues(alpha: 0.20),
                       ),
                     ),
                   ],

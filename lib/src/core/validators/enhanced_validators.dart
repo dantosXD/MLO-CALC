@@ -376,7 +376,7 @@ class _WarningTile extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: warning.color.withAlpha(20),
+      color: warning.color.withValues(alpha: 0.08),
       child: ListTile(
         dense: true,
         leading: Icon(warning.icon, color: warning.color),

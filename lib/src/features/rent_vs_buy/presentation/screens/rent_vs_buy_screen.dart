@@ -361,8 +361,8 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
 
     return Card(
       color: isBuyingBetter
-          ? Colors.green.withAlpha(30)
-          : Colors.orange.withAlpha(30),
+          ? Colors.green.withValues(alpha: 0.12)
+          : Colors.orange.withValues(alpha: 0.12),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

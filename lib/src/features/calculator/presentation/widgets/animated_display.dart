@@ -18,7 +18,7 @@ class AnimatedDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final calculatorProvider = Provider.of<CalculatorProvider>(context);
+    final calculatorProvider = context.watch<CalculatorProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final palette = theme.extension<CalculatorPalette>();

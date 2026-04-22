@@ -77,7 +77,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
   @override
   Widget build(BuildContext context) {
     final calculatorProvider = context.read<CalculatorProvider>();
-    final ratiosProvider = Provider.of<QualifyingRatiosProvider>(context);
+    final ratiosProvider = context.watch<QualifyingRatiosProvider>();
 
     if (ratiosProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());

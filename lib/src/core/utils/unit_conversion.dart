@@ -196,10 +196,14 @@ class UnitToggleButton extends StatelessWidget {
           vertical: compact ? 2 : 4,
         ),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer.withAlpha(100),
+          color: Theme.of(
+            context,
+          ).colorScheme.primaryContainer.withValues(alpha: 0.39),
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withAlpha(50),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.20),
           ),
         ),
         child: Row(

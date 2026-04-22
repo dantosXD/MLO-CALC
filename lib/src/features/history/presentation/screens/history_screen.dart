@@ -368,20 +368,13 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  static IconData _iconFor(CalculationEntryType type) {
-    switch (type) {
-      case CalculationEntryType.payment:
-        return Icons.payments_outlined;
-      case CalculationEntryType.loanAmount:
-        return Icons.account_balance_outlined;
-      case CalculationEntryType.term:
-        return Icons.schedule_outlined;
-      case CalculationEntryType.interestRate:
-        return Icons.percent_outlined;
-      case CalculationEntryType.qualification:
-        return Icons.verified_user_outlined;
-    }
-  }
+  static IconData _iconFor(CalculationEntryType type) => switch (type) {
+    CalculationEntryType.payment => Icons.payments_outlined,
+    CalculationEntryType.loanAmount => Icons.account_balance_outlined,
+    CalculationEntryType.term => Icons.schedule_outlined,
+    CalculationEntryType.interestRate => Icons.percent_outlined,
+    CalculationEntryType.qualification => Icons.verified_user_outlined,
+  };
 
   static String _fmt(DateTime dt) {
     return '${dt.year}-${_two(dt.month)}-${_two(dt.day)} ${_two(dt.hour)}:${_two(dt.minute)}';

@@ -292,7 +292,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           left: 16,
           right: 16,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -345,7 +345,7 @@ class _ComparisonCard extends StatelessWidget {
         ? view.monthlyPayment! - baselinePayment!
         : null;
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     // On mobile, use full width; on larger screens, use fixed width
     final cardWidth = screenWidth < 600 ? double.infinity : 340.0;
 
