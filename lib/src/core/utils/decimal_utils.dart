@@ -22,8 +22,7 @@ class DecimalUtils {
 
   /// Round a value to a specific number of decimal places
   ///
-  /// Uses standard banker's rounding (round half to even) for consistency.
-  /// [places] must be non-negative.
+  /// Uses half-up rounding. [places] must be non-negative.
   static double roundToDecimal(double value, int places) {
     if (places < 0) {
       throw ArgumentError('Decimal places must be non-negative');

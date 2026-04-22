@@ -30,7 +30,7 @@ class CurrencyFormatter {
 
     final format = _percentFormatCache.putIfAbsent(decimals, () {
       final f = NumberFormat.decimalPattern();
-      f.minimumFractionDigits = 0;
+      f.minimumFractionDigits = decimals;
       f.maximumFractionDigits = decimals;
       return f;
     });
