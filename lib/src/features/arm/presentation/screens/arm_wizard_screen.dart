@@ -396,7 +396,7 @@ class _ArmResultCard extends StatelessWidget {
                   style: theme.textTheme.bodyLarge,
                 ),
                 subtitle: Text(
-                  'Rate ${CurrencyFormatter.formatPercent(period.rate, decimals: 2)} • Payment ${_currency.format(period.monthlyPayment)}',
+                  'Rate ${CurrencyFormatter.formatPercent(period.rate, decimals: 3)} • Payment ${_currency.format(period.monthlyPayment)}',
                 ),
                 trailing: Text(
                   'Balance ${_currency.format(period.endingBalance)}',

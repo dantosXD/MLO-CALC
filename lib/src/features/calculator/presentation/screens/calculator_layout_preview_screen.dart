@@ -236,7 +236,7 @@ class _DisplayCard extends StatelessWidget {
                           value: calc.interestRate != null
                     ? CurrencyFormatter.formatPercent(
                         calc.interestRate,
-                        decimals: 2,
+                        decimals: 3,
                       )
                     : '--',
                           isSet: calc.interestRate != null,

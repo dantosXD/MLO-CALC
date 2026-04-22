@@ -200,7 +200,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
         DataCell(Text(
           projection.adjustedRate == null
               ? '—'
-              : CurrencyFormatter.formatPercent(projection.adjustedRate, decimals: 2),
+              : CurrencyFormatter.formatPercent(projection.adjustedRate, decimals: 3),
         )),
         DataCell(Text(
           projection.adjustedTerm == null
