@@ -155,10 +155,7 @@ class QualifyingRatiosProvider with ChangeNotifier {
 
   /// Get a ratio by ID
   QualifyingRatio? getRatioById(String id) {
-    try {
-      return allRatios.firstWhere((r) => r.id == id);
-    } catch (_) {
-      return null;
-    }
+    final matches = allRatios.where((r) => r.id == id);
+    return matches.isEmpty ? null : matches.first;
   }
 }

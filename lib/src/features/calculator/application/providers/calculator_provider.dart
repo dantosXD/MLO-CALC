@@ -143,7 +143,6 @@ class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel 
   @override
   bool get isComputingAmortization =>
       _amortizationController.isComputingAmortization;
-  double? get futureValue => null;
   @override
   CalculationHistory get history => _historyController.history;
   @override
