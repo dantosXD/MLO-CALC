@@ -145,7 +145,9 @@ class UnitConversionProvider with ChangeNotifier {
       if (term == 'months') _termUnit = TermUnit.months;
       
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UnitConversionProvider: failed to load preferences: $e');
+    }
   }
 
   Future<void> _save() async {
@@ -162,7 +164,9 @@ class UnitConversionProvider with ChangeNotifier {
         _termKey,
         _termUnit == TermUnit.months ? 'months' : 'years',
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UnitConversionProvider: failed to save preferences: $e');
+    }
   }
 }
 
