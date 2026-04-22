@@ -147,9 +147,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
                           items: ratiosProvider.allRatios.map((ratio) {
                             return DropdownMenuItem<String>(
                               value: ratio.id,
-                              child: Text(
-                                ratio.displayName,
-                              ),
+                              child: Text(ratio.displayName),
                             );
                           }).toList(),
                           onChanged: (id) {
@@ -517,9 +515,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
             Text(message),
             const SizedBox(height: 16),
             Text(
-              value != null
-                  ? CurrencyFormatter.formatCurrency(value)
-                  : 'N/A',
+              value != null ? CurrencyFormatter.formatCurrency(value) : 'N/A',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,

@@ -49,7 +49,7 @@ void main() {
     test('Calculate payment with zero interest rate shows error', () {
       provider.setLoanAmount(value: 100000);
       provider.setInterestRate(value: 0);
-      
+
       // Error should be shown immediately after invalid interest rate
       expect(provider.inputError, contains('positive'));
     });
@@ -92,7 +92,7 @@ void main() {
 
       // Now calculate loan amount from that payment
       provider.clearAll();
-      
+
       provider.setPayment(value: calculatedPayment);
       provider.setInterestRate(value: 6.25);
       provider.setTermYears(value: 30);
@@ -262,7 +262,10 @@ void main() {
       expect(firstPayment.interest, closeTo(500, 1));
 
       // Principal should be payment - interest
-      expect(firstPayment.principal, closeTo(firstPayment.payment - firstPayment.interest, 0.01));
+      expect(
+        firstPayment.principal,
+        closeTo(firstPayment.payment - firstPayment.interest, 0.01),
+      );
 
       // Balance should decrease
       expect(firstPayment.balance, lessThan(100000));
@@ -281,27 +284,30 @@ void main() {
       expect(finalPayment.balance, closeTo(0, 0.01));
     });
 
-    test('Amortization schedule - total payments equal loan + interest', () async {
-      provider.setLoanAmount(value: 200000);
-      provider.setInterestRate(value: 5.0);
-      provider.setTermYears(value: 30);
+    test(
+      'Amortization schedule - total payments equal loan + interest',
+      () async {
+        provider.setLoanAmount(value: 200000);
+        provider.setInterestRate(value: 5.0);
+        provider.setTermYears(value: 30);
 
-      await provider.generateAmortizationSchedule();
+        await provider.generateAmortizationSchedule();
 
-      double totalPrincipal = 0;
-      double totalInterest = 0;
+        double totalPrincipal = 0;
+        double totalInterest = 0;
 
-      for (var entry in provider.amortizationData) {
-        totalPrincipal += entry.principal;
-        totalInterest += entry.interest;
-      }
+        for (var entry in provider.amortizationData) {
+          totalPrincipal += entry.principal;
+          totalInterest += entry.interest;
+        }
 
-      // Total principal should equal loan amount
-      expect(totalPrincipal, closeTo(200000, 1));
+        // Total principal should equal loan amount
+        expect(totalPrincipal, closeTo(200000, 1));
 
-      // Total interest should be positive
-      expect(totalInterest, greaterThan(0));
-    });
+        // Total interest should be positive
+        expect(totalInterest, greaterThan(0));
+      },
+    );
   });
 
   group('CalculatorProvider - Remaining Balance (Balloon)', () {
@@ -349,7 +355,10 @@ void main() {
       final monthlyPayment = provider.payment!;
       final biWeeklyData = provider.calculateBiWeeklyConversion();
 
-      expect(biWeeklyData['biWeeklyPayment'], closeTo(monthlyPayment / 2, 0.01));
+      expect(
+        biWeeklyData['biWeeklyPayment'],
+        closeTo(monthlyPayment / 2, 0.01),
+      );
     });
 
     test('Bi-weekly conversion should save interest', () {

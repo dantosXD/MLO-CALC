@@ -7,7 +7,7 @@ class LayoutPreferenceProvider extends ChangeNotifier {
   static const String _layoutKey = 'calculator_layout';
 
   LayoutPreferenceProvider({PreferenceStore? preferenceStore})
-      : _preferences = preferenceStore ?? PreferenceStore();
+    : _preferences = preferenceStore ?? PreferenceStore();
 
   final PreferenceStore _preferences;
 
@@ -52,8 +52,10 @@ class LayoutPreferenceProvider extends ChangeNotifier {
   }
 
   Future<void> toggleLayout() async {
-    await setLayout(_layout == CalculatorLayout.classic 
-        ? CalculatorLayout.modern 
-        : CalculatorLayout.classic);
+    await setLayout(
+      _layout == CalculatorLayout.classic
+          ? CalculatorLayout.modern
+          : CalculatorLayout.classic,
+    );
   }
 }

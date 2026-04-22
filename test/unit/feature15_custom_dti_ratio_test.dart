@@ -45,10 +45,16 @@ void main() {
       final foundRatio = provider.allRatios.firstWhere(
         (r) => r.id == addedRatio.id,
       );
-      expect(foundRatio.housingRatio, equals(31.0),
-          reason: 'Housing DTI should be 31, not the default 28');
-      expect(foundRatio.debtRatio, equals(43.0),
-          reason: 'Total DTI should be 43, not the default 36');
+      expect(
+        foundRatio.housingRatio,
+        equals(31.0),
+        reason: 'Housing DTI should be 31, not the default 28',
+      );
+      expect(
+        foundRatio.debtRatio,
+        equals(43.0),
+        reason: 'Total DTI should be 43, not the default 36',
+      );
     });
 
     test('Add custom ratio with custom values (25/38)', () async {
@@ -64,10 +70,16 @@ void main() {
       );
 
       // Assert
-      expect(ratio.housingRatio, equals(25.0),
-          reason: 'Should preserve custom housing DTI of 25');
-      expect(ratio.debtRatio, equals(38.0),
-          reason: 'Should preserve custom total DTI of 38');
+      expect(
+        ratio.housingRatio,
+        equals(25.0),
+        reason: 'Should preserve custom housing DTI of 25',
+      );
+      expect(
+        ratio.debtRatio,
+        equals(38.0),
+        reason: 'Should preserve custom total DTI of 38',
+      );
     });
 
     test('Add custom ratio with decimal values (28.5/41.5)', () async {
@@ -83,22 +95,31 @@ void main() {
       );
 
       // Assert
-      expect(ratio.housingRatio, equals(28.5),
-          reason: 'Should preserve decimal housing DTI');
-      expect(ratio.debtRatio, equals(41.5),
-          reason: 'Should preserve decimal total DTI');
-    });
-
-    test('Qualifying ratio displayName preserves meaningful decimal precision', () {
-      const ratio = QualifyingRatio(
-        id: 'decimal',
-        name: 'Decimal Ratio',
-        housingRatio: 31.5,
-        debtRatio: 43.25,
+      expect(
+        ratio.housingRatio,
+        equals(28.5),
+        reason: 'Should preserve decimal housing DTI',
       );
-
-      expect(ratio.displayName, 'Decimal Ratio (31.5/43.25)');
+      expect(
+        ratio.debtRatio,
+        equals(41.5),
+        reason: 'Should preserve decimal total DTI',
+      );
     });
+
+    test(
+      'Qualifying ratio displayName preserves meaningful decimal precision',
+      () {
+        const ratio = QualifyingRatio(
+          id: 'decimal',
+          name: 'Decimal Ratio',
+          housingRatio: 31.5,
+          debtRatio: 43.25,
+        );
+
+        expect(ratio.displayName, 'Decimal Ratio (31.5/43.25)');
+      },
+    );
 
     test('Add custom ratio without description (optional field)', () async {
       // Act
@@ -135,10 +156,16 @@ void main() {
       );
 
       expect(persistedRatio.name, equals('Persistent Ratio'));
-      expect(persistedRatio.housingRatio, equals(33.0),
-          reason: 'Persisted housing DTI should be 33');
-      expect(persistedRatio.debtRatio, equals(45.0),
-          reason: 'Persisted total DTI should be 45');
+      expect(
+        persistedRatio.housingRatio,
+        equals(33.0),
+        reason: 'Persisted housing DTI should be 33',
+      );
+      expect(
+        persistedRatio.debtRatio,
+        equals(45.0),
+        reason: 'Persisted total DTI should be 45',
+      );
     });
 
     test('Add ratio with whitespace-only name', () async {
@@ -156,8 +183,11 @@ void main() {
 
       // Verify custom ratios count
       final customRatios = provider.allRatios.where((r) => !r.isBuiltIn);
-      expect(customRatios.length, equals(1),
-          reason: 'Provider adds ratio with whitespace name');
+      expect(
+        customRatios.length,
+        equals(1),
+        reason: 'Provider adds ratio with whitespace name',
+      );
     });
 
     test('Update existing custom ratio with new DTI values', () async {
@@ -170,18 +200,21 @@ void main() {
 
       // Act - Update with new values
       await provider.updateRatio(
-        initial.copyWith(
-          housingRatio: 35.0,
-          debtRatio: 47.0,
-        ),
+        initial.copyWith(housingRatio: 35.0, debtRatio: 47.0),
       );
 
       // Assert
       final updated = provider.allRatios.firstWhere((r) => r.id == initial.id);
-      expect(updated.housingRatio, equals(35.0),
-          reason: 'Updated housing DTI should be 35');
-      expect(updated.debtRatio, equals(47.0),
-          reason: 'Updated total DTI should be 47');
+      expect(
+        updated.housingRatio,
+        equals(35.0),
+        reason: 'Updated housing DTI should be 35',
+      );
+      expect(
+        updated.debtRatio,
+        equals(47.0),
+        reason: 'Updated total DTI should be 47',
+      );
     });
 
     test('Delete custom ratio removes it from list', () async {
@@ -197,8 +230,7 @@ void main() {
 
       // Assert
       final exists = provider.allRatios.any((r) => r.id == ratio.id);
-      expect(exists, isFalse,
-          reason: 'Deleted ratio should not exist in list');
+      expect(exists, isFalse, reason: 'Deleted ratio should not exist in list');
     });
 
     test('Cannot delete built-in ratio', () async {
@@ -212,10 +244,14 @@ void main() {
       );
 
       // Verify built-in ratio still exists
-      final stillExists =
-          provider.allRatios.any((r) => r.id == builtInRatio.id);
-      expect(stillExists, isTrue,
-          reason: 'Built-in ratios should not be deletable');
+      final stillExists = provider.allRatios.any(
+        (r) => r.id == builtInRatio.id,
+      );
+      expect(
+        stillExists,
+        isTrue,
+        reason: 'Built-in ratios should not be deletable',
+      );
     });
 
     test('Duplicate built-in ratio creates custom copy', () async {
@@ -228,16 +264,31 @@ void main() {
       final duplicate = await provider.duplicateRatio(fhaRatio);
 
       // Assert
-      expect(duplicate.id, isNot(equals(fhaRatio.id)),
-          reason: 'Duplicate should have unique ID');
-      expect(duplicate.isBuiltIn, isFalse,
-          reason: 'Duplicate should be marked as custom');
-      expect(duplicate.name, contains('Copy'),
-          reason: 'Duplicate name should indicate copy');
-      expect(duplicate.housingRatio, equals(fhaRatio.housingRatio),
-          reason: 'Duplicate should preserve housing DTI');
-      expect(duplicate.debtRatio, equals(fhaRatio.debtRatio),
-          reason: 'Duplicate should preserve total DTI');
+      expect(
+        duplicate.id,
+        isNot(equals(fhaRatio.id)),
+        reason: 'Duplicate should have unique ID',
+      );
+      expect(
+        duplicate.isBuiltIn,
+        isFalse,
+        reason: 'Duplicate should be marked as custom',
+      );
+      expect(
+        duplicate.name,
+        contains('Copy'),
+        reason: 'Duplicate name should indicate copy',
+      );
+      expect(
+        duplicate.housingRatio,
+        equals(fhaRatio.housingRatio),
+        reason: 'Duplicate should preserve housing DTI',
+      );
+      expect(
+        duplicate.debtRatio,
+        equals(fhaRatio.debtRatio),
+        reason: 'Duplicate should preserve total DTI',
+      );
     });
 
     test('Multiple custom ratios maintain distinct values', () async {
@@ -272,8 +323,11 @@ void main() {
 
       // Verify all appear in allRatios
       final customRatios = provider.allRatios.where((r) => !r.isBuiltIn);
-      expect(customRatios.length, equals(3),
-          reason: 'Should have 3 custom ratios');
+      expect(
+        customRatios.length,
+        equals(3),
+        reason: 'Should have 3 custom ratios',
+      );
     });
 
     test('Select custom ratio updates selectedRatio', () async {
@@ -311,8 +365,7 @@ void main() {
       expect(found.debtRatio, equals(39.0));
     });
 
-    test('Regression test: Values should not default to 28/36',
-        () async {
+    test('Regression test: Values should not default to 28/36', () async {
       // This test specifically addresses the regression reported
       // where custom DTI values were defaulting to 28/36
 
@@ -332,13 +385,13 @@ void main() {
       expect(
         ratio.debtRatio,
         equals(43.0),
-        reason:
-            'FAILING: Total DTI defaulted to 36 instead of 43 - REGRESSION',
+        reason: 'FAILING: Total DTI defaulted to 36 instead of 43 - REGRESSION',
       );
 
       // Also verify it persists correctly
-      final fromProvider =
-          provider.allRatios.firstWhere((r) => r.id == ratio.id);
+      final fromProvider = provider.allRatios.firstWhere(
+        (r) => r.id == ratio.id,
+      );
       expect(
         fromProvider.housingRatio,
         equals(31.0),

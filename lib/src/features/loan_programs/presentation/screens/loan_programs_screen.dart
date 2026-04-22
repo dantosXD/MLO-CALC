@@ -40,9 +40,9 @@ class LoanProgramsScreen extends StatelessWidget {
               // Built-in Programs
               Text(
                 'Built-in Programs',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               ...provider.builtInPrograms.map(
@@ -62,8 +62,8 @@ class LoanProgramsScreen extends StatelessWidget {
                 Text(
                   'Custom Programs',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ...provider.customPrograms.map(
@@ -102,11 +102,11 @@ class LoanProgramsScreen extends StatelessWidget {
   ) {
     // Select the program
     provider.selectProgram(program);
-    
+
     // Sync the program's DTI ratios to the calculator
     final calculatorProvider = context.read<CalculatorProvider>();
     calculatorProvider.setQualRatio1(program.toQualifyingRatio());
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -126,9 +126,9 @@ class LoanProgramsScreen extends StatelessWidget {
   ) async {
     final newProgram = await provider.duplicateProgram(program);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Created "${newProgram.name}"')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Created "${newProgram.name}"')));
     }
   }
 
@@ -158,9 +158,9 @@ class LoanProgramsScreen extends StatelessWidget {
     if (confirmed == true) {
       await provider.deleteProgram(program.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Program deleted')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Program deleted')));
       }
     }
   }
@@ -218,7 +218,8 @@ class _SelectedProgramCard extends StatelessWidget {
               children: [
                 _InfoChip(
                   label: 'DTI',
-                  value: '${CurrencyFormatter.formatPercent(program.housingRatio, decimals: 2)}/${CurrencyFormatter.formatPercent(program.debtRatio, decimals: 2)}',
+                  value:
+                      '${CurrencyFormatter.formatPercent(program.housingRatio, decimals: 2)}/${CurrencyFormatter.formatPercent(program.debtRatio, decimals: 2)}',
                 ),
                 _InfoChip(
                   label: 'Min Down',
@@ -267,15 +268,12 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$label: ',
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
+          Text('$label: ', style: Theme.of(context).textTheme.labelSmall),
           Text(
             value,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -422,7 +420,10 @@ class _ProgramCard extends StatelessWidget {
                       value: 'delete',
                       child: ListTile(
                         leading: Icon(Icons.delete, color: Colors.red),
-                        title: Text('Delete', style: TextStyle(color: Colors.red)),
+                        title: Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ),

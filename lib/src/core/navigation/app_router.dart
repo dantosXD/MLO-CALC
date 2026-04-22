@@ -23,9 +23,9 @@ class AppRouter extends ChangeNotifier {
   AppRouter({
     required ArmCalculatorService armCalculatorService,
     required ArmPresetStorage armPresetStorage,
-  })  : _catalog = const FeatureCatalog(),
-        _armCalculatorService = armCalculatorService,
-        _armPresetStorage = armPresetStorage;
+  }) : _catalog = const FeatureCatalog(),
+       _armCalculatorService = armCalculatorService,
+       _armPresetStorage = armPresetStorage;
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   final FeatureCatalog _catalog;
@@ -64,9 +64,7 @@ class AppRouter extends ChangeNotifier {
   }
 
   Future<String?> openWorkspaceDashboard() {
-    return _push<String>(
-      (_) => const WorkspaceDashboardScreen(),
-    );
+    return _push<String>((_) => const WorkspaceDashboardScreen());
   }
 
   Future<void> openSettings() {
@@ -104,9 +102,7 @@ class AppRouter extends ChangeNotifier {
 
   Future<void> openReportPreview(LoanParametersReadModel provider) async {
     final data = await ReportService.generateLoanReport(provider: provider);
-    await _push<void>(
-      (_) => _PdfPreviewRoute(data: data),
-    );
+    await _push<void>((_) => _PdfPreviewRoute(data: data));
   }
 
   Future<T?> _push<T>(WidgetBuilder builder) {

@@ -54,7 +54,10 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
     return CalculatorPalette(
       backgroundGradient: LinearGradient(
         colors: [
-          Color.alphaBlend(scheme.primary.withValues(alpha: 0.04), scheme.surface),
+          Color.alphaBlend(
+            scheme.primary.withValues(alpha: 0.04),
+            scheme.surface,
+          ),
           scheme.surface,
         ],
         begin: Alignment.topLeft,
@@ -86,7 +89,10 @@ class CalculatorPalette extends ThemeExtension<CalculatorPalette> {
     return CalculatorPalette(
       backgroundGradient: LinearGradient(
         colors: [
-          Color.alphaBlend(scheme.primary.withValues(alpha: 0.12), scheme.surface),
+          Color.alphaBlend(
+            scheme.primary.withValues(alpha: 0.12),
+            scheme.surface,
+          ),
           scheme.surfaceContainerHighest,
         ],
         begin: Alignment.topCenter,

@@ -23,7 +23,10 @@ class NLPCalculatorService {
     }
 
     try {
-      _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: normalizedKey);
+      _model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: normalizedKey,
+      );
       _isInitialized = true;
       _activeApiKey = normalizedKey;
     } catch (e) {
@@ -49,8 +52,8 @@ class NLPCalculatorService {
 
     // Input Sanitization
     String sanitizedQuery = query.trim();
-    
-    // Remove control characters (keeping newlines/tabs is usually fine for natural language, 
+
+    // Remove control characters (keeping newlines/tabs is usually fine for natural language,
     // but let's remove non-printable characters just in case)
     sanitizedQuery = sanitizedQuery.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
 
@@ -60,7 +63,7 @@ class NLPCalculatorService {
 
     // Limit query length to prevent excessive token usage
     if (sanitizedQuery.length > 500) {
-       sanitizedQuery = sanitizedQuery.substring(0, 500);
+      sanitizedQuery = sanitizedQuery.substring(0, 500);
     }
 
     final prompt =
@@ -123,11 +126,11 @@ Notes:
       // Clean up the response (remove markdown code blocks if present)
       final RegExp jsonRegex = RegExp(r'\{[\s\S]*\}');
       final Match? match = jsonRegex.firstMatch(responseText);
-      
+
       if (match == null) {
         throw Exception('No JSON found in response');
       }
-      
+
       final String cleanedResponse = match.group(0) ?? '';
       if (cleanedResponse.isEmpty) {
         throw Exception('Empty JSON response');

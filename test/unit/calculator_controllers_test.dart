@@ -35,7 +35,10 @@ void main() {
 
       expect(quoteController.payment, closeTo(1987.26, 0.01));
       expect(historyController.entries, isNotEmpty);
-      expect(historyController.entries.first.type, CalculationEntryType.payment);
+      expect(
+        historyController.entries.first.type,
+        CalculationEntryType.payment,
+      );
     });
 
     test('restores quote inputs and results from history entry', () {

@@ -8,8 +8,8 @@ class ArmWizardProvider extends ChangeNotifier {
   ArmWizardProvider({
     required ArmCalculatorService calculator,
     required ArmPresetStorage presetStorage,
-  })  : _calculator = calculator,
-        _presetStorage = presetStorage;
+  }) : _calculator = calculator,
+       _presetStorage = presetStorage;
 
   final ArmCalculatorService _calculator;
   final ArmPresetStorage _presetStorage;

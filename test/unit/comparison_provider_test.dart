@@ -38,10 +38,7 @@ void main() {
 
       expect(comparison.views.length, 2);
       expect(comparison.baseline.entry.id, anyOf('a', 'b'));
-      expect(
-        comparison.views.any((view) => view.miDropMonth != null),
-        isTrue,
-      );
+      expect(comparison.views.any((view) => view.miDropMonth != null), isTrue);
       expect(
         comparison.views
             .where((view) => !view.isBaseline)

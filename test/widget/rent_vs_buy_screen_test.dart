@@ -4,11 +4,7 @@ import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_v
 
 void main() {
   testWidgets('renders the rent vs buy screen shell', (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: RentVsBuyScreen(),
-      ),
-    );
+    await tester.pumpWidget(const MaterialApp(home: RentVsBuyScreen()));
     await tester.pumpAndSettle();
 
     expect(find.text('Rent vs Buy Analysis'), findsOneWidget);
@@ -19,11 +15,7 @@ void main() {
   });
 
   testWidgets('accepts a fractional term and shows a result', (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: RentVsBuyScreen(),
-      ),
-    );
+    await tester.pumpWidget(const MaterialApp(home: RentVsBuyScreen()));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.widgetWithText(TextField, '30').first, '7.5');

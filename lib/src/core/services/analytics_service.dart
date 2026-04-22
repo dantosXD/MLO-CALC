@@ -43,17 +43,13 @@ class AnalyticsEvent {
   final DateTime timestamp;
   final Map<String, Object?>? metadata;
 
-  AnalyticsEvent({
-    required this.type,
-    required this.timestamp,
-    this.metadata,
-  });
+  AnalyticsEvent({required this.type, required this.timestamp, this.metadata});
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'type': type.name,
-        'timestamp': timestamp.toIso8601String(),
-        'metadata': metadata,
-      };
+    'type': type.name,
+    'timestamp': timestamp.toIso8601String(),
+    'metadata': metadata,
+  };
 
   factory AnalyticsEvent.fromJson(Map<String, dynamic> json) {
     return AnalyticsEvent(
@@ -112,7 +108,7 @@ class UsageStats {
 /// All data is stored locally - no external tracking.
 class AnalyticsService {
   AnalyticsService({PreferenceStore? preferenceStore})
-      : _preferences = preferenceStore ?? PreferenceStore();
+    : _preferences = preferenceStore ?? PreferenceStore();
 
   static const String _eventsKey = 'analytics_events';
   static const String _statsKey = 'analytics_stats';
@@ -160,8 +156,9 @@ class AnalyticsService {
 
       final statsJson = _preferences.getString(_statsKey);
       if (statsJson != null && statsJson.isNotEmpty) {
-        final Map<String, dynamic> stats =
-            Map<String, dynamic>.from(jsonDecode(statsJson) as Map);
+        final Map<String, dynamic> stats = Map<String, dynamic>.from(
+          jsonDecode(statsJson) as Map,
+        );
         _totalSessions = (stats['totalSessions'] as num?)?.toInt() ?? 0;
         _firstUseDate = stats['firstUseDate'] != null
             ? DateTime.parse(stats['firstUseDate'] as String)
@@ -185,8 +182,9 @@ class AnalyticsService {
       final trimmedEvents = _events.length > _maxStoredEvents
           ? _events.sublist(_events.length - _maxStoredEvents)
           : _events;
-      final eventsJson =
-          jsonEncode(trimmedEvents.map((e) => e.toJson()).toList());
+      final eventsJson = jsonEncode(
+        trimmedEvents.map((e) => e.toJson()).toList(),
+      );
       await _preferences.setString(_eventsKey, eventsJson);
 
       final statsJson = jsonEncode(<String, Object?>{
@@ -213,10 +211,7 @@ class AnalyticsService {
     _lastActivity = now;
   }
 
-  void trackEvent(
-    AnalyticsEventType type, {
-    Map<String, Object?>? metadata,
-  }) {
+  void trackEvent(AnalyticsEventType type, {Map<String, Object?>? metadata}) {
     if (!_analyticsEnabled) return;
 
     final event = AnalyticsEvent(
@@ -240,8 +235,10 @@ class AnalyticsService {
     );
   }
 
-  void trackCalculation(String calculationType,
-      {Map<String, Object?>? params}) {
+  void trackCalculation(
+    String calculationType, {
+    Map<String, Object?>? params,
+  }) {
     final eventType = _calculationTypeToEvent(calculationType);
     final metadata = <String, Object?>{'calculationType': calculationType};
     final sanitized = _sanitizeMetadata(params);
@@ -284,8 +281,8 @@ class AnalyticsService {
 
       if (_isCalculationEvent(event.type)) {
         totalCalculations++;
-        final calcType = event.metadata?['calculationType'] as String? ??
-            event.type.name;
+        final calcType =
+            event.metadata?['calculationType'] as String? ?? event.type.name;
         calculationTypes[calcType] = (calculationTypes[calcType] ?? 0) + 1;
       }
     }
@@ -372,9 +369,7 @@ Map<String, Object?>? _metadataFromJson(Object? raw) {
   }
 
   return raw.map<String, Object?>(
-    (Object? key, Object? value) => MapEntry<String, Object?>(
-      key.toString(),
-      value,
-    ),
+    (Object? key, Object? value) =>
+        MapEntry<String, Object?>(key.toString(), value),
   );
 }

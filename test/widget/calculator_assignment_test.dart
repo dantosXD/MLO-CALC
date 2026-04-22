@@ -55,7 +55,9 @@ void main() {
           ),
         ),
         ChangeNotifierProvider(create: (context) => LayoutPreferenceProvider()),
-        ChangeNotifierProvider(create: (context) => CalculatorDisplayNotifier()),
+        ChangeNotifierProvider(
+          create: (context) => CalculatorDisplayNotifier(),
+        ),
         ChangeNotifierProvider(create: (context) => buildCalculatorProvider()),
         ChangeNotifierProvider(create: (context) => ComparisonProvider()),
         ChangeNotifierProvider(
@@ -92,7 +94,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('Display clears after assigning Price', (WidgetTester tester) async {
+  testWidgets('Display clears after assigning Price', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -117,7 +121,9 @@ void main() {
     expect(getDisplayValue(tester), '0');
   });
 
-  testWidgets('Display clears after assigning Loan Amount', (WidgetTester tester) async {
+  testWidgets('Display clears after assigning Loan Amount', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -142,7 +148,9 @@ void main() {
     expect(getDisplayValue(tester), '0');
   });
 
-  testWidgets('Assignment does nothing when display is 0', (WidgetTester tester) async {
+  testWidgets('Assignment does nothing when display is 0', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -160,7 +168,9 @@ void main() {
     expect(getDisplayValue(tester), '0');
   });
 
-  testWidgets('Display clears after assigning Interest Rate', (WidgetTester tester) async {
+  testWidgets('Display clears after assigning Interest Rate', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);

@@ -37,11 +37,7 @@ void main() {
 
     final data = ComparisonData.fromEntries(entries);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ComparisonScreen(data: data),
-      ),
-    );
+    await tester.pumpWidget(MaterialApp(home: ComparisonScreen(data: data)));
 
     expect(find.text('Scenario Comparison'), findsOneWidget);
     expect(find.byType(Card), findsWidgets);

@@ -339,15 +339,15 @@ class _MainNavigatorState extends State<MainNavigator> {
     final nlpService = context.read<NlpSettingsProvider>().calculatorService;
     showDialog(
       context: context,
-      builder: (context) => NlpDialog(
-        nlpService: nlpService,
-        speechToText: stt.SpeechToText(),
-      ),
+      builder: (context) =>
+          NlpDialog(nlpService: nlpService, speechToText: stt.SpeechToText()),
     );
   }
 
   Future<void> _openWorkspaceDashboard(BuildContext context) async {
-    final selectedFeatureId = await context.read<AppRouter>().openWorkspaceDashboard();
+    final selectedFeatureId = await context
+        .read<AppRouter>()
+        .openWorkspaceDashboard();
     if (!context.mounted || selectedFeatureId == null) {
       return;
     }

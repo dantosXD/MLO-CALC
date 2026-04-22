@@ -38,9 +38,7 @@ void main() {
             value: provider,
           ),
         ],
-        child: const MaterialApp(
-          home: QualificationScreen(),
-        ),
+        child: const MaterialApp(home: QualificationScreen()),
       );
     }
 
@@ -93,15 +91,26 @@ void main() {
 
       // Assert - Verify the ratio was added with correct values
       final customRatios = provider.customRatios;
-      expect(customRatios.length, equals(1),
-          reason: 'Should have 1 custom ratio');
+      expect(
+        customRatios.length,
+        equals(1),
+        reason: 'Should have 1 custom ratio',
+      );
 
       final addedRatio = customRatios.first;
       expect(addedRatio.name, equals('Test FHA Expanded'));
-      expect(addedRatio.housingRatio, equals(31.0),
-          reason: 'FAILING REGRESSION: Housing DTI is ${addedRatio.housingRatio} instead of 31.0');
-      expect(addedRatio.debtRatio, equals(43.0),
-          reason: 'FAILING REGRESSION: Total DTI is ${addedRatio.debtRatio} instead of 43.0');
+      expect(
+        addedRatio.housingRatio,
+        equals(31.0),
+        reason:
+            'FAILING REGRESSION: Housing DTI is ${addedRatio.housingRatio} instead of 31.0',
+      );
+      expect(
+        addedRatio.debtRatio,
+        equals(43.0),
+        reason:
+            'FAILING REGRESSION: Total DTI is ${addedRatio.debtRatio} instead of 43.0',
+      );
     });
 
     testWidgets(
@@ -151,10 +160,18 @@ void main() {
 
       // Assert
       final ratio = provider.customRatios.first;
-      expect(ratio.housingRatio, equals(25.0),
-          reason: 'FAILING REGRESSION: Housing DTI is ${ratio.housingRatio} instead of 25.0');
-      expect(ratio.debtRatio, equals(38.0),
-          reason: 'FAILING REGRESSION: Total DTI is ${ratio.debtRatio} instead of 38.0');
+      expect(
+        ratio.housingRatio,
+        equals(25.0),
+        reason:
+            'FAILING REGRESSION: Housing DTI is ${ratio.housingRatio} instead of 25.0',
+      );
+      expect(
+        ratio.debtRatio,
+        equals(38.0),
+        reason:
+            'FAILING REGRESSION: Total DTI is ${ratio.debtRatio} instead of 38.0',
+      );
     });
 
     testWidgets('Edit existing ratio to change DTI values', (tester) async {
@@ -166,9 +183,7 @@ void main() {
       );
       await provider.selectRatio(provider.customRatios.first);
 
-      await tester.pumpWidget(
-        buildTestApp(),
-      );
+      await tester.pumpWidget(buildTestApp());
 
       await tester.pumpAndSettle();
 
@@ -191,71 +206,78 @@ void main() {
 
       // Assert
       final updated = provider.customRatios.first;
-      expect(updated.housingRatio, equals(35.0),
-          reason: 'FAILING REGRESSION: Housing DTI is ${updated.housingRatio} instead of 35.0');
-      expect(updated.debtRatio, equals(45.0),
-          reason: 'FAILING REGRESSION: Total DTI is ${updated.debtRatio} instead of 45.0');
+      expect(
+        updated.housingRatio,
+        equals(35.0),
+        reason:
+            'FAILING REGRESSION: Housing DTI is ${updated.housingRatio} instead of 35.0',
+      );
+      expect(
+        updated.debtRatio,
+        equals(45.0),
+        reason:
+            'FAILING REGRESSION: Total DTI is ${updated.debtRatio} instead of 45.0',
+      );
     });
 
     testWidgets(
-        'Regression test: Verify user-entered values are preserved, not defaults',
-        (tester) async {
-      // This is the critical regression test
-      // Bug: Users enter 31/43 but it saves as 28/36
+      'Regression test: Verify user-entered values are preserved, not defaults',
+      (tester) async {
+        // This is the critical regression test
+        // Bug: Users enter 31/43 but it saves as 28/36
 
-      await tester.pumpWidget(
-        buildTestApp(),
-      );
+        await tester.pumpWidget(buildTestApp());
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Open dialog
-      await tester.tap(find.byIcon(Icons.add).first);
-      await tester.pumpAndSettle();
+        // Open dialog
+        await tester.tap(find.byIcon(Icons.add).first);
+        await tester.pumpAndSettle();
 
-      // Enter NON-default values
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Name'),
-        'REGRESSION TEST',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Housing DTI %'),
-        '31',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Total DTI %'),
-        '43',
-      );
+        // Enter NON-default values
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Name'),
+          'REGRESSION TEST',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Housing DTI %'),
+          '31',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Total DTI %'),
+          '43',
+        );
 
-      // Save
-      await tester.tap(find.text('Add'));
-      await tester.pumpAndSettle();
+        // Save
+        await tester.tap(find.text('Add'));
+        await tester.pumpAndSettle();
 
-      // CRITICAL ASSERTIONS - These will fail if regression exists
-      final ratio = provider.customRatios.first;
+        // CRITICAL ASSERTIONS - These will fail if regression exists
+        final ratio = provider.customRatios.first;
 
-      expect(
-        ratio.housingRatio,
-        equals(31.0),
-        reason:
-            '\n\n*** REGRESSION DETECTED ***\n'
-            'User entered: 31\n'
-            'But saved as: ${ratio.housingRatio}\n'
-            'This is the DEFAULT value (28)\n'
-            'User input was LOST!\n',
-      );
+        expect(
+          ratio.housingRatio,
+          equals(31.0),
+          reason:
+              '\n\n*** REGRESSION DETECTED ***\n'
+              'User entered: 31\n'
+              'But saved as: ${ratio.housingRatio}\n'
+              'This is the DEFAULT value (28)\n'
+              'User input was LOST!\n',
+        );
 
-      expect(
-        ratio.debtRatio,
-        equals(43.0),
-        reason:
-            '\n\n*** REGRESSION DETECTED ***\n'
-            'User entered: 43\n'
-            'But saved as: ${ratio.debtRatio}\n'
-            'This is the DEFAULT value (36)\n'
-            'User input was LOST!\n',
-      );
-    });
+        expect(
+          ratio.debtRatio,
+          equals(43.0),
+          reason:
+              '\n\n*** REGRESSION DETECTED ***\n'
+              'User entered: 43\n'
+              'But saved as: ${ratio.debtRatio}\n'
+              'This is the DEFAULT value (36)\n'
+              'User input was LOST!\n',
+        );
+      },
+    );
 
     testWidgets('Qualification inputs sync with provider updates', (
       tester,
@@ -273,9 +295,7 @@ void main() {
               value: provider,
             ),
           ],
-          child: const MaterialApp(
-            home: QualificationScreen(),
-          ),
+          child: const MaterialApp(home: QualificationScreen()),
         ),
       );
 
@@ -298,7 +318,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 800));
     });
 
-    testWidgets('Qualification UI shows decimal ratio precision', (tester) async {
+    testWidgets('Qualification UI shows decimal ratio precision', (
+      tester,
+    ) async {
       await provider.addRatio(
         name: 'Decimal Precision',
         housingRatio: 31.5,

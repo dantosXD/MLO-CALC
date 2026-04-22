@@ -15,19 +15,22 @@ void main() {
   );
 
   group('QualificationService', () {
-    test('calculateMaxLoan uses the housing-ratio bound when it is tighter', () {
-      final result = service.calculateMaxLoan(
-        ratio: ratio,
-        annualIncome: 120000,
-        interestRate: 6.0,
-        termYears: 30,
-      );
+    test(
+      'calculateMaxLoan uses the housing-ratio bound when it is tighter',
+      () {
+        final result = service.calculateMaxLoan(
+          ratio: ratio,
+          annualIncome: 120000,
+          interestRate: 6.0,
+          termYears: 30,
+        );
 
-      expect(result, isA<CalcSuccess<QualificationResult>>());
-      expect(result.isSuccess, isTrue);
-      expect(result.value, isNotNull);
-      expect(result.value!.monthlyPiPayment, closeTo(2800, 0.01));
-    });
+        expect(result, isA<CalcSuccess<QualificationResult>>());
+        expect(result.isSuccess, isTrue);
+        expect(result.value, isNotNull);
+        expect(result.value!.monthlyPiPayment, closeTo(2800, 0.01));
+      },
+    );
 
     test('calculateMaxLoan uses the debt-ratio bound when it is tighter', () {
       final result = service.calculateMaxLoan(

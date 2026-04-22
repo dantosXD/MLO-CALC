@@ -217,14 +217,18 @@ class AmortizationScreen extends StatelessWidget {
                             Expanded(
                               flex: 2,
                               child: Text(
-                                CurrencyFormatter.formatCurrency(entry.principal),
+                                CurrencyFormatter.formatCurrency(
+                                  entry.principal,
+                                ),
                                 textAlign: TextAlign.right,
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
-                                CurrencyFormatter.formatCurrency(entry.interest),
+                                CurrencyFormatter.formatCurrency(
+                                  entry.interest,
+                                ),
                                 textAlign: TextAlign.right,
                               ),
                             ),

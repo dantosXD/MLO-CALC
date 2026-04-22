@@ -129,12 +129,14 @@ void main() {
       provider.setInterestRate(value: 6.0);
       provider.setTermYears(value: 30);
       provider.setMonthlyDebt(value: 500);
-      provider.setQualRatio2(QualifyingRatio(
-        id: 'fha',
-        name: 'FHA',
-        housingRatio: 31,
-        debtRatio: 43,
-      ));
+      provider.setQualRatio2(
+        QualifyingRatio(
+          id: 'fha',
+          name: 'FHA',
+          housingRatio: 31,
+          debtRatio: 43,
+        ),
+      );
 
       // Act: Use ratio 2 (FHA)
       provider.calculateMinimumIncome(useRatio1: false);
@@ -293,28 +295,31 @@ void main() {
       expect(provider.annualIncome!, greaterThan(140000));
     });
 
-    test('Minimum income calculation uses MAX of front-end and back-end constraints', () {
-      // The service should return the higher of the two constraints
-      // This ensures the borrower qualifies under BOTH ratios
+    test(
+      'Minimum income calculation uses MAX of front-end and back-end constraints',
+      () {
+        // The service should return the higher of the two constraints
+        // This ensures the borrower qualifies under BOTH ratios
 
-      // Arrange
-      provider.setLoanAmount(value: 300000);
-      provider.setInterestRate(value: 6.0);
-      provider.setTermYears(value: 30);
-      provider.setMonthlyDebt(value: 1000);
+        // Arrange
+        provider.setLoanAmount(value: 300000);
+        provider.setInterestRate(value: 6.0);
+        provider.setTermYears(value: 30);
+        provider.setMonthlyDebt(value: 1000);
 
-      // Act
-      provider.calculateMinimumIncome(useRatio1: true);
+        // Act
+        provider.calculateMinimumIncome(useRatio1: true);
 
-      // Assert: Should require income to satisfy both ratios
-      expect(provider.annualIncome, isNotNull);
+        // Assert: Should require income to satisfy both ratios
+        expect(provider.annualIncome, isNotNull);
 
-      // Payment ≈ $1,799
-      // Front-end: 1799 / 0.28 * 12 ≈ $77,100
-      // Back-end: (1799 + 1000) / 0.36 * 12 ≈ $92,630
-      // Should use the higher value (back-end in this case)
-      expect(provider.annualIncome!, greaterThan(90000));
-    });
+        // Payment ≈ $1,799
+        // Front-end: 1799 / 0.28 * 12 ≈ $77,100
+        // Back-end: (1799 + 1000) / 0.36 * 12 ≈ $92,630
+        // Should use the higher value (back-end in this case)
+        expect(provider.annualIncome!, greaterThan(90000));
+      },
+    );
 
     test('Calculate minimum income - income updates after calculation', () {
       // Verify that the annualIncome field is actually updated

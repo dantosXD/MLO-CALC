@@ -11,10 +11,12 @@ class CalculatorLayoutPreviewScreen extends StatefulWidget {
   const CalculatorLayoutPreviewScreen({super.key});
 
   @override
-  State<CalculatorLayoutPreviewScreen> createState() => _CalculatorLayoutPreviewScreenState();
+  State<CalculatorLayoutPreviewScreen> createState() =>
+      _CalculatorLayoutPreviewScreenState();
 }
 
-class _CalculatorLayoutPreviewScreenState extends State<CalculatorLayoutPreviewScreen> 
+class _CalculatorLayoutPreviewScreenState
+    extends State<CalculatorLayoutPreviewScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -22,7 +24,7 @@ class _CalculatorLayoutPreviewScreenState extends State<CalculatorLayoutPreviewS
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Set initial tab based on current preference
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final layoutPref = context.read<LayoutPreferenceProvider>();
@@ -38,20 +40,22 @@ class _CalculatorLayoutPreviewScreenState extends State<CalculatorLayoutPreviewS
 
   void _applyLayout(BuildContext context) {
     final layoutPref = context.read<LayoutPreferenceProvider>();
-    final selectedLayout = _tabController.index == 0 
-        ? CalculatorLayout.classic 
+    final selectedLayout = _tabController.index == 0
+        ? CalculatorLayout.classic
         : CalculatorLayout.modern;
-    
+
     layoutPref.setLayout(selectedLayout);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${selectedLayout == CalculatorLayout.modern ? "Modern" : "Classic"} layout applied!'),
+        content: Text(
+          '${selectedLayout == CalculatorLayout.modern ? "Modern" : "Classic"} layout applied!',
+        ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
     );
-    
+
     Navigator.pop(context);
   }
 
@@ -65,30 +69,24 @@ class _CalculatorLayoutPreviewScreenState extends State<CalculatorLayoutPreviewS
             bottom: TabBar(
               controller: _tabController,
               tabs: const [
-                Tab(
-                  icon: Icon(Icons.calculate_outlined),
-                  text: 'Classic',
-                ),
-                Tab(
-                  icon: Icon(Icons.dashboard_outlined),
-                  text: 'Modern',
-                ),
+                Tab(icon: Icon(Icons.calculate_outlined), text: 'Classic'),
+                Tab(icon: Icon(Icons.dashboard_outlined), text: 'Modern'),
               ],
             ),
             actions: [
               TextButton.icon(
                 onPressed: () => _applyLayout(context),
                 icon: const Icon(Icons.check, color: Colors.white),
-                label: const Text('Apply', style: TextStyle(color: Colors.white)),
+                label: const Text(
+                  'Apply',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
           body: TabBarView(
             controller: _tabController,
-            children: const [
-              CalculatorScreen(),
-              _ModernCalculatorPreview(),
-            ],
+            children: const [CalculatorScreen(), _ModernCalculatorPreview()],
           ),
         );
       },
@@ -154,7 +152,8 @@ class _DisplayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isError = display.displayValue == 'Error' ||
+    final isError =
+        display.displayValue == 'Error' ||
         display.inputError != null ||
         calc.inputError != null;
 
@@ -201,7 +200,10 @@ class _DisplayCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isError
                       ? Colors.red.withValues(alpha: 0.3)
@@ -228,33 +230,51 @@ class _DisplayCard extends StatelessWidget {
                 label: 'L/A',
                 value: CurrencyFormatter.formatCompactCurrency(calc.loanAmount),
                 isSet: calc.loanAmount != null,
-                onTap: () => _setFromDisplay(context, 'Loan Amount', (v) => calc.setLoanAmount(value: v)),
+                onTap: () => _setFromDisplay(
+                  context,
+                  'Loan Amount',
+                  (v) => calc.setLoanAmount(value: v),
+                ),
               ),
               const SizedBox(width: 6),
-                        _StatChip(
-                          label: 'Rate',
-                          value: calc.interestRate != null
+              _StatChip(
+                label: 'Rate',
+                value: calc.interestRate != null
                     ? CurrencyFormatter.formatPercent(
                         calc.interestRate,
                         decimals: 3,
                       )
                     : '--',
-                          isSet: calc.interestRate != null,
-                          onTap: () => _setFromDisplay(context, 'Rate', (v) => calc.setInterestRate(value: v)),
-                        ),
+                isSet: calc.interestRate != null,
+                onTap: () => _setFromDisplay(
+                  context,
+                  'Rate',
+                  (v) => calc.setInterestRate(value: v),
+                ),
+              ),
               const SizedBox(width: 6),
               _StatChip(
                 label: 'Term',
-                value: calc.termYears != null ? '${calc.termYears!.toInt()}y' : '--',
+                value: calc.termYears != null
+                    ? '${calc.termYears!.toInt()}y'
+                    : '--',
                 isSet: calc.termYears != null,
-                onTap: () => _setFromDisplay(context, 'Term', (v) => calc.setTermYears(value: v)),
+                onTap: () => _setFromDisplay(
+                  context,
+                  'Term',
+                  (v) => calc.setTermYears(value: v),
+                ),
               ),
               const SizedBox(width: 6),
               _StatChip(
                 label: 'Pmt',
                 value: CurrencyFormatter.formatCompactCurrency(calc.payment),
                 isSet: calc.payment != null,
-                onTap: () => _setFromDisplay(context, 'Payment', (v) => calc.setPayment(value: v)),
+                onTap: () => _setFromDisplay(
+                  context,
+                  'Payment',
+                  (v) => calc.setPayment(value: v),
+                ),
               ),
             ],
           ),
@@ -271,7 +291,11 @@ class _DisplayCard extends StatelessWidget {
     return rawValue;
   }
 
-  void _setFromDisplay(BuildContext context, String label, void Function(double) setter) {
+  void _setFromDisplay(
+    BuildContext context,
+    String label,
+    void Function(double) setter,
+  ) {
     final parsed = double.tryParse(display.displayValue);
     if (parsed != null && parsed != 0) {
       display.clear();
@@ -338,7 +362,9 @@ class _StatChip extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isSet ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                    color: isSet
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -366,37 +392,58 @@ class _SecondaryFieldsRow extends StatelessWidget {
           label: 'Price',
           value: calc.price,
           color: AppTheme.loanButton,
-          onTap: () => _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
+          onTap: () =>
+              _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
         ),
         _RowChip(
           label: 'DnPmt',
           value: calc.downPayment,
           color: AppTheme.successGreen,
-          onTap: () => _setFromDisplay(context, 'Down Pmt', (v) => calc.setDownPayment(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'Down Pmt',
+            (v) => calc.setDownPayment(value: v),
+          ),
         ),
         _RowChip(
           label: 'Tax',
           value: calc.propertyTax,
           color: AppTheme.pitiButton,
-          onTap: () => _setFromDisplay(context, 'Tax/yr', (v) => calc.setPropertyTax(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'Tax/yr',
+            (v) => calc.setPropertyTax(value: v),
+          ),
         ),
         _RowChip(
           label: 'Ins',
           value: calc.homeInsurance,
           color: AppTheme.pitiButton,
-          onTap: () => _setFromDisplay(context, 'Ins/yr', (v) => calc.setHomeInsurance(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'Ins/yr',
+            (v) => calc.setHomeInsurance(value: v),
+          ),
         ),
         _RowChip(
           label: 'HOA',
           value: calc.monthlyExpenses,
           color: AppTheme.warningOrange,
-          onTap: () => _setFromDisplay(context, 'HOA/mo', (v) => calc.setMonthlyExpenses(value: v)),
+          onTap: () => _setFromDisplay(
+            context,
+            'HOA/mo',
+            (v) => calc.setMonthlyExpenses(value: v),
+          ),
         ),
       ],
     );
   }
 
-  void _setFromDisplay(BuildContext context, String label, void Function(double) setter) {
+  void _setFromDisplay(
+    BuildContext context,
+    String label,
+    void Function(double) setter,
+  ) {
     final parsed = double.tryParse(display.displayValue);
     if (parsed != null && parsed != 0) {
       display.clear();
@@ -444,7 +491,9 @@ class _RowChip extends StatelessWidget {
               decoration: BoxDecoration(
                 color: hasValue
                     ? color.withValues(alpha: isDark ? 0.15 : 0.1)
-                    : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade200),
+                    : (isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -459,11 +508,15 @@ class _RowChip extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    hasValue ? CurrencyFormatter.formatCompactCurrency(value) : '--',
+                    hasValue
+                        ? CurrencyFormatter.formatCompactCurrency(value)
+                        : '--',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: hasValue ? (isDark ? Colors.white : Colors.black87) : Colors.grey,
+                      color: hasValue
+                          ? (isDark ? Colors.white : Colors.black87)
+                          : Colors.grey,
                     ),
                   ),
                 ],
@@ -497,64 +550,151 @@ class _ModernKeypad extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                _buildKey(context, 'AC', onTap: () {
-                  calculatorProvider.clearAll();
-                  displayProvider.clearAll();
-                }, color: AppTheme.errorRed, textColor: Colors.white),
-                _buildKey(context, '⌫', onTap: displayProvider.backspace, 
-                    onLongPress: displayProvider.clear,
-                    color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
-                _buildKey(context, '%', onTap: displayProvider.calculatePercent,
-                    color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
-                _buildKey(context, '÷', onTap: () => displayProvider.performOperation('/'),
-                    color: AppTheme.primaryTeal, textColor: Colors.white),
+                _buildKey(
+                  context,
+                  'AC',
+                  onTap: () {
+                    calculatorProvider.clearAll();
+                    displayProvider.clearAll();
+                  },
+                  color: AppTheme.errorRed,
+                  textColor: Colors.white,
+                ),
+                _buildKey(
+                  context,
+                  '⌫',
+                  onTap: displayProvider.backspace,
+                  onLongPress: displayProvider.clear,
+                  color: isDark
+                      ? const Color(0xFF475569)
+                      : const Color(0xFFE2E8F0),
+                ),
+                _buildKey(
+                  context,
+                  '%',
+                  onTap: displayProvider.calculatePercent,
+                  color: isDark
+                      ? const Color(0xFF475569)
+                      : const Color(0xFFE2E8F0),
+                ),
+                _buildKey(
+                  context,
+                  '÷',
+                  onTap: () => displayProvider.performOperation('/'),
+                  color: AppTheme.primaryTeal,
+                  textColor: Colors.white,
+                ),
               ],
             ),
           ),
           Expanded(
             child: Row(
               children: [
-                _buildKey(context, '7', onTap: () => displayProvider.inputDigit('7')),
-                _buildKey(context, '8', onTap: () => displayProvider.inputDigit('8')),
-                _buildKey(context, '9', onTap: () => displayProvider.inputDigit('9')),
-                _buildKey(context, '×', onTap: () => displayProvider.performOperation('x'),
-                    color: AppTheme.primaryTeal, textColor: Colors.white),
+                _buildKey(
+                  context,
+                  '7',
+                  onTap: () => displayProvider.inputDigit('7'),
+                ),
+                _buildKey(
+                  context,
+                  '8',
+                  onTap: () => displayProvider.inputDigit('8'),
+                ),
+                _buildKey(
+                  context,
+                  '9',
+                  onTap: () => displayProvider.inputDigit('9'),
+                ),
+                _buildKey(
+                  context,
+                  '×',
+                  onTap: () => displayProvider.performOperation('x'),
+                  color: AppTheme.primaryTeal,
+                  textColor: Colors.white,
+                ),
               ],
             ),
           ),
           Expanded(
             child: Row(
               children: [
-                _buildKey(context, '4', onTap: () => displayProvider.inputDigit('4')),
-                _buildKey(context, '5', onTap: () => displayProvider.inputDigit('5')),
-                _buildKey(context, '6', onTap: () => displayProvider.inputDigit('6')),
-                _buildKey(context, '−', onTap: () => displayProvider.performOperation('-'),
-                    color: AppTheme.primaryTeal, textColor: Colors.white),
+                _buildKey(
+                  context,
+                  '4',
+                  onTap: () => displayProvider.inputDigit('4'),
+                ),
+                _buildKey(
+                  context,
+                  '5',
+                  onTap: () => displayProvider.inputDigit('5'),
+                ),
+                _buildKey(
+                  context,
+                  '6',
+                  onTap: () => displayProvider.inputDigit('6'),
+                ),
+                _buildKey(
+                  context,
+                  '−',
+                  onTap: () => displayProvider.performOperation('-'),
+                  color: AppTheme.primaryTeal,
+                  textColor: Colors.white,
+                ),
               ],
             ),
           ),
           Expanded(
             child: Row(
               children: [
-                _buildKey(context, '1', onTap: () => displayProvider.inputDigit('1')),
-                _buildKey(context, '2', onTap: () => displayProvider.inputDigit('2')),
-                _buildKey(context, '3', onTap: () => displayProvider.inputDigit('3')),
-                _buildKey(context, '+', onTap: () => displayProvider.performOperation('+'),
-                    color: AppTheme.primaryTeal, textColor: Colors.white),
+                _buildKey(
+                  context,
+                  '1',
+                  onTap: () => displayProvider.inputDigit('1'),
+                ),
+                _buildKey(
+                  context,
+                  '2',
+                  onTap: () => displayProvider.inputDigit('2'),
+                ),
+                _buildKey(
+                  context,
+                  '3',
+                  onTap: () => displayProvider.inputDigit('3'),
+                ),
+                _buildKey(
+                  context,
+                  '+',
+                  onTap: () => displayProvider.performOperation('+'),
+                  color: AppTheme.primaryTeal,
+                  textColor: Colors.white,
+                ),
               ],
             ),
           ),
           Expanded(
             child: Row(
               children: [
-                _buildKey(context, '00', onTap: () {
-                  displayProvider.inputDigit('0');
-                  displayProvider.inputDigit('0');
-                }),
-                _buildKey(context, '0', onTap: () => displayProvider.inputDigit('0')),
+                _buildKey(
+                  context,
+                  '00',
+                  onTap: () {
+                    displayProvider.inputDigit('0');
+                    displayProvider.inputDigit('0');
+                  },
+                ),
+                _buildKey(
+                  context,
+                  '0',
+                  onTap: () => displayProvider.inputDigit('0'),
+                ),
                 _buildKey(context, '.', onTap: displayProvider.inputDecimal),
-                _buildKey(context, '=', onTap: displayProvider.calculateResult,
-                    color: AppTheme.accentGold, textColor: Colors.white),
+                _buildKey(
+                  context,
+                  '=',
+                  onTap: displayProvider.calculateResult,
+                  color: AppTheme.accentGold,
+                  textColor: Colors.white,
+                ),
               ],
             ),
           ),
@@ -589,7 +729,9 @@ class _ModernKeypad extends StatelessWidget {
             onLongPress: onLongPress,
             borderRadius: BorderRadius.circular(16),
             splashColor: (color ?? AppTheme.primaryTeal).withValues(alpha: 0.2),
-            highlightColor: (color ?? AppTheme.primaryTeal).withValues(alpha: 0.1),
+            highlightColor: (color ?? AppTheme.primaryTeal).withValues(
+              alpha: 0.1,
+            ),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),

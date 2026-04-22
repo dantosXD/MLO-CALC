@@ -33,7 +33,7 @@ class CoreCalculationService {
     // Round payment to cents for display
     return CalcResult.success(DecimalUtils.roundToCents(payment));
   }
-  
+
   CalcResult<double> calculateInterestOnlyPayment({
     required double loanAmount,
     required double interestRate,
@@ -133,10 +133,9 @@ class CoreCalculationService {
         continue;
       }
 
-      final double fVal =
-          loanAmount * r * factor - payment * (factor - 1);
-      final double dfVal = loanAmount *
-              (factor + (r * totalMonths * factor) / (1 + r)) -
+      final double fVal = loanAmount * r * factor - payment * (factor - 1);
+      final double dfVal =
+          loanAmount * (factor + (r * totalMonths * factor) / (1 + r)) -
           payment * totalMonths * factor / (1 + r);
 
       // Track best result so far (for fallback)

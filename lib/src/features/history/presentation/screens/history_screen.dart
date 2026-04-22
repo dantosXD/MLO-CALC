@@ -309,7 +309,7 @@ class _HistoryCard extends StatelessWidget {
         onTap: selectionMode ? onSelect : null,
         child: ListTile(
           leading: selectionMode
-                ? Checkbox(value: selected, onChanged: (_) => onSelect())
+              ? Checkbox(value: selected, onChanged: (_) => onSelect())
               : CircleAvatar(
                   backgroundColor: theme.colorScheme.primaryContainer,
                   child: Icon(

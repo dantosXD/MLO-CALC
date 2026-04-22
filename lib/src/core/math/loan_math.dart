@@ -3,6 +3,7 @@
 /// Provides core Time Value of Money (TVM) calculations for payment,
 /// principal, interest rate, and term solving.
 library;
+
 import 'dart:math';
 
 class LoanMath {
@@ -22,7 +23,7 @@ class LoanMath {
     }
 
     final double r = interestRate / 100 / 12;
-    
+
     // Interest-only payment: just the monthly interest
     if (interestOnly) {
       return loanAmount * r;
@@ -32,7 +33,7 @@ class LoanMath {
 
     return loanAmount * (r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
   }
-  
+
   /// Calculate Interest-Only Payment
   ///
   /// Formula: I = P * r
@@ -114,8 +115,8 @@ class LoanMath {
       final double factor = pow(1 + r, n).toDouble();
 
       final double fVal = loanAmount * r * factor - payment * (factor - 1);
-      final double dfVal = loanAmount *
-              (factor + ((r * n * factor) / (1 + r))) -
+      final double dfVal =
+          loanAmount * (factor + ((r * n * factor) / (1 + r))) -
           payment * n * factor / (1 + r);
 
       if (dfVal.abs() < 1e-9) break;

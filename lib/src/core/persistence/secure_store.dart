@@ -3,10 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 abstract class SecureStore {
   Future<String?> read(String key);
 
-  Future<void> write({
-    required String key,
-    required String value,
-  });
+  Future<void> write({required String key, required String value});
 
   Future<void> delete(String key);
 
@@ -15,7 +12,7 @@ abstract class SecureStore {
 
 class FlutterSecureStoreBackend implements SecureStore {
   FlutterSecureStoreBackend({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
@@ -25,10 +22,7 @@ class FlutterSecureStoreBackend implements SecureStore {
   }
 
   @override
-  Future<void> write({
-    required String key,
-    required String value,
-  }) {
+  Future<void> write({required String key, required String value}) {
     return _storage.write(key: key, value: value);
   }
 
@@ -62,10 +56,7 @@ class InMemorySecureStore implements SecureStore {
   }
 
   @override
-  Future<void> write({
-    required String key,
-    required String value,
-  }) async {
+  Future<void> write({required String key, required String value}) async {
     _values[key] = value;
   }
 }

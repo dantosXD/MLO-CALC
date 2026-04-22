@@ -14,7 +14,7 @@ class LoanProgramEditor extends StatefulWidget {
 
 class _LoanProgramEditorState extends State<LoanProgramEditor> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _housingRatioController;
@@ -25,7 +25,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
   late TextEditingController _annualMiController;
   late TextEditingController _fundingFeeController;
   late TextEditingController _miCancelLtvController;
-  
+
   LoanProgramType _selectedType = LoanProgramType.custom;
   bool _hasMiConfig = false;
   bool _autoCalculateMi = true;
@@ -37,7 +37,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
   void initState() {
     super.initState();
     final p = widget.program;
-    
+
     _nameController = TextEditingController(text: p?.name ?? '');
     _descriptionController = TextEditingController(text: p?.description ?? '');
     _housingRatioController = TextEditingController(
@@ -52,7 +52,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
     _maxLoanAmountController = TextEditingController(
       text: p?.maxLoanAmount?.toString() ?? '',
     );
-    
+
     // MI Config
     _upfrontMiController = TextEditingController(
       text: p?.miConfig?.upfrontPercent?.toString() ?? '',
@@ -66,7 +66,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
     _miCancelLtvController = TextEditingController(
       text: p?.miConfig?.cancelationLtvThreshold?.toString() ?? '80',
     );
-    
+
     _selectedType = p?.type ?? LoanProgramType.custom;
     _hasMiConfig = p?.miConfig != null;
     _autoCalculateMi = p?.miConfig?.autoCalculate ?? true;
@@ -171,7 +171,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
             ),
 
             const SizedBox(height: 24),
-            
+
             // DTI Ratios Section
             _SectionHeader(title: 'Qualifying Ratios'),
             const SizedBox(height: 12),
@@ -222,7 +222,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
             ),
 
             const SizedBox(height: 24),
-            
+
             // Loan Limits Section
             _SectionHeader(title: 'Loan Limits'),
             const SizedBox(height: 12),
@@ -264,7 +264,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
             ),
 
             const SizedBox(height: 24),
-            
+
             // Mortgage Insurance Section
             _SectionHeader(title: 'Mortgage Insurance'),
             const SizedBox(height: 8),
@@ -274,7 +274,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
               value: _hasMiConfig,
               onChanged: (value) => setState(() => _hasMiConfig = value),
             ),
-            
+
             if (_hasMiConfig) ...[
               const SizedBox(height: 12),
               SwitchListTile(
@@ -417,7 +417,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
 
     try {
       final provider = context.read<LoanProgramsProvider>();
-      
+
       MortgageInsuranceConfig? miConfig;
       if (_hasMiConfig) {
         miConfig = MortgageInsuranceConfig(
@@ -466,9 +466,9 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) {
@@ -493,9 +493,9 @@ class _SectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         Expanded(child: Divider(color: Theme.of(context).dividerColor)),

@@ -625,10 +625,7 @@ class _SecondaryFieldsRow extends StatelessWidget {
                 (v) => calc.setDownPayment(value: v),
               ),
               subtitle: downPaymentPct != null
-                  ? CurrencyFormatter.formatPercent(
-                      downPaymentPct,
-                      decimals: 2,
-                    )
+                  ? CurrencyFormatter.formatPercent(downPaymentPct, decimals: 2)
                   : null,
             );
           },

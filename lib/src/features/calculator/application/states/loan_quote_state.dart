@@ -68,16 +68,17 @@ class LoanQuoteState {
   }) {
     return LoanQuoteState(
       loanAmount: clearLoanAmount ? null : (loanAmount ?? this.loanAmount),
-      interestRate:
-          clearInterestRate ? null : (interestRate ?? this.interestRate),
+      interestRate: clearInterestRate
+          ? null
+          : (interestRate ?? this.interestRate),
       termYears: clearTermYears ? null : (termYears ?? this.termYears),
       payment: clearPayment ? null : (payment ?? this.payment),
       price: clearPrice ? null : (price ?? this.price),
       downPayment: clearDownPayment ? null : (downPayment ?? this.downPayment),
-      propertyTax:
-          clearPropertyTax ? null : (propertyTax ?? this.propertyTax),
-      homeInsurance:
-          clearHomeInsurance ? null : (homeInsurance ?? this.homeInsurance),
+      propertyTax: clearPropertyTax ? null : (propertyTax ?? this.propertyTax),
+      homeInsurance: clearHomeInsurance
+          ? null
+          : (homeInsurance ?? this.homeInsurance),
       mortgageInsurance: clearMortgageInsurance
           ? null
           : (mortgageInsurance ?? this.mortgageInsurance),
@@ -90,8 +91,9 @@ class LoanQuoteState {
           : (calculationError ?? this.calculationError),
       isInterestOnly: isInterestOnly ?? this.isInterestOnly,
       displayMode: displayMode ?? this.displayMode,
-      presentedValue:
-          clearPresentedValue ? null : (presentedValue ?? this.presentedValue),
+      presentedValue: clearPresentedValue
+          ? null
+          : (presentedValue ?? this.presentedValue),
     );
   }
 

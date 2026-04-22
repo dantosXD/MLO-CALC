@@ -6,10 +6,7 @@ import 'package:loan_ranger/src/core/utils/formatters.dart';
 class AmortizationChart extends StatelessWidget {
   final List<AmortizationEntry> data;
 
-  const AmortizationChart({
-    super.key,
-    required this.data,
-  });
+  const AmortizationChart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -178,15 +175,9 @@ class AmortizationChart extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _LegendItem(
-                  color: colorScheme.primary,
-                  label: 'Principal',
-                ),
+                _LegendItem(color: colorScheme.primary, label: 'Principal'),
                 const SizedBox(width: 24),
-                _LegendItem(
-                  color: colorScheme.secondary,
-                  label: 'Interest',
-                ),
+                _LegendItem(color: colorScheme.secondary, label: 'Interest'),
               ],
             ),
           ],
@@ -213,10 +204,7 @@ class _LegendItem extends StatelessWidget {
   final Color color;
   final String label;
 
-  const _LegendItem({
-    required this.color,
-    required this.label,
-  });
+  const _LegendItem({required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -231,10 +219,7 @@ class _LegendItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }

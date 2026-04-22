@@ -77,9 +77,9 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
             tooltip: 'Save preset',
             onPressed: () {
               context.read<ArmWizardProvider>().savePreset();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ARM preset saved')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('ARM preset saved')));
             },
           ),
         ],
@@ -116,7 +116,10 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
                           ElevatedButton(
                             onPressed: details.onStepContinue,
                             child: Text(
-                                _currentStep == steps.length - 1 ? 'Done' : 'Next'),
+                              _currentStep == steps.length - 1
+                                  ? 'Done'
+                                  : 'Next',
+                            ),
                           ),
                           const SizedBox(width: 12),
                           if (_currentStep > 0)
@@ -151,10 +154,7 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
                 ),
                 const SizedBox(height: 24),
                 if (provider.result != null)
-                  _ArmResultCard(
-                    result: provider.result!,
-                    theme: theme,
-                  ),
+                  _ArmResultCard(result: provider.result!, theme: theme),
                 const SizedBox(height: 24),
               ],
             ),
@@ -174,8 +174,10 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
               label: 'Loan Amount',
               suffix: '\$',
               value: scenario.loanAmount,
-              onChanged: (value) => _updateScenario(context,
-                  scenario.copyWith(loanAmount: value)),
+              onChanged: (value) => _updateScenario(
+                context,
+                scenario.copyWith(loanAmount: value),
+              ),
             ),
             _NumberField(
               label: 'Term (years)',
@@ -186,8 +188,10 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
             _NumberField(
               label: 'Initial Rate (%)',
               value: scenario.initialRate,
-              onChanged: (value) =>
-                  _updateScenario(context, scenario.copyWith(initialRate: value)),
+              onChanged: (value) => _updateScenario(
+                context,
+                scenario.copyWith(initialRate: value),
+              ),
             ),
           ],
         ),
@@ -306,7 +310,9 @@ class _NumberFieldState extends State<_NumberField> {
       final newValueFormatted = _format(widget.value);
       if (_controller.text != newValueFormatted) {
         _controller.text = newValueFormatted;
-        _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+        _controller.selection = TextSelection.collapsed(
+          offset: _controller.text.length,
+        );
       }
     }
   }
@@ -348,10 +354,7 @@ class _NumberFieldState extends State<_NumberField> {
 }
 
 class _ArmResultCard extends StatelessWidget {
-  const _ArmResultCard({
-    required this.result,
-    required this.theme,
-  });
+  const _ArmResultCard({required this.result, required this.theme});
 
   final ArmScheduleResult result;
   final ThemeData theme;
@@ -364,10 +367,7 @@ class _ArmResultCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'ARM Schedule',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('ARM Schedule', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Wrap(
               spacing: 12,
@@ -412,10 +412,7 @@ class _ArmResultCard extends StatelessWidget {
 }
 
 class _ResultChip extends StatelessWidget {
-  const _ResultChip({
-    required this.label,
-    required this.value,
-  });
+  const _ResultChip({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -429,17 +426,15 @@ class _ResultChip extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(letterSpacing: 0.8),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(letterSpacing: 0.8),
           ),
           Text(
             value,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),

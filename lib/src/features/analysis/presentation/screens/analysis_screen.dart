@@ -342,7 +342,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                  child: Text(
+                                    child: Text(
                                       'Paying bi-weekly reduces your term by ${CurrencyFormatter.formatYears(calculatorProvider.termYears! - _biWeeklyResults!['newTermYears']!)}!',
                                       style: const TextStyle(
                                         fontSize: 12,

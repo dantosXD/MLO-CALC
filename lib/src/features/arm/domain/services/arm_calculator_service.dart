@@ -13,8 +13,10 @@ class ArmCalculatorService {
   ArmScheduleResult calculateSchedule(ArmScenario scenario) {
     final int totalMonths = max(1, (scenario.termYears * 12).round());
     final int fixedMonths = max(1, (scenario.initialFixedYears * 12).round());
-    final int adjustmentMonths =
-        max(1, (scenario.adjustmentFrequencyYears * 12).round());
+    final int adjustmentMonths = max(
+      1,
+      (scenario.adjustmentFrequencyYears * 12).round(),
+    );
 
     double balance = scenario.loanAmount;
     double currentRate = scenario.initialRate;
@@ -33,18 +35,22 @@ class ArmCalculatorService {
         monthsRemaining,
       );
 
-      final double monthlyPayment = DecimalUtils.roundToCents(_resolvePayment(
-        balance: balance,
-        rate: currentRate,
-        remainingMonths: monthsRemaining,
-      ));
+      final double monthlyPayment = DecimalUtils.roundToCents(
+        _resolvePayment(
+          balance: balance,
+          rate: currentRate,
+          remainingMonths: monthsRemaining,
+        ),
+      );
 
       double periodInterest = 0;
       double periodPrincipal = 0;
 
       for (int i = 0; i < periodLength; i++) {
         final double monthlyRate = currentRate / 100 / 12;
-        final double interestPaid = DecimalUtils.roundToCents(balance * monthlyRate);
+        final double interestPaid = DecimalUtils.roundToCents(
+          balance * monthlyRate,
+        );
         double principalPaid = monthlyPayment - interestPaid;
 
         if (principalPaid <= 0) {
@@ -79,7 +85,9 @@ class ArmCalculatorService {
           monthlyPayment: monthlyPayment,
           principalPaid: DecimalUtils.roundToCents(periodPrincipal),
           interestPaid: DecimalUtils.roundToCents(periodInterest),
-          endingBalance: DecimalUtils.isEffectivelyZero(balance) ? 0 : DecimalUtils.roundToCents(balance),
+          endingBalance: DecimalUtils.isEffectivelyZero(balance)
+              ? 0
+              : DecimalUtils.roundToCents(balance),
         ),
       );
 

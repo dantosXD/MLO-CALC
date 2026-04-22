@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
@@ -52,7 +51,8 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
     _recordingController.text = costs.recordingFees.toStringAsFixed(2);
     _transferTaxController.text = costs.transferTaxes.toStringAsFixed(2);
     _prepaidInterestController.text = costs.prepaidInterest.toStringAsFixed(2);
-    _prepaidInsuranceController.text = costs.prepaidHomeInsurance.toStringAsFixed(2);
+    _prepaidInsuranceController.text = costs.prepaidHomeInsurance
+        .toStringAsFixed(2);
     _prepaidTaxController.text = costs.prepaidPropertyTaxes.toStringAsFixed(2);
     _otherFeesController.text = costs.otherFees.toStringAsFixed(2);
   }
@@ -73,7 +73,8 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
       recordingFees: double.tryParse(_recordingController.text) ?? 0,
       transferTaxes: double.tryParse(_transferTaxController.text) ?? 0,
       prepaidInterest: double.tryParse(_prepaidInterestController.text) ?? 0,
-      prepaidHomeInsurance: double.tryParse(_prepaidInsuranceController.text) ?? 0,
+      prepaidHomeInsurance:
+          double.tryParse(_prepaidInsuranceController.text) ?? 0,
       prepaidPropertyTaxes: double.tryParse(_prepaidTaxController.text) ?? 0,
       otherFees: double.tryParse(_otherFeesController.text) ?? 0,
     );
@@ -127,15 +128,20 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
                   ),
                 ),
               ),
-              
+
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final estimateButton = TextButton.icon(
                       onPressed: () {
-                        context.read<CalculatorProvider>().estimateClosingCosts();
+                        context
+                            .read<CalculatorProvider>()
+                            .estimateClosingCosts();
                         _loadValues();
                       },
                       icon: const Icon(Icons.auto_fix_high),
@@ -176,7 +182,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
                   },
                 ),
               ),
-              
+
               const Divider(),
 
               // Form
@@ -199,22 +205,34 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
 
                     const SizedBox(height: 16),
                     _buildSectionTitle(context, 'Title & Escrow'),
-                    _buildInput('Lender Title Insurance', _titleLenderController),
+                    _buildInput(
+                      'Lender Title Insurance',
+                      _titleLenderController,
+                    ),
                     _buildInput('Owner Title Insurance', _titleOwnerController),
-                    _buildInput('Settlement/Closing Fee', _settlementController),
+                    _buildInput(
+                      'Settlement/Closing Fee',
+                      _settlementController,
+                    ),
                     _buildInput('Recording Fees', _recordingController),
                     _buildInput('Transfer Taxes', _transferTaxController),
 
                     const SizedBox(height: 16),
                     _buildSectionTitle(context, 'Prepaids & Reserves'),
                     _buildInput('Prepaid Interest', _prepaidInterestController),
-                    _buildInput('Prepaid Home Insurance', _prepaidInsuranceController),
-                    _buildInput('Prepaid Property Taxes', _prepaidTaxController),
+                    _buildInput(
+                      'Prepaid Home Insurance',
+                      _prepaidInsuranceController,
+                    ),
+                    _buildInput(
+                      'Prepaid Property Taxes',
+                      _prepaidTaxController,
+                    ),
 
                     const SizedBox(height: 16),
                     _buildSectionTitle(context, 'Other'),
                     _buildInput('Other Fees', _otherFeesController),
-                    
+
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -225,18 +243,29 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
                 builder: (context, provider, child) {
                   final closingCosts = provider.closingCosts.total;
                   final cashToClose = provider.cashToClose;
-                  
+
                   return Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       border: Border(top: BorderSide(color: Colors.grey[300]!)),
                     ),
                     child: Column(
                       children: [
-                        _buildSummaryRow(context, 'Total Closing Costs', closingCosts),
+                        _buildSummaryRow(
+                          context,
+                          'Total Closing Costs',
+                          closingCosts,
+                        ),
                         const SizedBox(height: 8),
-                        _buildSummaryRow(context, 'Estimated Cash to Close', cashToClose, isTotal: true),
+                        _buildSummaryRow(
+                          context,
+                          'Estimated Cash to Close',
+                          cashToClose,
+                          isTotal: true,
+                        ),
                       ],
                     ),
                   );
@@ -272,31 +301,41 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
           labelText: label,
           prefixText: '\$ ',
           border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
         onChanged: (_) => _updateCosts(),
       ),
     );
   }
 
-  Widget _buildSummaryRow(BuildContext context, String label, double value, {bool isTotal = false}) {
+  Widget _buildSummaryRow(
+    BuildContext context,
+    String label,
+    double value, {
+    bool isTotal = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: isTotal 
-            ? Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
-            : Theme.of(context).textTheme.bodyLarge,
+          style: isTotal
+              ? Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
+              : Theme.of(context).textTheme.bodyLarge,
         ),
         Text(
           CurrencyFormatter.formatCurrency(value),
           style: isTotal
-            ? Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              )
-            : Theme.of(context).textTheme.bodyLarge,
+              ? Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                )
+              : Theme.of(context).textTheme.bodyLarge,
         ),
       ],
     );

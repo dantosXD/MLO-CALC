@@ -3,7 +3,9 @@ import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 /// Unit conversion modes for various calculator inputs
 enum TimeUnit { monthly, annual }
+
 enum AmountUnit { percentage, dollar }
+
 enum TermUnit { years, months }
 
 /// Provider for unit conversion preferences
@@ -13,7 +15,7 @@ class UnitConversionProvider with ChangeNotifier {
   static const String _termKey = 'unit_term';
 
   UnitConversionProvider({PreferenceStore? preferenceStore})
-      : _preferences = preferenceStore ?? PreferenceStore();
+    : _preferences = preferenceStore ?? PreferenceStore();
 
   final PreferenceStore _preferences;
 
@@ -52,9 +54,7 @@ class UnitConversionProvider with ChangeNotifier {
   }
 
   void toggleTermUnit() {
-    _termUnit = _termUnit == TermUnit.years
-        ? TermUnit.months
-        : TermUnit.years;
+    _termUnit = _termUnit == TermUnit.years ? TermUnit.months : TermUnit.years;
     _save();
     notifyListeners();
   }
@@ -122,14 +122,13 @@ class UnitConversionProvider with ChangeNotifier {
   }
 
   // Labels for UI
-  String get taxInsuranceLabel => 
+  String get taxInsuranceLabel =>
       _taxInsuranceUnit == TimeUnit.monthly ? '/month' : '/year';
-  
-  String get downPaymentLabel => 
+
+  String get downPaymentLabel =>
       _downPaymentUnit == AmountUnit.percentage ? '%' : '\$';
-  
-  String get termLabel => 
-      _termUnit == TermUnit.years ? 'years' : 'months';
+
+  String get termLabel => _termUnit == TermUnit.years ? 'years' : 'months';
 
   Future<void> load() async {
     try {
@@ -137,13 +136,13 @@ class UnitConversionProvider with ChangeNotifier {
 
       final taxIns = _preferences.getString(_taxInsuranceKey);
       if (taxIns == 'monthly') _taxInsuranceUnit = TimeUnit.monthly;
-      
+
       final downPmt = _preferences.getString(_downPaymentKey);
       if (downPmt == 'dollar') _downPaymentUnit = AmountUnit.dollar;
-      
+
       final term = _preferences.getString(_termKey);
       if (term == 'months') _termUnit = TermUnit.months;
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('UnitConversionProvider: failed to load preferences: $e');
@@ -155,7 +154,8 @@ class UnitConversionProvider with ChangeNotifier {
       await _preferences.load();
       await _preferences.setString(
         _taxInsuranceKey,
-          _taxInsuranceUnit == TimeUnit.monthly ? 'monthly' : 'annual');
+        _taxInsuranceUnit == TimeUnit.monthly ? 'monthly' : 'annual',
+      );
       await _preferences.setString(
         _downPaymentKey,
         _downPaymentUnit == AmountUnit.dollar ? 'dollar' : 'percentage',
@@ -242,10 +242,14 @@ class UnitSegmentedButton<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SegmentedButton<T>(
-      segments: options.map((opt) => ButtonSegment<T>(
-        value: opt.value,
-        label: Text(opt.label, style: const TextStyle(fontSize: 11)),
-      )).toList(),
+      segments: options
+          .map(
+            (opt) => ButtonSegment<T>(
+              value: opt.value,
+              label: Text(opt.label, style: const TextStyle(fontSize: 11)),
+            ),
+          )
+          .toList(),
       selected: {value},
       onSelectionChanged: (selection) {
         if (selection.isNotEmpty) {

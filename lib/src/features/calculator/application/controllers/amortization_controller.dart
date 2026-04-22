@@ -9,8 +9,8 @@ class AmortizationController with ChangeNotifier {
   AmortizationController({
     required AmortizationService amortizationService,
     required LoanQuoteController quoteController,
-  })  : _amortizationService = amortizationService,
-        _quoteController = quoteController;
+  }) : _amortizationService = amortizationService,
+       _quoteController = quoteController;
 
   final AmortizationService _amortizationService;
   final LoanQuoteController _quoteController;

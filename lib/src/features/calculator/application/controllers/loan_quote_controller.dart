@@ -27,8 +27,8 @@ class LoanQuoteController with ChangeNotifier {
   LoanQuoteController({
     required CoreCalculationService coreCalculationService,
     required HistoryController historyController,
-  })  : _coreCalculationService = coreCalculationService,
-        _historyController = historyController;
+  }) : _coreCalculationService = coreCalculationService,
+       _historyController = historyController;
 
   final CoreCalculationService _coreCalculationService;
   final HistoryController _historyController;
@@ -200,10 +200,7 @@ class LoanQuoteController with ChangeNotifier {
       );
       _unregisterManualInput(_ManualVar.loanAmount);
     } else {
-      _state = _state.copyWith(
-        loanAmount: value,
-        clearCalculationError: true,
-      );
+      _state = _state.copyWith(loanAmount: value, clearCalculationError: true);
       _registerManualInput(_ManualVar.loanAmount);
     }
 
@@ -256,10 +253,7 @@ class LoanQuoteController with ChangeNotifier {
       );
       _unregisterManualInput(_ManualVar.termYears);
     } else {
-      _state = _state.copyWith(
-        termYears: value,
-        clearCalculationError: true,
-      );
+      _state = _state.copyWith(termYears: value, clearCalculationError: true);
       _registerManualInput(_ManualVar.termYears);
     }
 
@@ -277,16 +271,10 @@ class LoanQuoteController with ChangeNotifier {
   void setPayment({double? value}) {
     if (!_validateValue(value, FinancialValidators.validatePayment)) return;
     if (value == null) {
-      _state = _state.copyWith(
-        clearPayment: true,
-        clearCalculationError: true,
-      );
+      _state = _state.copyWith(clearPayment: true, clearCalculationError: true);
       _unregisterManualInput(_ManualVar.payment);
     } else {
-      _state = _state.copyWith(
-        payment: value,
-        clearCalculationError: true,
-      );
+      _state = _state.copyWith(payment: value, clearCalculationError: true);
       _registerManualInput(_ManualVar.payment);
     }
 
@@ -449,10 +437,7 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void clearTermYears() {
-    _state = _state.copyWith(
-      clearTermYears: true,
-      clearCalculationError: true,
-    );
+    _state = _state.copyWith(clearTermYears: true, clearCalculationError: true);
     _unregisterManualInput(_ManualVar.termYears);
     final didCalculate = calculate();
     if (!didCalculate) {
@@ -461,10 +446,7 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void clearPayment() {
-    _state = _state.copyWith(
-      clearPayment: true,
-      clearCalculationError: true,
-    );
+    _state = _state.copyWith(clearPayment: true, clearCalculationError: true);
     _unregisterManualInput(_ManualVar.payment);
     final didCalculate = calculate();
     if (!didCalculate) {

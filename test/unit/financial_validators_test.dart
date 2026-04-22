@@ -108,14 +108,29 @@ void main() {
 
   group('FinancialValidators - Down Payment', () {
     test('Valid percentage down payments pass', () {
-      expect(FinancialValidators.validateDownPayment(20, 400000).isValid, isTrue);
-      expect(FinancialValidators.validateDownPayment(3.5, 300000).isValid, isTrue);
-      expect(FinancialValidators.validateDownPayment(50, 500000).isValid, isTrue);
+      expect(
+        FinancialValidators.validateDownPayment(20, 400000).isValid,
+        isTrue,
+      );
+      expect(
+        FinancialValidators.validateDownPayment(3.5, 300000).isValid,
+        isTrue,
+      );
+      expect(
+        FinancialValidators.validateDownPayment(50, 500000).isValid,
+        isTrue,
+      );
     });
 
     test('Valid flat down payments pass', () {
-      expect(FinancialValidators.validateDownPayment(50000, 250000).isValid, isTrue);
-      expect(FinancialValidators.validateDownPayment(100000, 500000).isValid, isTrue);
+      expect(
+        FinancialValidators.validateDownPayment(50000, 250000).isValid,
+        isTrue,
+      );
+      expect(
+        FinancialValidators.validateDownPayment(100000, 500000).isValid,
+        isTrue,
+      );
     });
 
     test('Down payment exceeding price fails', () {
@@ -141,8 +156,8 @@ void main() {
     test('Sufficient payment passes', () {
       final result = FinancialValidators.validatePaymentSufficiency(
         200000, // loan
-        5.0,    // rate
-        1200,   // payment
+        5.0, // rate
+        1200, // payment
       );
       expect(result.isValid, isTrue);
     });
@@ -150,17 +165,34 @@ void main() {
     test('Insufficient payment fails', () {
       final result = FinancialValidators.validatePaymentSufficiency(
         200000, // loan
-        6.0,    // rate
-        900,    // payment (less than monthly interest)
+        6.0, // rate
+        900, // payment (less than monthly interest)
       );
       expect(result.isValid, isFalse);
       expect(result.errorMessage, contains('exceed minimum interest'));
     });
 
     test('Missing values allow validation to pass', () {
-      expect(FinancialValidators.validatePaymentSufficiency(null, 5.0, 1000).isValid, isTrue);
-      expect(FinancialValidators.validatePaymentSufficiency(200000, null, 1000).isValid, isTrue);
-      expect(FinancialValidators.validatePaymentSufficiency(200000, 5.0, null).isValid, isTrue);
+      expect(
+        FinancialValidators.validatePaymentSufficiency(null, 5.0, 1000).isValid,
+        isTrue,
+      );
+      expect(
+        FinancialValidators.validatePaymentSufficiency(
+          200000,
+          null,
+          1000,
+        ).isValid,
+        isTrue,
+      );
+      expect(
+        FinancialValidators.validatePaymentSufficiency(
+          200000,
+          5.0,
+          null,
+        ).isValid,
+        isTrue,
+      );
     });
   });
 
@@ -187,11 +219,16 @@ void main() {
   group('FinancialValidators - Input Length', () {
     test('Normal length inputs pass', () {
       expect(FinancialValidators.validateInputLength('12345').isValid, isTrue);
-      expect(FinancialValidators.validateInputLength('123456789012345').isValid, isTrue);
+      expect(
+        FinancialValidators.validateInputLength('123456789012345').isValid,
+        isTrue,
+      );
     });
 
     test('Too long input fails', () {
-      final result = FinancialValidators.validateInputLength('1234567890123456');
+      final result = FinancialValidators.validateInputLength(
+        '1234567890123456',
+      );
       expect(result.isValid, isFalse);
       expect(result.errorMessage, contains('too long'));
     });
@@ -215,7 +252,10 @@ void main() {
     test('Negative optional field values fail', () {
       expect(FinancialValidators.validatePropertyTax(-100).isValid, isFalse);
       expect(FinancialValidators.validateInsurance(-50).isValid, isFalse);
-      expect(FinancialValidators.validateMonthlyExpenses(-200).isValid, isFalse);
+      expect(
+        FinancialValidators.validateMonthlyExpenses(-200).isValid,
+        isFalse,
+      );
       expect(FinancialValidators.validateMonthlyDebt(-500).isValid, isFalse);
     });
   });

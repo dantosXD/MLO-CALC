@@ -1,8 +1,5 @@
 class ShareTemplateRenderer {
-  static String render(
-    String template,
-    Map<String, String> tokens,
-  ) {
+  static String render(String template, Map<String, String> tokens) {
     var out = template;
     for (final entry in tokens.entries) {
       out = out.replaceAll('{{${entry.key}}}', entry.value);
