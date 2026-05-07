@@ -164,6 +164,21 @@ class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel 
     return _initializeFuture ??= _loadState();
   }
 
+  /// Pre-fills fields that have no persisted value with MLO-defined defaults.
+  /// Only rate and term are applied here; percentage-based PITI fields require
+  /// a purchase price which is not known at startup.
+  void applyDefaultsIfEmpty({
+    double? interestRate,
+    double? termYears,
+  }) {
+    if (this.interestRate == null && interestRate != null) {
+      setInterestRate(value: interestRate);
+    }
+    if (this.termYears == null && termYears != null) {
+      setTermYears(value: termYears);
+    }
+  }
+
   @override
   void dispose() {
     _saveTimer?.cancel();

@@ -14,6 +14,7 @@ import 'package:loan_ranger/src/features/comparison/presentation/screens/compari
 import 'package:loan_ranger/src/features/loan_programs/domain/models/loan_program.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/widgets/loan_program_editor.dart';
 import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
+import 'package:loan_ranger/src/features/settings/presentation/screens/settings_screen.dart';
 import 'package:loan_ranger/src/features/workspace/presentation/screens/workspace_dashboard_screen.dart';
 
 import '../models/loan_parameters_read_model.dart';
@@ -66,6 +67,10 @@ class AppRouter extends ChangeNotifier {
     return _push<String>(
       (_) => const WorkspaceDashboardScreen(),
     );
+  }
+
+  Future<void> openSettings() {
+    return _push((_) => const SettingsScreen());
   }
 
   Future<void> openCalculatorLayoutPreview() {

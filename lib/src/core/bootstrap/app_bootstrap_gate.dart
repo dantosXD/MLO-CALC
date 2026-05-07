@@ -8,6 +8,7 @@ import '../../features/calculator/application/providers/layout_preference_provid
 import '../../features/loan_programs/application/providers/loan_programs_provider.dart';
 import '../../features/nlp/application/providers/nlp_settings_provider.dart';
 import '../../features/qualification/application/providers/qualifying_ratios_provider.dart';
+import '../../features/settings/domain/providers/mlo_profile_provider.dart';
 import '../../features/share/application/providers/share_templates_provider.dart';
 import '../utils/unit_conversion.dart';
 
@@ -43,6 +44,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
     final programs = context.read<LoanProgramsProvider>();
     final templates = context.read<ShareTemplatesProvider>();
     final nlp = context.read<NlpSettingsProvider>();
+    final mloProfile = context.read<MloProfileProvider>();
 
     await connectivity.initialize();
     await analytics.initialize();
@@ -54,7 +56,14 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
       programs.load(),
       templates.load(),
       nlp.load(),
+      mloProfile.load(),
     ]);
+
+    // Apply MLO-defined defaults to fields with no prior session value
+    calculator.applyDefaultsIfEmpty(
+      interestRate: mloProfile.defaultInterestRate,
+      termYears: mloProfile.defaultTermYears,
+    );
   }
 
   @override

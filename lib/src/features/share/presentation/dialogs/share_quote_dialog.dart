@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:loan_ranger/src/features/share/application/providers/share_templates_provider.dart';
 import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
 import 'package:loan_ranger/src/features/share/domain/models/share_template.dart';
@@ -91,6 +92,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
   Map<String, String> get _tokens => widget.data.toTokenMap(
         borrowerName: _borrowerController.text.trim(),
         scenarioName: _scenarioController.text.trim(),
+        mloTokens: context.read<MloProfileProvider>().toTokenMap(),
       );
 
   void _applyTemplate(ShareTemplate template) {
