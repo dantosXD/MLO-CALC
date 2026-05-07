@@ -366,7 +366,7 @@ class _CalculatorDefaultsSectionState
                       hint: '6.875',
                       icon: Icons.percent,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true),
                       onChanged: (_) => _markDirty(),
                     ),
                   ),
@@ -393,7 +393,7 @@ class _CalculatorDefaultsSectionState
                       hint: '20',
                       icon: Icons.arrow_downward,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true),
                       onChanged: (_) => _markDirty(),
                     ),
                   ),
@@ -405,7 +405,7 @@ class _CalculatorDefaultsSectionState
                       hint: '1.2',
                       icon: Icons.account_balance_outlined,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true),
                       onChanged: (_) => _markDirty(),
                     ),
                   ),
@@ -421,7 +421,7 @@ class _CalculatorDefaultsSectionState
                       hint: '0.5',
                       icon: Icons.shield_outlined,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true),
                       onChanged: (_) => _markDirty(),
                     ),
                   ),
@@ -598,7 +598,8 @@ class _AiVoiceSection extends StatelessWidget {
       children: [
         const _SectionHeader(
           'AI / Voice Input',
-          subtitle: 'Requires a Google Gemini API key for natural-language queries.',
+          subtitle:
+              'Requires a Google Gemini API key for natural-language queries.',
         ),
         ListTile(
           leading: const Icon(Icons.key_outlined),
@@ -720,8 +721,8 @@ class _SettingsTextField extends StatelessWidget {
         hintText: hint,
         prefixIcon: Icon(icon),
         border: const OutlineInputBorder(),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12, vertical: 14),
       ),
     );
   }

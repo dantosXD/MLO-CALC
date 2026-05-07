@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/main.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/core/navigation/app_router.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/core/theme/theme_provider.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
@@ -18,6 +20,7 @@ import 'package:loan_ranger/src/features/loan_programs/application/providers/loa
 import 'package:loan_ranger/src/core/utils/unit_conversion.dart';
 import 'package:loan_ranger/src/core/services/analytics_service.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
+import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,6 +48,12 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: serviceLocator<AppRouter>()),
+        ChangeNotifierProvider(
+          create: (context) => MloProfileProvider(
+            preferenceStore: serviceLocator<PreferenceStore>(),
+          ),
+        ),
         ChangeNotifierProvider(create: (context) => LayoutPreferenceProvider()),
         ChangeNotifierProvider(create: (context) => CalculatorDisplayNotifier()),
         ChangeNotifierProvider(create: (context) => buildCalculatorProvider()),
