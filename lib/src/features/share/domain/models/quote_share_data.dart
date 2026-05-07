@@ -80,6 +80,7 @@ class QuoteShareData {
   Map<String, String> toTokenMap({
     String? borrowerName,
     String? scenarioName,
+    Map<String, String>? mloTokens,
   }) {
     final Map<String, String> tokens = <String, String>{};
 
@@ -124,7 +125,14 @@ class QuoteShareData {
         ? CurrencyFormatter.formatCurrency(downPayment, showDecimals: false)
         : '';
 
-    tokens['disclaimer'] =
+    // MLO identity tokens (populated from MloProfileProvider if provided)
+    tokens['mlo_name'] = mloTokens?['mlo_name'] ?? '';
+    tokens['mlo_nmls'] = mloTokens?['mlo_nmls'] ?? '';
+    tokens['mlo_company'] = mloTokens?['mlo_company'] ?? '';
+    tokens['mlo_phone'] = mloTokens?['mlo_phone'] ?? '';
+    tokens['mlo_email'] = mloTokens?['mlo_email'] ?? '';
+
+    tokens['disclaimer'] = mloTokens?['disclaimer'] ??
         'Estimates only. Not a loan offer. Taxes/insurance/MI may vary.';
 
     return tokens;

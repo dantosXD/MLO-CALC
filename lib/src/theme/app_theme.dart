@@ -29,17 +29,20 @@ class AppTheme {
   static const Color arithmeticButton = Color(0xFF6B7280);
   static const Color actionButton = Color(0xFF10B981);
 
-  static ThemeData lightTheme() {
-    final colorScheme = ColorScheme.light(
-      primary: primaryTeal,
-      secondary: accentGold,
-      tertiary: successGreen,
-      surface: surfaceLight,
-      error: errorRed,
-      onPrimary: textLight,
-      onSecondary: textPrimary,
-      onSurface: textPrimary,
-    );
+  static ThemeData lightTheme({Color? accent}) {
+    final seed = accent ?? primaryTeal;
+    final colorScheme = accent != null
+        ? ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light)
+        : ColorScheme.light(
+            primary: primaryTeal,
+            secondary: accentGold,
+            tertiary: successGreen,
+            surface: surfaceLight,
+            error: errorRed,
+            onPrimary: textLight,
+            onSecondary: textPrimary,
+            onSurface: textPrimary,
+          );
 
     return ThemeData(
       useMaterial3: true,
@@ -144,17 +147,20 @@ class AppTheme {
     );
   }
 
-  static ThemeData darkTheme() {
-    final colorScheme = ColorScheme.dark(
-      primary: primaryTeal,
-      secondary: accentGold,
-      tertiary: successGreen,
-      surface: surfaceDark,
-      error: errorRed,
-      onPrimary: textPrimary,
-      onSecondary: textLight,
-      onSurface: textLight,
-    );
+  static ThemeData darkTheme({Color? accent}) {
+    final seed = accent ?? primaryTeal;
+    final colorScheme = accent != null
+        ? ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark)
+        : ColorScheme.dark(
+            primary: primaryTeal,
+            secondary: accentGold,
+            tertiary: successGreen,
+            surface: surfaceDark,
+            error: errorRed,
+            onPrimary: textPrimary,
+            onSecondary: textLight,
+            onSurface: textLight,
+          );
 
     return ThemeData(
       useMaterial3: true,

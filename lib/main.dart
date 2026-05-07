@@ -28,6 +28,7 @@ import 'package:loan_ranger/src/core/utils/unit_conversion.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_cache_service.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
+import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:loan_ranger/src/features/share/application/providers/share_templates_provider.dart';
 import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
 import 'package:loan_ranger/src/features/share/presentation/dialogs/share_quote_dialog.dart';
@@ -46,6 +47,11 @@ Future<void> main() async {
 
 List<SingleChildWidget> buildAppProviders() => [
   ChangeNotifierProvider(create: (_) => ThemeProvider()),
+  ChangeNotifierProvider(
+    create: (_) => MloProfileProvider(
+      preferenceStore: serviceLocator<PreferenceStore>(),
+    ),
+  ),
   ChangeNotifierProvider.value(value: serviceLocator<ConnectivityService>()),
   Provider.value(value: serviceLocator<AnalyticsService>()),
   ChangeNotifierProvider.value(value: serviceLocator<AppRouter>()),
@@ -112,12 +118,13 @@ class LoanRangerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider, AppRouter>(
-      builder: (context, themeProvider, router, child) {
+    return Consumer3<ThemeProvider, AppRouter, MloProfileProvider>(
+      builder: (context, themeProvider, router, mloProfile, child) {
+        final accent = Color(mloProfile.accentColorValue);
         return MaterialApp(
           title: 'MLO-Calc - Professional Mortgage Calculator',
-          theme: AppTheme.lightTheme(),
-          darkTheme: AppTheme.darkTheme(),
+          theme: AppTheme.lightTheme(accent: accent),
+          darkTheme: AppTheme.darkTheme(accent: accent),
           themeMode: themeProvider.themeMode,
           navigatorKey: router.navigatorKey,
           home: const AppBootstrapGate(child: MainNavigator()),
@@ -157,8 +164,6 @@ class _MainNavigatorState extends State<MainNavigator> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool useRail = constraints.maxWidth >= 900;
@@ -205,17 +210,8 @@ class _MainNavigatorState extends State<MainNavigator> {
                 case 'how_to':
                   InfoDialog.show(context);
                   break;
-                case 'calc_layout_preview':
-                  context.read<AppRouter>().openCalculatorLayoutPreview();
-                  break;
-                case 'toggle_theme':
-                  themeProvider.toggleTheme();
-                  break;
                 case 'workspace':
                   _openWorkspaceDashboard(context);
-                  break;
-                case 'api_key':
-                  _showApiKeySheet(context);
                   break;
                 case 'loan_programs':
                   _openFeatureById(context, FeatureCatalog.loanProgramsId);
@@ -223,9 +219,20 @@ class _MainNavigatorState extends State<MainNavigator> {
                 case 'rent_vs_buy':
                   _openFeatureById(context, FeatureCatalog.rentVsBuyId);
                   break;
+                case 'settings':
+                  context.read<AppRouter>().openSettings();
+                  break;
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'settings',
+                child: ListTile(
+                  leading: Icon(Icons.tune_outlined),
+                  title: Text('Settings'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
               const PopupMenuItem(
                 value: 'how_to',
                 child: ListTile(
@@ -243,26 +250,6 @@ class _MainNavigatorState extends State<MainNavigator> {
                 ),
               ),
               const PopupMenuItem(
-                value: 'calc_layout_preview',
-                child: ListTile(
-                  leading: Icon(Icons.dashboard_customize_outlined),
-                  title: Text('Calculator Layout Preview'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'toggle_theme',
-                child: ListTile(
-                  leading: Icon(
-                    themeProvider.themeMode == ThemeMode.light
-                        ? Icons.dark_mode_outlined
-                        : Icons.light_mode_outlined,
-                  ),
-                  title: const Text('Toggle theme'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
                 value: 'loan_programs',
                 child: ListTile(
                   leading: Icon(Icons.account_balance),
@@ -275,14 +262,6 @@ class _MainNavigatorState extends State<MainNavigator> {
                 child: ListTile(
                   leading: Icon(Icons.home_work),
                   title: Text('Rent vs Buy'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'api_key',
-                child: ListTile(
-                  leading: Icon(Icons.key),
-                  title: Text('API Key'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -351,85 +330,6 @@ class _MainNavigatorState extends State<MainNavigator> {
                   destinations: _destinations,
                   elevation: 8,
                 ),
-        );
-      },
-    );
-  }
-
-  void _showApiKeySheet(BuildContext context) {
-    final settings = context.read<NlpSettingsProvider>();
-    final controller = TextEditingController(text: settings.apiKey ?? '');
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        final navigator = Navigator.of(context);
-        final messenger = ScaffoldMessenger.of(context);
-
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Gemini API Key',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'API Key',
-                  hintText: 'Enter your Gemini API key',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-                obscureText: true,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      await settings.setApiKey(controller.text);
-                      if (!mounted) return;
-                      navigator.pop();
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('API key saved')),
-                      );
-                    },
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Save'),
-                  ),
-                  const SizedBox(width: 12),
-                  TextButton(
-                    onPressed: () async {
-                      controller.clear();
-                      await settings.setApiKey(null);
-                      if (!mounted) return;
-                      navigator.pop();
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('API key cleared')),
-                      );
-                    },
-                    child: const Text('Clear'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Your key is stored locally on this device using secure storage.',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
-              ),
-            ],
-          ),
         );
       },
     );
