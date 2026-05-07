@@ -112,12 +112,12 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
 
   Future<void> _save() async {
     await context.read<MloProfileProvider>().saveProfile(
-          name: _nameCtrl.text.trim(),
-          nmls: _nmlsCtrl.text.trim(),
-          company: _companyCtrl.text.trim(),
-          phone: _phoneCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
-        );
+      name: _nameCtrl.text.trim(),
+      nmls: _nmlsCtrl.text.trim(),
+      company: _companyCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+    );
     if (!mounted) return;
     setState(() => _dirty = false);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -326,12 +326,12 @@ class _CalculatorDefaultsSectionState
 
   Future<void> _save() async {
     await context.read<MloProfileProvider>().saveCalculatorDefaults(
-          interestRate: double.tryParse(_rateCtrl.text),
-          termYears: double.tryParse(_termCtrl.text),
-          downPaymentPct: double.tryParse(_downCtrl.text),
-          propertyTaxRate: double.tryParse(_taxCtrl.text),
-          insuranceRate: double.tryParse(_insCtrl.text),
-        );
+      interestRate: double.tryParse(_rateCtrl.text),
+      termYears: double.tryParse(_termCtrl.text),
+      downPaymentPct: double.tryParse(_downCtrl.text),
+      propertyTaxRate: double.tryParse(_taxCtrl.text),
+      insuranceRate: double.tryParse(_insCtrl.text),
+    );
     if (!mounted) return;
     setState(() => _dirty = false);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -534,8 +534,8 @@ class _AppearanceSection extends StatelessWidget {
                               : null,
                         ),
                         child: selected
-                            ? const Icon(Icons.check,
-                                color: Colors.white, size: 18)
+                            ? const Icon(
+                                Icons.check, color: Colors.white, size: 18)
                             : null,
                       ),
                     ),

@@ -21,9 +21,9 @@ class MloProfileProvider with ChangeNotifier {
   // Calculator prefill defaults (null = no default)
   double? defaultInterestRate;
   double? defaultTermYears;
-  double? defaultDownPaymentPct;   // percent of purchase price, e.g. 20.0
-  double? defaultPropertyTaxRate;  // annual % of home value, e.g. 1.2
-  double? defaultInsuranceRate;    // annual % of home value, e.g. 0.5
+  double? defaultDownPaymentPct; // percent of purchase price, e.g. 20.0
+  double? defaultPropertyTaxRate; // annual % of home value, e.g. 1.2
+  double? defaultInsuranceRate; // annual % of home value, e.g. 0.5
 
   // Branding — stored as raw ARGB int (Color.value)
   int accentColorValue = 0xFF0891B2; // default = primaryTeal
