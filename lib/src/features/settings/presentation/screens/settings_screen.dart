@@ -527,7 +527,8 @@ class _AppearanceSection extends StatelessWidget {
                           boxShadow: selected
                               ? [
                                   BoxShadow(
-                                    color: Color(opt.value).withValues(alpha: 0.5),
+                                    color: Color(opt.value)
+                                        .withValues(alpha: 0.5),
                                     blurRadius: 8,
                                   )
                                 ]
