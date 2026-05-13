@@ -48,9 +48,8 @@ Future<void> main() async {
 List<SingleChildWidget> buildAppProviders() => [
   ChangeNotifierProvider(create: (_) => ThemeProvider()),
   ChangeNotifierProvider(
-    create: (_) => MloProfileProvider(
-      preferenceStore: serviceLocator<PreferenceStore>(),
-    ),
+    create: (_) =>
+        MloProfileProvider(preferenceStore: serviceLocator<PreferenceStore>()),
   ),
   ChangeNotifierProvider.value(value: serviceLocator<ConnectivityService>()),
   Provider.value(value: serviceLocator<AnalyticsService>()),
@@ -177,105 +176,18 @@ class _MainNavigatorState extends State<MainNavigator> {
             .map((FeatureCatalogEntry entry) => entry.toRailDestination())
             .toList();
 
-        void openShareQuote() {
-          final provider = context.read<CalculatorProvider>();
-          ShareQuoteDialog.show(
-            context,
-            data: QuoteShareData.fromCalculatorProvider(provider),
-            scenarioName: 'Quick Quote',
-          );
-        }
-
-        final List<Widget> appBarActionChildren = [
-          IconButton(
-            icon: const Icon(Icons.ios_share),
-            onPressed:
-                _primaryFeatures[_selectedIndex].id ==
-                    FeatureCatalog.calculatorId
-                ? openShareQuote
-                : null,
-            tooltip: 'Share quote',
-          ),
-          IconButton(
-            icon: const Icon(Icons.mic_outlined),
-            onPressed: () {
-              _showNLPDialog(context);
-            },
-            tooltip: 'Voice/Text input',
-          ),
-          PopupMenuButton<String>(
-            icon: Icon(
-              compactAppBar ? Icons.more_vert : Icons.settings_outlined,
-            ),
-            tooltip: 'More',
-            onSelected: (value) {
-              switch (value) {
-                case 'how_to':
-                  InfoDialog.show(context);
-                  break;
-                case 'workspace':
-                  _openWorkspaceDashboard(context);
-                  break;
-                case 'loan_programs':
-                  _openFeatureById(context, FeatureCatalog.loanProgramsId);
-                  break;
-                case 'rent_vs_buy':
-                  _openFeatureById(context, FeatureCatalog.rentVsBuyId);
-                  break;
-                case 'settings':
-                  context.read<AppRouter>().openSettings();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'settings',
-                child: ListTile(
-                  leading: Icon(Icons.tune_outlined),
-                  title: Text('Settings'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'how_to',
-                child: ListTile(
-                  leading: Icon(Icons.info_outline),
-                  title: Text('How to Use'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'workspace',
-                child: ListTile(
-                  leading: Icon(Icons.space_dashboard_outlined),
-                  title: Text('Workspace Dashboard'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'loan_programs',
-                child: ListTile(
-                  leading: Icon(Icons.account_balance),
-                  title: Text('Loan Programs'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'rent_vs_buy',
-                child: ListTile(
-                  leading: Icon(Icons.home_work),
-                  title: Text('Rent vs Buy'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 8),
-        ];
-
         final List<Widget> appBarActions = bootstrapLayout
             ? const <Widget>[]
-            : appBarActionChildren;
+            : [
+                _AppBarActions(
+                  isCalculatorTab:
+                      _primaryFeatures[_selectedIndex].id ==
+                      FeatureCatalog.calculatorId,
+                  compact: compactAppBar,
+                  onWorkspace: () => _openWorkspaceDashboard(context),
+                  onFeatureById: (id) => _openFeatureById(context, id),
+                ),
+              ];
 
         return Scaffold(
           appBar: AppBar(
@@ -375,5 +287,122 @@ class _MainNavigatorState extends State<MainNavigator> {
 
     context.read<AnalyticsService>().trackScreenView(feature.analyticsName);
     await context.read<AppRouter>().openFeatureById(featureId);
+  }
+}
+
+class _AppBarActions extends StatelessWidget {
+  const _AppBarActions({
+    required this.isCalculatorTab,
+    required this.compact,
+    required this.onWorkspace,
+    required this.onFeatureById,
+  });
+
+  final bool isCalculatorTab;
+  final bool compact;
+  final VoidCallback onWorkspace;
+  final void Function(String id) onFeatureById;
+
+  @override
+  Widget build(BuildContext context) {
+    void openShareQuote() {
+      final provider = context.read<CalculatorProvider>();
+      ShareQuoteDialog.show(
+        context,
+        data: QuoteShareData.fromCalculatorProvider(provider),
+        scenarioName: 'Quick Quote',
+      );
+    }
+
+    void showNlp() {
+      final nlpService = context.read<NlpSettingsProvider>().calculatorService;
+      showDialog(
+        context: context,
+        builder: (context) =>
+            NlpDialog(nlpService: nlpService, speechToText: stt.SpeechToText()),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.ios_share),
+          onPressed: isCalculatorTab ? openShareQuote : null,
+          tooltip: 'Share quote',
+        ),
+        IconButton(
+          icon: const Icon(Icons.mic_outlined),
+          onPressed: showNlp,
+          tooltip: 'Voice/Text input',
+        ),
+        PopupMenuButton<String>(
+          icon: Icon(compact ? Icons.more_vert : Icons.settings_outlined),
+          tooltip: 'More',
+          onSelected: (value) {
+            switch (value) {
+              case 'settings':
+                context.read<AppRouter>().openSettings();
+                break;
+              case 'how_to':
+                InfoDialog.show(context);
+                break;
+              case 'workspace':
+                onWorkspace();
+                break;
+              case 'loan_programs':
+                onFeatureById(FeatureCatalog.loanProgramsId);
+                break;
+              case 'rent_vs_buy':
+                onFeatureById(FeatureCatalog.rentVsBuyId);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'settings',
+              child: ListTile(
+                leading: Icon(Icons.tune_outlined),
+                title: Text('Settings'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'how_to',
+              child: ListTile(
+                leading: Icon(Icons.info_outline),
+                title: Text('How to Use'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'workspace',
+              child: ListTile(
+                leading: Icon(Icons.space_dashboard_outlined),
+                title: Text('Workspace Dashboard'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'loan_programs',
+              child: ListTile(
+                leading: Icon(Icons.account_balance),
+                title: Text('Loan Programs'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'rent_vs_buy',
+              child: ListTile(
+                leading: Icon(Icons.home_work),
+                title: Text('Rent vs Buy'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
   }
 }
