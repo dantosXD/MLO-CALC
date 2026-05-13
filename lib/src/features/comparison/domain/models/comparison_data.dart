@@ -210,7 +210,8 @@ int? _estimateMiDropMonth(CalculationEntry entry) {
   for (int month = 1; month <= totalMonths; month++) {
     final double interestPaid = monthlyRate > 0 ? balance * monthlyRate : 0;
     final double principalPaid = payment - interestPaid;
-    if (principalPaid <= 0) break; // payment doesn't cover interest; MI never drops
+    if (principalPaid <= 0)
+      break; // payment doesn't cover interest; MI never drops
     balance -= principalPaid;
     if (balance <= targetBalance) {
       return month;
