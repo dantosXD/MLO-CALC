@@ -60,7 +60,9 @@ class AmortizationService {
     double balance = loanAmount;
 
     for (int month = 0; month < totalMonths && balance > 0; month++) {
-      final double interestPaid = DecimalUtils.roundToCents(balance * monthlyRate);
+      final double interestPaid = DecimalUtils.roundToCents(
+        balance * monthlyRate,
+      );
       double principalPaid = computedPayment - interestPaid;
 
       // Prevent overpayment
@@ -105,7 +107,9 @@ class AmortizationService {
     }
 
     // Round bi-weekly payment to cents for accuracy
-    final double biWeeklyPayment = DecimalUtils.roundToCents(monthlyPayment / 2);
+    final double biWeeklyPayment = DecimalUtils.roundToCents(
+      monthlyPayment / 2,
+    );
     final double biWeeklyRate = interestRate / 100 / 26;
 
     double balance = loanAmount;
@@ -113,7 +117,9 @@ class AmortizationService {
     int periods = 0;
 
     while (balance > 0 && periods < 2000) {
-      final double interestPaid = DecimalUtils.roundToCents(balance * biWeeklyRate);
+      final double interestPaid = DecimalUtils.roundToCents(
+        balance * biWeeklyRate,
+      );
       double principalPaid = biWeeklyPayment - interestPaid;
       if (principalPaid <= 0) {
         break;
@@ -141,6 +147,7 @@ class AmortizationService {
       interestSaved: interestSaved,
     );
   }
+
   double _resolvePayment({
     required double loanAmount,
     required double interestRate,
@@ -189,7 +196,9 @@ List<AmortizationEntry> _generateSchedule(_AmortizationParams params) {
 
   for (int month = 1; month <= totalMonths; month++) {
     // Round interest to cents at each step for accuracy
-    final double interestPaid = DecimalUtils.roundToCents(balance * monthlyRate);
+    final double interestPaid = DecimalUtils.roundToCents(
+      balance * monthlyRate,
+    );
     double principalPaid = payment - interestPaid;
 
     // On final month or if principal exceeds balance, pay off remaining balance

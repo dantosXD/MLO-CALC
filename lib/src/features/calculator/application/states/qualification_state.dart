@@ -29,8 +29,9 @@ class QualificationState {
     return QualificationState(
       qualRatio1: qualRatio1 ?? this.qualRatio1,
       qualRatio2: qualRatio2 ?? this.qualRatio2,
-      annualIncome:
-          clearAnnualIncome ? null : (annualIncome ?? this.annualIncome),
+      annualIncome: clearAnnualIncome
+          ? null
+          : (annualIncome ?? this.annualIncome),
       monthlyDebt: clearMonthlyDebt ? null : (monthlyDebt ?? this.monthlyDebt),
       calculationError: clearCalculationError
           ? null

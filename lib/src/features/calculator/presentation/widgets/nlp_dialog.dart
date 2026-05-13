@@ -21,7 +21,7 @@ class NlpDialog extends StatefulWidget {
   final NLPCalculatorService nlpService;
   final stt.SpeechToText speechToText;
   final void Function(bool isListening, bool isProcessing, bool hasError)?
-      onStateChanged;
+  onStateChanged;
 
   @override
   State<NlpDialog> createState() => _NlpDialogState();
@@ -44,12 +44,16 @@ class _NlpDialogState extends State<NlpDialog> {
   }
 
   void _notifyStateChange() {
-    widget.onStateChanged?.call(_isListening, _isProcessing, _status != null && _status!.startsWith('Error'));
+    widget.onStateChanged?.call(
+      _isListening,
+      _isProcessing,
+      _status != null && _status!.startsWith('Error'),
+    );
   }
 
   Future<void> _toggleListening() async {
     HapticFeedback.mediumImpact();
-    
+
     if (_isListening) {
       await widget.speechToText.stop();
       setState(() {
@@ -158,48 +162,56 @@ class _NlpDialogState extends State<NlpDialog> {
       final cached = settings.cache.getCachedResponse(query);
       if (cached != null) {
         setState(() => _status = 'Using cached response...');
-        final String resultMessage = await calculator.applyNlpRequest(cached.response);
-        
+        final String resultMessage = await calculator.applyNlpRequest(
+          cached.response,
+        );
+
         HapticFeedback.mediumImpact();
         if (!mounted) return;
         navigator.pop();
-        messenger.showSnackBar(SnackBar(
-          content: Text('$resultMessage (cached)'),
-          action: SnackBarAction(
-            label: 'Refresh',
-            onPressed: () async {
-              // Queue for fresh response
-              await settings.cache.queueRequest(query);
-            },
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('$resultMessage (cached)'),
+            action: SnackBarAction(
+              label: 'Refresh',
+              onPressed: () async {
+                // Queue for fresh response
+                await settings.cache.queueRequest(query);
+              },
+            ),
           ),
-        ));
+        );
         return;
       }
-      
+
       // Check if offline
       if (settings.isOffline) {
         // Queue request for later
         await settings.cache.queueRequest(query);
         setState(() => _status = 'Offline - request queued for later');
         HapticFeedback.selectionClick();
-        
+
         await Future.delayed(const Duration(seconds: 2));
         if (!mounted) return;
         navigator.pop();
-        messenger.showSnackBar(const SnackBar(
-          content: Text('You\'re offline. Request saved for when you reconnect.'),
-        ));
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'You\'re offline. Request saved for when you reconnect.',
+            ),
+          ),
+        );
         return;
       }
-      
+
       await widget.nlpService.initialize(apiKey);
       final request = await widget.nlpService.processQuery(query);
-      
+
       // Cache the response
       await settings.cache.cacheResponse(query, request);
-      
+
       final String resultMessage = await calculator.applyNlpRequest(request);
-      
+
       HapticFeedback.mediumImpact();
       if (!mounted) return;
       navigator.pop();
@@ -237,7 +249,7 @@ class _NlpDialogState extends State<NlpDialog> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withAlpha(50),
+                  color: Colors.orange.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -278,7 +290,7 @@ class _NlpDialogState extends State<NlpDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Input Field
           TextField(
             controller: _controller,
@@ -291,9 +303,9 @@ class _NlpDialogState extends State<NlpDialog> {
             maxLines: 3,
             onSubmitted: (_) => _runNlp(),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Suggestions
           if (_controller.text.isEmpty)
             Wrap(
@@ -312,14 +324,16 @@ class _NlpDialogState extends State<NlpDialog> {
                 );
               }).toList(),
             ),
-            
+
           const SizedBox(height: 8),
           if (_status != null)
             Text(
               _status!,
               style: TextStyle(
-                fontSize: 12, 
-                color: (_status!.startsWith('Error')) ? Colors.red : Colors.black54,
+                fontSize: 12,
+                color: (_status!.startsWith('Error'))
+                    ? Colors.red
+                    : Colors.black54,
               ),
               textAlign: TextAlign.center,
             ),
@@ -332,7 +346,7 @@ class _NlpDialogState extends State<NlpDialog> {
           onPressed: _isProcessing ? null : () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        
+
         const SizedBox(width: 8),
 
         // Microphone Button (FAB-like)
@@ -341,14 +355,13 @@ class _NlpDialogState extends State<NlpDialog> {
           height: 64,
           child: FloatingActionButton(
             elevation: _isListening ? 8 : 2,
-            backgroundColor: _isListening 
-                ? AppConstants.micListeningColor 
-                : (_isProcessing ? AppConstants.micProcessingColor : AppConstants.micIdleColor),
+            backgroundColor: _isListening
+                ? AppConstants.micListeningColor
+                : (_isProcessing
+                      ? AppConstants.micProcessingColor
+                      : AppConstants.micIdleColor),
             onPressed: _isProcessing ? null : _toggleListening,
-            child: Icon(
-              _isListening ? Icons.stop : Icons.mic,
-              size: 32,
-            ),
+            child: Icon(_isListening ? Icons.stop : Icons.mic, size: 32),
           ),
         ),
 
@@ -356,11 +369,12 @@ class _NlpDialogState extends State<NlpDialog> {
 
         // Send Button
         IconButton(
-          icon: _isProcessing 
+          icon: _isProcessing
               ? const SizedBox(
-                  width: 24, height: 24, 
-                  child: CircularProgressIndicator(strokeWidth: 2)
-                ) 
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Icon(Icons.send),
           onPressed: _isProcessing ? null : _runNlp,
           color: Theme.of(context).colorScheme.primary,

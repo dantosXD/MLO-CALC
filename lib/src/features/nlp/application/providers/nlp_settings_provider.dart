@@ -16,12 +16,12 @@ class NlpSettingsProvider with ChangeNotifier {
     required NLPCalculatorService calculatorService,
     SecureStore? secureStore,
     PreferenceStore? preferenceStore,
-  })  : _connectivity = connectivity ?? ConnectivityService(),
-        _ownsConnectivity = connectivity == null,
-        _cache = cache ?? NlpCacheService(),
-        _calculatorService = calculatorService,
-        _secureStore = secureStore ?? FlutterSecureStoreBackend(),
-        _legacyStore = preferenceStore ?? PreferenceStore();
+  }) : _connectivity = connectivity ?? ConnectivityService(),
+       _ownsConnectivity = connectivity == null,
+       _cache = cache ?? NlpCacheService(),
+       _calculatorService = calculatorService,
+       _secureStore = secureStore ?? FlutterSecureStoreBackend(),
+       _legacyStore = preferenceStore ?? PreferenceStore();
 
   final ConnectivityService _connectivity;
   final bool _ownsConnectivity;

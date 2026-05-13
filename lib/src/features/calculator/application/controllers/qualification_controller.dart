@@ -12,9 +12,9 @@ class QualificationController with ChangeNotifier {
     required QualificationService qualificationService,
     required LoanQuoteController quoteController,
     required HistoryController historyController,
-  })  : _qualificationService = qualificationService,
-        _quoteController = quoteController,
-        _historyController = historyController;
+  }) : _qualificationService = qualificationService,
+       _quoteController = quoteController,
+       _historyController = historyController;
 
   final QualificationService _qualificationService;
   final LoanQuoteController _quoteController;
@@ -49,27 +49,15 @@ class QualificationController with ChangeNotifier {
 
   void setAnnualIncome({double? value}) {
     _state = value == null
-        ? _state.copyWith(
-            clearAnnualIncome: true,
-            clearCalculationError: true,
-          )
-        : _state.copyWith(
-            annualIncome: value,
-            clearCalculationError: true,
-          );
+        ? _state.copyWith(clearAnnualIncome: true, clearCalculationError: true)
+        : _state.copyWith(annualIncome: value, clearCalculationError: true);
     notifyListeners();
   }
 
   void setMonthlyDebt({double? value}) {
     _state = value == null
-        ? _state.copyWith(
-            clearMonthlyDebt: true,
-            clearCalculationError: true,
-          )
-        : _state.copyWith(
-            monthlyDebt: value,
-            clearCalculationError: true,
-          );
+        ? _state.copyWith(clearMonthlyDebt: true, clearCalculationError: true)
+        : _state.copyWith(monthlyDebt: value, clearCalculationError: true);
     notifyListeners();
   }
 

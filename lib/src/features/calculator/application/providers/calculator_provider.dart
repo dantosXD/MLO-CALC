@@ -21,7 +21,9 @@ import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_serv
 export 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart'
     show PaymentDisplayMode;
 
-class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel {
+class CalculatorProvider
+    with ChangeNotifier
+    implements LoanParametersReadModel {
   factory CalculatorProvider({
     required CoreCalculationService coreCalculationService,
     required AmortizationService amortizationService,
@@ -55,9 +57,7 @@ class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel 
         );
     final repository =
         sessionRepository ??
-        CalculatorSessionRepository(
-          persistenceService: persistenceService,
-        );
+        CalculatorSessionRepository(persistenceService: persistenceService);
 
     return CalculatorProvider._(
       loanQuoteController: quote,
@@ -158,7 +158,8 @@ class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel 
   @override
   double get interestOnlyPayment => _loanQuoteController.interestOnlyPayment;
   @override
-  double get monthlyEscrowExpenses => _loanQuoteController.monthlyEscrowExpenses;
+  double get monthlyEscrowExpenses =>
+      _loanQuoteController.monthlyEscrowExpenses;
 
   Future<void> initialize() {
     return _initializeFuture ??= _loadState();
@@ -167,10 +168,7 @@ class CalculatorProvider with ChangeNotifier implements LoanParametersReadModel 
   /// Pre-fills fields that have no persisted value with MLO-defined defaults.
   /// Only rate and term are applied here; percentage-based PITI fields require
   /// a purchase price which is not known at startup.
-  void applyDefaultsIfEmpty({
-    double? interestRate,
-    double? termYears,
-  }) {
+  void applyDefaultsIfEmpty({double? interestRate, double? termYears}) {
     if (this.interestRate == null && interestRate != null) {
       setInterestRate(value: interestRate);
     }

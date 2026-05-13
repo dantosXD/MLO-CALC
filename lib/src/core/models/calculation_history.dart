@@ -285,13 +285,13 @@ class CalculationEntry {
     required Object? inputs,
     required Object? results,
     this.notes,
-  })  : type = CalculationEntryType.fromJsonValue(type),
-        inputs = inputs is CalculationEntryInputs
-            ? inputs
-            : CalculationEntryInputs.fromJson(inputs),
-        results = results is CalculationEntryResults
-            ? results
-            : CalculationEntryResults.fromJson(results);
+  }) : type = CalculationEntryType.fromJsonValue(type),
+       inputs = inputs is CalculationEntryInputs
+           ? inputs
+           : CalculationEntryInputs.fromJson(inputs),
+       results = results is CalculationEntryResults
+           ? results
+           : CalculationEntryResults.fromJson(results);
 
   /// Create from loan calculation
   factory CalculationEntry.fromLoanCalculation({
@@ -327,13 +327,18 @@ class CalculationEntry {
 
     final results = switch (entryType) {
       CalculationEntryType.payment => CalculationEntryResults(payment: payment),
-      CalculationEntryType.loanAmount =>
-        CalculationEntryResults(loanAmount: loanAmount),
-      CalculationEntryType.term => CalculationEntryResults(termYears: termYears),
-      CalculationEntryType.interestRate =>
-        CalculationEntryResults(interestRate: interestRate),
-      CalculationEntryType.qualification =>
-        CalculationEntryResults(maxLoanAmount: loanAmount),
+      CalculationEntryType.loanAmount => CalculationEntryResults(
+        loanAmount: loanAmount,
+      ),
+      CalculationEntryType.term => CalculationEntryResults(
+        termYears: termYears,
+      ),
+      CalculationEntryType.interestRate => CalculationEntryResults(
+        interestRate: interestRate,
+      ),
+      CalculationEntryType.qualification => CalculationEntryResults(
+        maxLoanAmount: loanAmount,
+      ),
     };
 
     return CalculationEntry(
@@ -524,7 +529,8 @@ class CalculationEntry {
     final payment = monthlyPayment;
     if (payment == null) return null;
 
-    final piti = payment +
+    final piti =
+        payment +
         ((propertyTax ?? 0) / 12) +
         ((homeInsurance ?? 0) / 12) +
         ((mortgageInsurance ?? 0) / 12) +
@@ -583,8 +589,9 @@ class CalculationHistory {
 
   /// Export history to JSON string
   String toJsonString() {
-    final List<Map<String, dynamic>> jsonList =
-        _entries.map((e) => e.toJson()).toList();
+    final List<Map<String, dynamic>> jsonList = _entries
+        .map((e) => e.toJson())
+        .toList();
     return jsonEncode(jsonList);
   }
 

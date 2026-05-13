@@ -34,9 +34,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => buildCalculatorProvider()),
           ChangeNotifierProvider(create: (_) => ComparisonProvider()),
         ],
-        child: const MaterialApp(
-          home: Scaffold(body: HistoryScreen()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: HistoryScreen())),
       ),
     );
     await tester.pumpAndSettle();

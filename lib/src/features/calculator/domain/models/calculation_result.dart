@@ -10,10 +10,7 @@ sealed class CalcResult<T> {
     return CalcSuccess<T>(value, converged: converged);
   }
 
-  factory CalcResult.failure(
-    String message, {
-    bool converged = false,
-  }) {
+  factory CalcResult.failure(String message, {bool converged = false}) {
     return CalcFailure<T>(message, converged: converged);
   }
 }

@@ -8,7 +8,7 @@ class ConnectivityService with ChangeNotifier {
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   Future<void>? _initializeFuture;
-  
+
   bool _isOnline = true;
   bool _isInitialized = false;
 
@@ -27,16 +27,16 @@ class ConnectivityService with ChangeNotifier {
     final results = await _connectivity.checkConnectivity();
     _isInitialized = true;
     _updateStatus(results, notify: false);
-    
+
     _subscription = _connectivity.onConnectivityChanged.listen(_updateStatus);
     notifyListeners();
   }
 
   void _updateStatus(List<ConnectivityResult> results, {bool notify = true}) {
     final wasOnline = _isOnline;
-    
+
     _isOnline = results.any((result) => result != ConnectivityResult.none);
-    
+
     if (wasOnline != _isOnline) {
       if (kDebugMode) {
         debugPrint('Connectivity changed: ${_isOnline ? "Online" : "Offline"}');

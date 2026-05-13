@@ -51,16 +51,13 @@ class _SectionHeader extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
           ],
         ],
       ),
@@ -496,9 +493,9 @@ class _AppearanceSection extends StatelessWidget {
             children: [
               Text(
                 'Accent Color',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -522,25 +519,29 @@ class _AppearanceSection extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: selected
                               ? Border.all(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   width: 3,
                                 )
                               : null,
                           boxShadow: selected
                               ? [
                                   BoxShadow(
-                                    color: Color(opt.value)
-                                        .withValues(alpha: 0.5),
+                                    color: Color(
+                                      opt.value,
+                                    ).withValues(alpha: 0.5),
                                     blurRadius: 8,
-                                  )
+                                  ),
                                 ]
                               : null,
                         ),
                         child: selected
                             ? const Icon(
-                                Icons.check, color: Colors.white, size: 18)
+                                Icons.check,
+                                color: Colors.white,
+                                size: 18,
+                              )
                             : null,
                       ),
                     ),
@@ -569,7 +570,8 @@ class _CalculatorLayoutSection extends StatelessWidget {
       children: [
         const _SectionHeader(
           'Calculator Layout',
-          subtitle: 'Classic is the original button-based layout. '
+          subtitle:
+              'Classic is the original button-based layout. '
               'Modern uses a form-based input.',
         ),
         RadioListTile<CalculatorLayout>(

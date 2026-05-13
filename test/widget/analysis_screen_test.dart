@@ -32,9 +32,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => buildCalculatorProvider()),
         ],
-        child: const MaterialApp(
-          home: Scaffold(body: AnalysisScreen()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: AnalysisScreen())),
       ),
     );
     await tester.pumpAndSettle();

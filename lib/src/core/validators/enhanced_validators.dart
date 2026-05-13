@@ -1,5 +1,5 @@
 /// Enhanced validation with industry-specific warnings
-/// 
+///
 /// Provides conforming loan limits, DTI thresholds, and LTV warnings
 /// to help MLOs identify potential issues early.
 library;
@@ -51,16 +51,19 @@ class ConformingLoanLimits {
   static const int year = 2024;
   static const double standardLimit = 766550;
   static const double highCostLimit = 1149825; // For high-cost areas
-  
+
   // FHA limits vary by county - using baseline
   static const double fhaFloorLimit = 472030;
   static const double fhaCeilingLimit = 1149825;
-  
+
   // Jumbo threshold
   static double get jumboThreshold => standardLimit;
-  
+
   /// Check if loan amount exceeds conforming limit
-  static ValidationWarning? checkConformingLimit(double loanAmount, {String? county}) {
+  static ValidationWarning? checkConformingLimit(
+    double loanAmount, {
+    String? county,
+  }) {
     if (loanAmount > highCostLimit) {
       return ValidationWarning(
         message: 'Super jumbo loan - exceeds all conforming limits',
@@ -68,15 +71,17 @@ class ConformingLoanLimits {
         suggestion: 'This loan will require non-conforming/portfolio financing',
       );
     }
-    
+
     if (loanAmount > standardLimit) {
       return ValidationWarning(
-        message: 'Exceeds standard conforming limit (\$${standardLimit.toStringAsFixed(0)})',
+        message:
+            'Exceeds standard conforming limit (\$${standardLimit.toStringAsFixed(0)})',
         severity: WarningSeverity.info,
-        suggestion: 'May qualify as conforming in high-cost areas, or consider jumbo financing',
+        suggestion:
+            'May qualify as conforming in high-cost areas, or consider jumbo financing',
       );
     }
-    
+
     return null;
   }
 
@@ -86,18 +91,20 @@ class ConformingLoanLimits {
       return ValidationWarning(
         message: 'Exceeds FHA ceiling limit',
         severity: WarningSeverity.critical,
-        suggestion: 'FHA loans cannot exceed \$${fhaCeilingLimit.toStringAsFixed(0)}',
+        suggestion:
+            'FHA loans cannot exceed \$${fhaCeilingLimit.toStringAsFixed(0)}',
       );
     }
-    
+
     if (loanAmount > fhaFloorLimit) {
       return ValidationWarning(
-        message: 'Exceeds standard FHA limit (\$${fhaFloorLimit.toStringAsFixed(0)})',
+        message:
+            'Exceeds standard FHA limit (\$${fhaFloorLimit.toStringAsFixed(0)})',
         severity: WarningSeverity.info,
         suggestion: 'Higher limit may apply in high-cost areas',
       );
     }
-    
+
     return null;
   }
 }
@@ -106,14 +113,15 @@ class ConformingLoanLimits {
 class DtiValidator {
   // QM (Qualified Mortgage) threshold
   static const double qmThreshold = 43.0;
-  
+
   // Common program thresholds
   static const double conventionalBackEnd = 36.0;
   static const double conventionalBackEndWithStrong = 45.0;
   static const double fhaBackEnd = 43.0;
   static const double fhaBackEndStretch = 50.0; // With compensating factors
-  static const double vaNoLimit = 41.0; // VA uses residual income, this is guideline
-  
+  static const double vaNoLimit =
+      41.0; // VA uses residual income, this is guideline
+
   /// Calculate DTI ratio
   static double calculateDti({
     required double monthlyDebtPayments,
@@ -136,28 +144,33 @@ class DtiValidator {
   static ValidationWarning? checkQmCompliance(double backEndDti) {
     if (backEndDti > 50) {
       return ValidationWarning(
-        message: 'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds most program limits',
+        message:
+            'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds most program limits',
         severity: WarningSeverity.critical,
-        suggestion: 'Consider debt payoff, income increase, or lower loan amount',
+        suggestion:
+            'Consider debt payoff, income increase, or lower loan amount',
       );
     }
-    
+
     if (backEndDti > qmThreshold) {
       return ValidationWarning(
-        message: 'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds QM threshold (43%)',
+        message:
+            'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds QM threshold (43%)',
         severity: WarningSeverity.warning,
         suggestion: 'Non-QM loan may be required, or find compensating factors',
       );
     }
-    
+
     if (backEndDti > 36) {
       return ValidationWarning(
-        message: 'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} above standard guidelines',
+        message:
+            'DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} above standard guidelines',
         severity: WarningSeverity.info,
-        suggestion: 'May require compensating factors (credit score, reserves, etc.)',
+        suggestion:
+            'May require compensating factors (credit score, reserves, etc.)',
       );
     }
-    
+
     return null;
   }
 
@@ -169,31 +182,37 @@ class DtiValidator {
     double? backEndLimit,
   }) {
     final warnings = <ValidationWarning>[];
-    
+
     // Check front-end
     if (frontEndLimit != null && frontEndDti > frontEndLimit) {
-      warnings.add(ValidationWarning(
-        message: 'Housing DTI ${CurrencyFormatter.formatPercent(frontEndDti, decimals: 1)} exceeds ${CurrencyFormatter.formatPercent(frontEndLimit, decimals: 2)} limit',
-        severity: frontEndDti > frontEndLimit + 5 
-            ? WarningSeverity.warning 
-            : WarningSeverity.info,
-      ));
+      warnings.add(
+        ValidationWarning(
+          message:
+              'Housing DTI ${CurrencyFormatter.formatPercent(frontEndDti, decimals: 1)} exceeds ${CurrencyFormatter.formatPercent(frontEndLimit, decimals: 2)} limit',
+          severity: frontEndDti > frontEndLimit + 5
+              ? WarningSeverity.warning
+              : WarningSeverity.info,
+        ),
+      );
     }
-    
+
     // Check back-end
     if (backEndLimit != null && backEndDti > backEndLimit) {
-      warnings.add(ValidationWarning(
-        message: 'Total DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds ${CurrencyFormatter.formatPercent(backEndLimit, decimals: 2)} limit',
-        severity: backEndDti > backEndLimit + 5 
-            ? WarningSeverity.warning 
-            : WarningSeverity.info,
-      ));
+      warnings.add(
+        ValidationWarning(
+          message:
+              'Total DTI ${CurrencyFormatter.formatPercent(backEndDti, decimals: 1)} exceeds ${CurrencyFormatter.formatPercent(backEndLimit, decimals: 2)} limit',
+          severity: backEndDti > backEndLimit + 5
+              ? WarningSeverity.warning
+              : WarningSeverity.info,
+        ),
+      );
     }
-    
+
     // Check QM
     final qmWarning = checkQmCompliance(backEndDti);
     if (qmWarning != null) warnings.add(qmWarning);
-    
+
     return warnings;
   }
 }
@@ -207,7 +226,7 @@ class LtvValidator {
   static const double vaMaxLtv = 100.0;
   static const double usdaMaxLtv = 100.0;
   static const double jumboTypicalMax = 90.0;
-  
+
   /// Calculate LTV
   static double calculateLtv({
     required double loanAmount,
@@ -218,54 +237,72 @@ class LtvValidator {
   }
 
   /// Get LTV warnings
-  static List<ValidationWarning> getLtvWarnings(double ltv, {String? loanType}) {
+  static List<ValidationWarning> getLtvWarnings(
+    double ltv, {
+    String? loanType,
+  }) {
     final warnings = <ValidationWarning>[];
-    
+
     // PMI warning
     if (ltv > pmiThreshold && loanType != 'VA' && loanType != 'USDA') {
-      warnings.add(ValidationWarning(
-        message: 'LTV ${CurrencyFormatter.formatPercent(ltv, decimals: 1)} requires mortgage insurance',
-        severity: WarningSeverity.info,
-        suggestion: 'PMI required until LTV reaches 80%',
-      ));
+      warnings.add(
+        ValidationWarning(
+          message:
+              'LTV ${CurrencyFormatter.formatPercent(ltv, decimals: 1)} requires mortgage insurance',
+          severity: WarningSeverity.info,
+          suggestion: 'PMI required until LTV reaches 80%',
+        ),
+      );
     }
-    
+
     // High LTV warnings
     if (ltv > 95) {
-      warnings.add(ValidationWarning(
-        message: 'Very high LTV (${CurrencyFormatter.formatPercent(ltv, decimals: 1)})',
-        severity: WarningSeverity.warning,
-        suggestion: 'Limited program options, higher rates likely',
-      ));
+      warnings.add(
+        ValidationWarning(
+          message:
+              'Very high LTV (${CurrencyFormatter.formatPercent(ltv, decimals: 1)})',
+          severity: WarningSeverity.warning,
+          suggestion: 'Limited program options, higher rates likely',
+        ),
+      );
     } else if (ltv > 90) {
-      warnings.add(ValidationWarning(
-        message: 'High LTV (${CurrencyFormatter.formatPercent(ltv, decimals: 1)})',
-        severity: WarningSeverity.info,
-        suggestion: 'Higher PMI rates and stricter guidelines may apply',
-      ));
+      warnings.add(
+        ValidationWarning(
+          message:
+              'High LTV (${CurrencyFormatter.formatPercent(ltv, decimals: 1)})',
+          severity: WarningSeverity.info,
+          suggestion: 'Higher PMI rates and stricter guidelines may apply',
+        ),
+      );
     }
-    
+
     // Program-specific max LTV
     if (loanType == 'Conventional' && ltv > conventionalMaxLtv) {
-      warnings.add(ValidationWarning(
-        message: 'Exceeds max conventional LTV (97%)',
-        severity: WarningSeverity.critical,
-        suggestion: 'Increase down payment or consider FHA/VA',
-      ));
+      warnings.add(
+        ValidationWarning(
+          message: 'Exceeds max conventional LTV (97%)',
+          severity: WarningSeverity.critical,
+          suggestion: 'Increase down payment or consider FHA/VA',
+        ),
+      );
     } else if (loanType == 'FHA' && ltv > fhaMaxLtv) {
-      warnings.add(ValidationWarning(
-        message: 'Exceeds max FHA LTV (96.5%)',
-        severity: WarningSeverity.critical,
-        suggestion: 'FHA requires minimum 3.5% down payment',
-      ));
+      warnings.add(
+        ValidationWarning(
+          message: 'Exceeds max FHA LTV (96.5%)',
+          severity: WarningSeverity.critical,
+          suggestion: 'FHA requires minimum 3.5% down payment',
+        ),
+      );
     } else if (loanType == 'Jumbo' && ltv > jumboTypicalMax) {
-      warnings.add(ValidationWarning(
-        message: 'High LTV for jumbo loan',
-        severity: WarningSeverity.warning,
-        suggestion: 'Most jumbo programs require 10%+ down payment',
-      ));
+      warnings.add(
+        ValidationWarning(
+          message: 'High LTV for jumbo loan',
+          severity: WarningSeverity.warning,
+          suggestion: 'Most jumbo programs require 10%+ down payment',
+        ),
+      );
     }
-    
+
     return warnings;
   }
 }
@@ -283,7 +320,7 @@ class EnhancedValidationResult {
   });
 
   bool get hasWarnings => warnings.isNotEmpty;
-  bool get hasCriticalWarnings => 
+  bool get hasCriticalWarnings =>
       warnings.any((w) => w.severity == WarningSeverity.critical);
 }
 
@@ -304,10 +341,9 @@ class ValidationWarningsDisplay extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: warnings.map((warning) => _WarningTile(
-        warning: warning,
-        compact: compact,
-      )).toList(),
+      children: warnings
+          .map((warning) => _WarningTile(warning: warning, compact: compact))
+          .toList(),
     );
   }
 }
@@ -340,7 +376,7 @@ class _WarningTile extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: warning.color.withAlpha(20),
+      color: warning.color.withValues(alpha: 0.08),
       child: ListTile(
         dense: true,
         leading: Icon(warning.icon, color: warning.color),
@@ -353,10 +389,7 @@ class _WarningTile extends StatelessWidget {
           ),
         ),
         subtitle: warning.suggestion != null
-            ? Text(
-                warning.suggestion!,
-                style: const TextStyle(fontSize: 11),
-              )
+            ? Text(warning.suggestion!, style: const TextStyle(fontSize: 11))
             : null,
       ),
     );

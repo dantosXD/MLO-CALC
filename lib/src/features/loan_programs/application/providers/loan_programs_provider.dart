@@ -7,16 +7,16 @@ import '../../domain/models/loan_program.dart';
 class LoanProgramsProvider with ChangeNotifier {
   static const String _storageKey = 'loan_programs_custom';
   static const String _selectedKey = 'loan_program_selected';
-  
+
   final Uuid _uuid = const Uuid();
   final PreferenceStore _preferences;
-  
+
   List<LoanProgram> _customPrograms = [];
   LoanProgram? _selectedProgram;
   bool _isLoading = true;
 
   LoanProgramsProvider({PreferenceStore? preferenceStore})
-      : _preferences = preferenceStore ?? PreferenceStore();
+    : _preferences = preferenceStore ?? PreferenceStore();
 
   /// All available programs (built-in + custom)
   List<LoanProgram> get allPrograms => [
@@ -48,7 +48,7 @@ class LoanProgramsProvider with ChangeNotifier {
             .map((e) => LoanProgram.fromJson(e as Map<String, dynamic>))
             .toList();
       }
-      
+
       final selectedId = _preferences.getString(_selectedKey);
       if (selectedId != null) {
         _selectedProgram = allPrograms.firstWhere(
@@ -124,7 +124,7 @@ class LoanProgramsProvider with ChangeNotifier {
       createdAt: now,
       updatedAt: now,
     );
-    
+
     _customPrograms.add(program);
     await _savePrograms();
     notifyListeners();
@@ -141,7 +141,7 @@ class LoanProgramsProvider with ChangeNotifier {
       createdAt: now,
       updatedAt: now,
     );
-    
+
     _customPrograms.add(program);
     await _savePrograms();
     notifyListeners();
@@ -154,14 +154,14 @@ class LoanProgramsProvider with ChangeNotifier {
     if (index == -1) {
       throw Exception('Cannot update built-in or non-existent program');
     }
-    
+
     _customPrograms[index] = program.copyWith(updatedAt: DateTime.now());
-    
+
     // Update selected if it was the one being edited
     if (_selectedProgram?.id == program.id) {
       _selectedProgram = _customPrograms[index];
     }
-    
+
     await _savePrograms();
     notifyListeners();
   }
@@ -172,19 +172,19 @@ class LoanProgramsProvider with ChangeNotifier {
       (p) => p.id == id,
       orElse: () => throw Exception('Program not found'),
     );
-    
+
     if (program.isBuiltIn) {
       throw Exception('Cannot delete built-in programs');
     }
-    
+
     _customPrograms.removeWhere((p) => p.id == id);
-    
+
     // If deleted program was selected, select first built-in
     if (_selectedProgram?.id == id) {
       _selectedProgram = DefaultLoanPrograms.programs.first;
       await _saveSelectedProgram();
     }
-    
+
     await _savePrograms();
     notifyListeners();
   }
@@ -197,9 +197,12 @@ class LoanProgramsProvider with ChangeNotifier {
   /// Search programs by name
   List<LoanProgram> searchPrograms(String query) {
     final q = query.toLowerCase();
-    return allPrograms.where((p) =>
-      p.name.toLowerCase().contains(q) ||
-      p.description.toLowerCase().contains(q)
-    ).toList();
+    return allPrograms
+        .where(
+          (p) =>
+              p.name.toLowerCase().contains(q) ||
+              p.description.toLowerCase().contains(q),
+        )
+        .toList();
   }
 }

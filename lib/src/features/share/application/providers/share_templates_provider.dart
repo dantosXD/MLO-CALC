@@ -3,17 +3,11 @@ import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 import '../../domain/models/share_template.dart';
 
-enum ShareChannel {
-  sms,
-  email,
-  shareSheet,
-  copy,
-  screenshot,
-}
+enum ShareChannel { sms, email, shareSheet, copy, screenshot }
 
 class ShareTemplatesProvider with ChangeNotifier {
   ShareTemplatesProvider({PreferenceStore? preferenceStore})
-      : _preferences = preferenceStore ?? PreferenceStore();
+    : _preferences = preferenceStore ?? PreferenceStore();
 
   static const String _customTemplatesKey = 'shareCustomTemplates';
   static const String _selectedTemplateKeyPrefix = 'shareSelectedTemplate_';
@@ -29,9 +23,10 @@ class ShareTemplatesProvider with ChangeNotifier {
       List<ShareTemplate>.unmodifiable(_customTemplates);
 
   List<ShareTemplate> get allTemplates {
-    return List<ShareTemplate>.unmodifiable(
-      <ShareTemplate>[..._defaultTemplates, ..._customTemplates],
-    );
+    return List<ShareTemplate>.unmodifiable(<ShareTemplate>[
+      ..._defaultTemplates,
+      ..._customTemplates,
+    ]);
   }
 
   ShareTemplate templateForChannel(ShareChannel channel) {
@@ -41,18 +36,16 @@ class ShareTemplatesProvider with ChangeNotifier {
       if (t.isNotEmpty) return t.first;
     }
 
-    switch (channel) {
-      case ShareChannel.sms:
-        return allTemplates.firstWhere((t) => t.id == 'default_sms_short');
-      case ShareChannel.email:
-        return allTemplates.firstWhere((t) => t.id == 'default_email_full');
-      case ShareChannel.shareSheet:
-        return allTemplates.firstWhere((t) => t.id == 'default_share_full');
-      case ShareChannel.copy:
-        return allTemplates.firstWhere((t) => t.id == 'default_share_full');
-      case ShareChannel.screenshot:
-        return allTemplates.firstWhere((t) => t.id == 'default_share_full');
-    }
+    return switch (channel) {
+      ShareChannel.sms => allTemplates.firstWhere(
+        (t) => t.id == 'default_sms_short',
+      ),
+      ShareChannel.email => allTemplates.firstWhere(
+        (t) => t.id == 'default_email_full',
+      ),
+      ShareChannel.shareSheet || ShareChannel.copy || ShareChannel.screenshot =>
+        allTemplates.firstWhere((t) => t.id == 'default_share_full'),
+    };
   }
 
   Future<void> setTemplateForChannel(
@@ -136,8 +129,9 @@ class ShareTemplatesProvider with ChangeNotifier {
       }
 
       for (final channel in ShareChannel.values) {
-        final selected =
-            _preferences.getString('$_selectedTemplateKeyPrefix${channel.name}');
+        final selected = _preferences.getString(
+          '$_selectedTemplateKeyPrefix${channel.name}',
+        );
         if (selected != null && selected.isNotEmpty) {
           _selectedTemplateIds[channel] = selected;
         }

@@ -9,8 +9,8 @@ class CalculatorPersistenceService {
   CalculatorPersistenceService({
     SecureStore? secureStore,
     PreferenceStore? legacyStore,
-  })  : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
-        _legacyStore = legacyStore ?? PreferenceStore();
+  }) : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
+       _legacyStore = legacyStore ?? PreferenceStore();
 
   static const String _scenarioSessionKey = 'scenarioSession';
   static const List<String> _legacyKeys = <String>[

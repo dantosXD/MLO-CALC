@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferenceStore {
   PreferenceStore({SharedPreferences? preferences})
-      : _preferences = preferences;
+    : _preferences = preferences;
 
   SharedPreferences? _preferences;
 

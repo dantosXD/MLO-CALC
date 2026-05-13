@@ -32,12 +32,7 @@ class ShareTemplate {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'subject': subject,
-      'body': body,
-    };
+    return {'id': id, 'name': name, 'subject': subject, 'body': body};
   }
 
   static ShareTemplate fromJson(Map<String, dynamic> json) {

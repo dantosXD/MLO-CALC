@@ -138,11 +138,7 @@ class _CalculatorButtonState extends State<CalculatorButton>
         ? Icon(widget.icon, size: widget.iconSize)
         : FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
-              widget.text,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-            ),
+            child: Text(widget.text, textAlign: TextAlign.center, maxLines: 1),
           );
 
     // Apply wiggle animation if needed
@@ -150,10 +146,7 @@ class _CalculatorButtonState extends State<CalculatorButton>
       buttonChild = AnimatedBuilder(
         animation: _wiggleAnimation,
         builder: (context, child) {
-          return Transform.rotate(
-            angle: _wiggleAnimation.value,
-            child: child,
-          );
+          return Transform.rotate(angle: _wiggleAnimation.value, child: child);
         },
         child: buttonChild,
       );
@@ -163,17 +156,17 @@ class _CalculatorButtonState extends State<CalculatorButton>
       onPressed: () {},
       onLongPress: null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: widget.backgroundColor ??
+        backgroundColor:
+            widget.backgroundColor ??
             Theme.of(context).colorScheme.secondaryContainer,
-        foregroundColor: widget.foregroundColor ??
+        foregroundColor:
+            widget.foregroundColor ??
             Theme.of(context).colorScheme.onSecondaryContainer,
         elevation: widget.isActive ? 6 : 2,
         shadowColor: widget.isActive
             ? (widget.backgroundColor ?? Colors.black26).withValues(alpha: 0.5)
             : Colors.black26,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         padding: const EdgeInsets.symmetric(vertical: 20),
         textStyle: const TextStyle(
           fontSize: 20,
@@ -194,17 +187,15 @@ class _CalculatorButtonState extends State<CalculatorButton>
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: (widget.backgroundColor ?? Colors.blue)
-                      .withValues(alpha: 0.4 * _pulseAnimation.value),
+                  color: (widget.backgroundColor ?? Colors.blue).withValues(
+                    alpha: 0.4 * _pulseAnimation.value,
+                  ),
                   blurRadius: 12 * _pulseAnimation.value,
                   spreadRadius: 2 * (_pulseAnimation.value - 1),
                 ),
               ],
             ),
-            child: Transform.scale(
-              scale: _pulseAnimation.value,
-              child: child,
-            ),
+            child: Transform.scale(scale: _pulseAnimation.value, child: child),
           );
         },
         child: button,
@@ -239,7 +230,9 @@ class _CalculatorButtonState extends State<CalculatorButton>
                 behavior: HitTestBehavior.translucent,
                 excludeFromSemantics: true,
                 onTap: _handleTap,
-                onLongPress: widget.onLongPress != null ? _handleLongPress : null,
+                onLongPress: widget.onLongPress != null
+                    ? _handleLongPress
+                    : null,
                 onDoubleTap: widget.onDoubleTap,
                 child: const SizedBox.expand(),
               ),

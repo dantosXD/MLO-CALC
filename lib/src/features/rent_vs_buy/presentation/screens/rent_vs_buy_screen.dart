@@ -16,7 +16,7 @@ class RentVsBuyScreen extends StatefulWidget {
 
 class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
   final _calculator = const RentVsBuyCalculator();
-  
+
   // Input Controllers
   final _homePriceController = TextEditingController(text: '400000');
   final _downPaymentController = TextEditingController(text: '20');
@@ -34,7 +34,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
   final _appreciationController = TextEditingController(text: '3');
   final _investmentReturnController = TextEditingController(text: '7');
   final _taxRateController = TextEditingController(text: '22');
-  
+
   int _analysisYears = 10;
   RentVsBuyCalculation? _result;
   bool _showMethodology = false;
@@ -67,16 +67,19 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
       interestRate: double.tryParse(_interestRateController.text) ?? 6.5,
       termYears: double.tryParse(_termController.text) ?? 30,
       propertyTaxRate: double.tryParse(_propertyTaxController.text) ?? 1.2,
-      homeInsuranceAnnual: double.tryParse(_homeInsuranceController.text) ?? 1800,
+      homeInsuranceAnnual:
+          double.tryParse(_homeInsuranceController.text) ?? 1800,
       hoaMonthly: double.tryParse(_hoaController.text) ?? 0,
       maintenancePercent: double.tryParse(_maintenanceController.text) ?? 1,
       closingCostsPercent: double.tryParse(_closingCostsController.text) ?? 3,
       pmiRate: double.tryParse(_pmiRateController.text) ?? 0.5,
       monthlyRent: double.tryParse(_monthlyRentController.text) ?? 2000,
       annualRentIncrease: double.tryParse(_rentIncreaseController.text) ?? 3,
-      rentersInsuranceMonthly: double.tryParse(_rentersInsuranceController.text) ?? 25,
+      rentersInsuranceMonthly:
+          double.tryParse(_rentersInsuranceController.text) ?? 25,
       homeAppreciationRate: double.tryParse(_appreciationController.text) ?? 3,
-      investmentReturnRate: double.tryParse(_investmentReturnController.text) ?? 7,
+      investmentReturnRate:
+          double.tryParse(_investmentReturnController.text) ?? 7,
       marginalTaxRate: double.tryParse(_taxRateController.text) ?? 22,
       analysisYears: _analysisYears,
     );
@@ -93,9 +96,12 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
         title: const Text('Rent vs Buy Analysis'),
         actions: [
           IconButton(
-            icon: Icon(_showMethodology ? Icons.visibility_off : Icons.visibility),
+            icon: Icon(
+              _showMethodology ? Icons.visibility_off : Icons.visibility,
+            ),
             tooltip: _showMethodology ? 'Hide Methodology' : 'Show Methodology',
-            onPressed: () => setState(() => _showMethodology = !_showMethodology),
+            onPressed: () =>
+                setState(() => _showMethodology = !_showMethodology),
           ),
         ],
       ),
@@ -104,9 +110,9 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
         children: [
           // Input Sections
           _buildInputSection(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Calculate Button
           SizedBox(
             width: double.infinity,
@@ -328,12 +334,15 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                           isDense: true,
                         ),
                         items: [5, 7, 10, 15, 20, 30]
-                            .map((y) => DropdownMenuItem(
-                                  value: y,
-                                  child: Text('$y years'),
-                                ))
+                            .map(
+                              (y) => DropdownMenuItem(
+                                value: y,
+                                child: Text('$y years'),
+                              ),
+                            )
                             .toList(),
-                        onChanged: (v) => setState(() => _analysisYears = v ?? 10),
+                        onChanged: (v) =>
+                            setState(() => _analysisYears = v ?? 10),
                       ),
                     ),
                   ],
@@ -349,11 +358,11 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
   Widget _buildResultsSummary(RentVsBuyCalculation result) {
     final theme = Theme.of(context);
     final isBuyingBetter = result.buyingIsBetter;
-    
+
     return Card(
-      color: isBuyingBetter 
-          ? Colors.green.withAlpha(30)
-          : Colors.orange.withAlpha(30),
+      color: isBuyingBetter
+          ? Colors.green.withValues(alpha: 0.12)
+          : Colors.orange.withValues(alpha: 0.12),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -421,9 +430,9 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                       Text(
                         'BUYING',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       _CostRow('P&I', result.buyingCosts.principalAndInterest),
@@ -434,8 +443,11 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                       if (result.buyingCosts.hoa > 0)
                         _CostRow('HOA', result.buyingCosts.hoa),
                       _CostRow('Maintenance', result.buyingCosts.maintenance),
-                      _CostRow('Tax Benefit', -result.buyingCosts.taxBenefit,
-                          isCredit: true),
+                      _CostRow(
+                        'Tax Benefit',
+                        -result.buyingCosts.taxBenefit,
+                        isCredit: true,
+                      ),
                       const Divider(),
                       _CostRow('Total', result.buyingCosts.total, isBold: true),
                     ],
@@ -450,15 +462,22 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                       Text(
                         'RENTING',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Colors.orange,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       _CostRow('Rent', result.rentingCosts.rent),
-                      _CostRow('Insurance', result.rentingCosts.rentersInsurance),
+                      _CostRow(
+                        'Insurance',
+                        result.rentingCosts.rentersInsurance,
+                      ),
                       const Divider(),
-                      _CostRow('Total', result.rentingCosts.total, isBold: true),
+                      _CostRow(
+                        'Total',
+                        result.rentingCosts.total,
+                        isBold: true,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         '* Opportunity cost of ${_currency.format(result.rentingCosts.opportunityCost)}/mo '
@@ -521,15 +540,21 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                         },
                       ),
                     ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   borderData: FlBorderData(show: true),
                   lineBarsData: [
                     // Buying Line
                     LineChartBarData(
                       spots: result.projections
-                          .map((p) => FlSpot(p.year.toDouble(), p.netWorthBuying))
+                          .map(
+                            (p) => FlSpot(p.year.toDouble(), p.netWorthBuying),
+                          )
                           .toList(),
                       isCurved: true,
                       color: Colors.blue,
@@ -539,7 +564,9 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                     // Renting Line
                     LineChartBarData(
                       spots: result.projections
-                          .map((p) => FlSpot(p.year.toDouble(), p.netWorthRenting))
+                          .map(
+                            (p) => FlSpot(p.year.toDouble(), p.netWorthRenting),
+                          )
                           .toList(),
                       isCurved: true,
                       color: Colors.orange,
@@ -588,7 +615,9 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const Divider(height: 24),
-            ...result.breakdown.steps.map((step) => _MethodologyStep(step: step)),
+            ...result.breakdown.steps.map(
+              (step) => _MethodologyStep(step: step),
+            ),
           ],
         ),
       ),
@@ -605,9 +634,9 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 }
@@ -647,7 +676,12 @@ class _CostRow extends StatelessWidget {
   final bool isBold;
   final bool isCredit;
 
-  const _CostRow(this.label, this.value, {this.isBold = false, this.isCredit = false});
+  const _CostRow(
+    this.label,
+    this.value, {
+    this.isBold = false,
+    this.isCredit = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -661,7 +695,9 @@ class _CostRow extends StatelessWidget {
             style: isBold ? const TextStyle(fontWeight: FontWeight.bold) : null,
           ),
           Text(
-            isCredit ? '-${_currency.format(value.abs())}' : _currency.format(value),
+            isCredit
+                ? '-${_currency.format(value.abs())}'
+                : _currency.format(value),
             style: TextStyle(
               fontWeight: isBold ? FontWeight.bold : null,
               color: isCredit ? Colors.green : null,
@@ -745,20 +781,22 @@ class _MethodologyStep extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               // Inputs
-              ...step.inputs.entries.map((e) => Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: Row(
-                      children: [
-                        Text('${e.key}: '),
-                        Text(
-                          e.value is double
-                              ? (e.value as double).toStringAsFixed(4)
-                              : e.value.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  )),
+              ...step.inputs.entries.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.only(left: 24),
+                  child: Row(
+                    children: [
+                      Text('${e.key}: '),
+                      Text(
+                        e.value is double
+                            ? (e.value as double).toStringAsFixed(4)
+                            : e.value.toString(),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 8),
               // Explanation
               Text(

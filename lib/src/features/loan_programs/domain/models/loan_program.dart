@@ -52,7 +52,8 @@ class LoanProgram {
       type: type ?? this.type,
       housingRatio: housingRatio ?? this.housingRatio,
       debtRatio: debtRatio ?? this.debtRatio,
-      minDownPaymentPercent: minDownPaymentPercent ?? this.minDownPaymentPercent,
+      minDownPaymentPercent:
+          minDownPaymentPercent ?? this.minDownPaymentPercent,
       maxLoanAmount: maxLoanAmount ?? this.maxLoanAmount,
       miConfig: miConfig ?? this.miConfig,
       isBuiltIn: isBuiltIn ?? this.isBuiltIn,
@@ -131,15 +132,7 @@ class LoanProgram {
   }
 }
 
-enum LoanProgramType {
-  conventional,
-  fha,
-  va,
-  usda,
-  jumbo,
-  nonQm,
-  custom,
-}
+enum LoanProgramType { conventional, fha, va, usda, jumbo, nonQm, custom }
 
 extension LoanProgramTypeExtension on LoanProgramType {
   String get displayName {

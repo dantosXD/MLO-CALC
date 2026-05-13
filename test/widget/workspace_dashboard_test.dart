@@ -59,11 +59,12 @@ void main() {
                 body: Center(
                   child: ElevatedButton(
                     onPressed: () async {
-                      selectedFeatureId = await Navigator.of(context).push<String>(
-                        MaterialPageRoute(
-                          builder: (_) => const WorkspaceDashboardScreen(),
-                        ),
-                      );
+                      selectedFeatureId = await Navigator.of(context)
+                          .push<String>(
+                            MaterialPageRoute(
+                              builder: (_) => const WorkspaceDashboardScreen(),
+                            ),
+                          );
                     },
                     child: const Text('Open dashboard'),
                   ),

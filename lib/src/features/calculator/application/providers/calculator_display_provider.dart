@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 class CalculatorDisplayNotifier with ChangeNotifier {
   String _displayValue = '0';
   String? _inputError;
-  
+
   // Arithmetic State
   double? _firstOperand;
   String? _operator;
   bool _shouldResetDisplay = false;
-  
+
   // Memory State
   double? _memory;
 
@@ -17,7 +17,7 @@ class CalculatorDisplayNotifier with ChangeNotifier {
   String? get inputError => _inputError;
   bool get hasMemory => _memory != null;
   double? get memory => _memory;
-  
+
   void setDisplayValue(String value) {
     _displayValue = value;
     _shouldResetDisplay = true;
@@ -121,10 +121,10 @@ class CalculatorDisplayNotifier with ChangeNotifier {
   void clearAll() {
     clear();
     _resetArithmeticState();
-    // Note: We don't clear memory here, similar to standard calculators? 
+    // Note: We don't clear memory here, similar to standard calculators?
     // Original code DID clear memory in clearAll() if I recall?
     // Let's check original... it did clear everything.
-    // But usually AC clears calculation, not memory. 
+    // But usually AC clears calculation, not memory.
     // I'll keep memory persistent for now unless requested otherwise.
     notifyListeners();
   }
@@ -183,7 +183,7 @@ class CalculatorDisplayNotifier with ChangeNotifier {
   void calculatePercent() {
     final current = double.tryParse(_displayValue);
     if (current == null) return;
-    
+
     // If we have a first operand, calculate percent of that
     if (_firstOperand != null) {
       // Example: 100 + 10% -> 100 + 10
@@ -198,12 +198,12 @@ class CalculatorDisplayNotifier with ChangeNotifier {
 
   String _formatResult(double result) {
     if (result.isInfinite || result.isNaN) return 'Error';
-    
+
     // If integer
     if (result.truncateToDouble() == result) {
       return result.toInt().toString();
     }
-    
+
     // Max 10 chars to fit screen?
     final int decimals = result.abs() >= 100 ? 2 : 4;
     return result

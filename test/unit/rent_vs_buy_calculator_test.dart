@@ -40,19 +40,11 @@ void main() {
   group('RentVsBuyCalculator', () {
     test('keeps PMI off at exactly 80% LTV and applies it at 80.01%', () {
       final exact80 = _calculator.calculate(
-        _buildInputs(
-          downPaymentPercent: 20,
-          interestRate: 0,
-          termYears: 30,
-        ),
+        _buildInputs(downPaymentPercent: 20, interestRate: 0, termYears: 30),
       );
 
       final over80 = _calculator.calculate(
-        _buildInputs(
-          downPaymentPercent: 19.99,
-          interestRate: 0,
-          termYears: 30,
-        ),
+        _buildInputs(downPaymentPercent: 19.99, interestRate: 0, termYears: 30),
       );
 
       expect(exact80.buyingCosts.pmi, equals(0));
@@ -76,11 +68,7 @@ void main() {
 
     test('uses the zero-rate monthly payment path without truncation', () {
       final result = _calculator.calculate(
-        _buildInputs(
-          downPaymentPercent: 20,
-          interestRate: 0,
-          termYears: 30,
-        ),
+        _buildInputs(downPaymentPercent: 20, interestRate: 0, termYears: 30),
       );
 
       expect(result.buyingCosts.principalAndInterest, closeTo(222.22, 0.01));
@@ -100,14 +88,19 @@ void main() {
       );
 
       expect(result.buyingCosts.principalAndInterest, closeTo(expected, 0.01));
-      expect(result.buyingCosts.principalAndInterest, isNot(closeTo(
-        _loanMath.calculatePayment(
-          loanAmount: inputs.loanAmount,
-          interestRate: 6.0,
-          termYears: 30,
+      expect(
+        result.buyingCosts.principalAndInterest,
+        isNot(
+          closeTo(
+            _loanMath.calculatePayment(
+              loanAmount: inputs.loanAmount,
+              interestRate: 6.0,
+              termYears: 30,
+            ),
+            0.01,
+          ),
         ),
-        0.01,
-      )));
+      );
     });
   });
 }

@@ -70,8 +70,12 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     super.initState();
     _channel = ShareChannel.shareSheet;
 
-    _borrowerController = TextEditingController(text: widget.borrowerName ?? '');
-    _scenarioController = TextEditingController(text: widget.scenarioName ?? '');
+    _borrowerController = TextEditingController(
+      text: widget.borrowerName ?? '',
+    );
+    _scenarioController = TextEditingController(
+      text: widget.scenarioName ?? '',
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ShareTemplatesProvider>();
@@ -90,10 +94,10 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
   }
 
   Map<String, String> get _tokens => widget.data.toTokenMap(
-        borrowerName: _borrowerController.text.trim(),
-        scenarioName: _scenarioController.text.trim(),
-        mloTokens: context.read<MloProfileProvider>().toTokenMap(),
-      );
+    borrowerName: _borrowerController.text.trim(),
+    scenarioName: _scenarioController.text.trim(),
+    mloTokens: context.read<MloProfileProvider>().toTokenMap(),
+  );
 
   void _applyTemplate(ShareTemplate template) {
     final renderedBody = ShareTemplateRenderer.render(template.body, _tokens);
@@ -122,7 +126,8 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
 
     final shouldOverwriteBody =
         _lastRenderedBody == null || _bodyController.text == _lastRenderedBody;
-    final shouldOverwriteSubject = _lastRenderedSubject == null ||
+    final shouldOverwriteSubject =
+        _lastRenderedSubject == null ||
         _subjectController.text == _lastRenderedSubject;
 
     setState(() {
@@ -144,10 +149,12 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     final provider = context.read<ShareTemplatesProvider>();
 
     final nameController = TextEditingController(text: current.name);
-    final subjectController = TextEditingController(text: current.subject ?? '');
+    final subjectController = TextEditingController(
+      text: current.subject ?? '',
+    );
     final bodyController = TextEditingController(text: current.body);
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompactDialog = screenWidth < 600;
 
     final result = await showDialog<_TemplateEditResult>(
@@ -190,7 +197,10 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _PlaceholdersHelp(tokens: _tokens, isCompact: isCompactDialog),
+                  _PlaceholdersHelp(
+                    tokens: _tokens,
+                    isCompact: isCompactDialog,
+                  ),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -240,8 +250,9 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Template saved')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Template saved')));
   }
 
   Future<void> _setChannel(ShareChannel channel) async {
@@ -255,7 +266,9 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     final provider = context.read<ShareTemplatesProvider>();
 
     final nameController = TextEditingController();
-    final subjectController = TextEditingController(text: _subjectController.text);
+    final subjectController = TextEditingController(
+      text: _subjectController.text,
+    );
 
     final String? name = await showDialog<String>(
       context: context,
@@ -311,9 +324,9 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saved template "$name"')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Saved template "$name"')));
 
     final created = provider.allTemplates
         .where((t) => t.id == 'custom_${_slug(name)}')
@@ -343,8 +356,9 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
       final subject = _subjectController.text.trim();
 
       final box = context.findRenderObject() as RenderBox?;
-      final Rect? shareOrigin =
-          box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+      final Rect? shareOrigin = box != null
+          ? (box.localToGlobal(Offset.zero) & box.size)
+          : null;
 
       switch (_channel) {
         case ShareChannel.copy:
@@ -364,9 +378,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
         case ShareChannel.sms:
           final uri = Uri(
             scheme: 'sms',
-            queryParameters: <String, String>{
-              'body': body,
-            },
+            queryParameters: <String, String>{'body': body},
           );
           if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
             throw Exception('Unable to open SMS app');
@@ -429,17 +441,17 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
 
   Future<Uint8List> _captureScreenshotPng() async {
     final boundary =
-        _screenshotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+        _screenshotKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
 
     if (boundary == null) {
       throw Exception('Screenshot not ready');
     }
 
     final ui.Image image = await boundary.toImage(
-      pixelRatio: MediaQuery.of(context).devicePixelRatio,
+      pixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
-    final byteData =
-        await image.toByteData(format: ui.ImageByteFormat.png);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     if (byteData == null) {
       throw Exception('Unable to encode image');
     }
@@ -453,7 +465,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
 
     final title = widget.title ?? 'Share Quote';
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 600;
 
     return AlertDialog(
@@ -552,7 +564,10 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
                   : (id) async {
                       if (id == null) return;
                       final t = templates.firstWhere((t) => t.id == id);
-                      await templatesProvider.setTemplateForChannel(_channel, t);
+                      await templatesProvider.setTemplateForChannel(
+                        _channel,
+                        t,
+                      );
                       _applyTemplate(t);
                     },
             ),
@@ -648,20 +663,13 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     );
   }
 
-  String _buttonLabel(ShareChannel channel) {
-    switch (channel) {
-      case ShareChannel.sms:
-        return 'Text';
-      case ShareChannel.email:
-        return 'Email';
-      case ShareChannel.shareSheet:
-        return 'Share';
-      case ShareChannel.copy:
-        return 'Copy';
-      case ShareChannel.screenshot:
-        return 'Share Image';
-    }
-  }
+  String _buttonLabel(ShareChannel channel) => switch (channel) {
+    ShareChannel.sms => 'Text',
+    ShareChannel.email => 'Email',
+    ShareChannel.shareSheet => 'Share',
+    ShareChannel.copy => 'Copy',
+    ShareChannel.screenshot => 'Share Image',
+  };
 }
 
 class _ChannelPicker extends StatelessWidget {
@@ -798,10 +806,7 @@ class _TemplateEditResult {
 }
 
 class _PlaceholdersHelp extends StatelessWidget {
-  const _PlaceholdersHelp({
-    required this.tokens,
-    this.isCompact = false,
-  });
+  const _PlaceholdersHelp({required this.tokens, this.isCompact = false});
 
   final Map<String, String> tokens;
   final bool isCompact;
@@ -835,9 +840,9 @@ class _PlaceholdersHelp extends StatelessWidget {
                 onTap: () async {
                   await Clipboard.setData(ClipboardData(text: label));
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Copied $label')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Copied $label')));
                 },
                 child: Chip(
                   label: Text(label, style: const TextStyle(fontSize: 11)),
@@ -885,9 +890,9 @@ class _PlaceholdersHelp extends StatelessWidget {
                   onTap: () async {
                     await Clipboard.setData(ClipboardData(text: label));
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Copied $label')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Copied $label')));
                   },
                   child: Chip(
                     label: Text(text),
@@ -904,10 +909,7 @@ class _PlaceholdersHelp extends StatelessWidget {
 }
 
 class _QuoteCardPreview extends StatelessWidget {
-  const _QuoteCardPreview({
-    required this.data,
-    required this.scenarioName,
-  });
+  const _QuoteCardPreview({required this.data, required this.scenarioName});
 
   final QuoteShareData data;
   final String? scenarioName;

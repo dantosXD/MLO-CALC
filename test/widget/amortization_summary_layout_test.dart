@@ -37,9 +37,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(
-            create: (_) => buildCalculatorProvider(),
-          ),
+          ChangeNotifierProvider(create: (_) => buildCalculatorProvider()),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme(),
@@ -67,9 +65,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(
-            create: (_) => buildCalculatorProvider(),
-          ),
+          ChangeNotifierProvider(create: (_) => buildCalculatorProvider()),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme(),

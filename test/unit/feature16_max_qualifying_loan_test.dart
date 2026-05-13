@@ -43,10 +43,22 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, greaterThan(400000), reason: 'Should qualify for >\$400k');
-      expect(provider.loanAmount!, lessThan(450000), reason: 'Should qualify for <\$450k');
+      expect(
+        provider.loanAmount!,
+        greaterThan(400000),
+        reason: 'Should qualify for >\$400k',
+      );
+      expect(
+        provider.loanAmount!,
+        lessThan(450000),
+        reason: 'Should qualify for <\$450k',
+      );
       expect(provider.payment, isNotNull);
-      expect(provider.payment!, greaterThan(0), reason: 'Should have positive payment');
+      expect(
+        provider.payment!,
+        greaterThan(0),
+        reason: 'Should have positive payment',
+      );
     });
 
     test('Calculate max loan with high income', () {
@@ -59,7 +71,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, greaterThan(900000), reason: 'Should qualify for >\$900k with \$250k income at 6.5%');
+      expect(
+        provider.loanAmount!,
+        greaterThan(900000),
+        reason: 'Should qualify for >\$900k with \$250k income at 6.5%',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -73,7 +89,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, lessThan(200000), reason: 'Should qualify for <\$200k with \$40k income');
+      expect(
+        provider.loanAmount!,
+        lessThan(200000),
+        reason: 'Should qualify for <\$200k with \$40k income',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -88,7 +108,11 @@ void main() {
 
       expect(provider.loanAmount, isNotNull);
       // With \$2000 monthly debt, should qualify for LESS than with \$500 debt
-      expect(provider.loanAmount!, lessThan(380000), reason: 'High debt should reduce qualifying amount');
+      expect(
+        provider.loanAmount!,
+        lessThan(380000),
+        reason: 'High debt should reduce qualifying amount',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -103,7 +127,11 @@ void main() {
 
       expect(provider.loanAmount, isNotNull);
       // With \$0 debt, should qualify for MORE than with \$500 debt
-      expect(provider.loanAmount!, greaterThan(430000), reason: 'No debt should increase qualifying amount');
+      expect(
+        provider.loanAmount!,
+        greaterThan(430000),
+        reason: 'No debt should increase qualifying amount',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -117,7 +145,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, lessThan(350000), reason: '15-year term should reduce qualifying amount');
+      expect(
+        provider.loanAmount!,
+        lessThan(350000),
+        reason: '15-year term should reduce qualifying amount',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -131,7 +163,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, lessThan(380000), reason: '7.5% rate should reduce qualifying amount');
+      expect(
+        provider.loanAmount!,
+        lessThan(380000),
+        reason: '7.5% rate should reduce qualifying amount',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -143,19 +179,25 @@ void main() {
       provider.setMonthlyDebt(value: 500);
 
       // Set FHA ratio
-      provider.setQualRatio1(const QualifyingRatio(
-        id: 'fha',
-        name: 'FHA',
-        housingRatio: 31,
-        debtRatio: 43,
-        isBuiltIn: true,
-      ));
+      provider.setQualRatio1(
+        const QualifyingRatio(
+          id: 'fha',
+          name: 'FHA',
+          housingRatio: 31,
+          debtRatio: 43,
+          isBuiltIn: true,
+        ),
+      );
 
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
       // FHA (31/43) should allow MORE than conventional (28/36)
-      expect(provider.loanAmount!, greaterThan(470000), reason: 'FHA ratios should allow higher loan amount');
+      expect(
+        provider.loanAmount!,
+        greaterThan(470000),
+        reason: 'FHA ratios should allow higher loan amount',
+      );
       expect(provider.payment, isNotNull);
     });
 
@@ -207,17 +249,24 @@ void main() {
 
       // Verify payment doesn't exceed housing ratio
       final monthlyIncome = 120000 / 12; // \$10,000
-      final maxHousingPayment = monthlyIncome * 0.28; // \$2,800 (28% housing ratio)
+      final maxHousingPayment =
+          monthlyIncome * 0.28; // \$2,800 (28% housing ratio)
 
-      expect(provider.payment!, lessThanOrEqualTo(maxHousingPayment),
-          reason: 'Payment should not exceed 28% housing ratio');
+      expect(
+        provider.payment!,
+        lessThanOrEqualTo(maxHousingPayment),
+        reason: 'Payment should not exceed 28% housing ratio',
+      );
 
       // Verify total debt doesn't exceed back-end ratio
       final totalDebt = provider.payment! + 1000; // Payment + existing debt
       final maxTotalDebt = monthlyIncome * 0.36; // \$3,600 (36% debt ratio)
 
-      expect(totalDebt, lessThanOrEqualTo(maxTotalDebt),
-          reason: 'Total debt should not exceed 36% back-end ratio');
+      expect(
+        totalDebt,
+        lessThanOrEqualTo(maxTotalDebt),
+        reason: 'Total debt should not exceed 36% back-end ratio',
+      );
     });
 
     test('History entry is created after calculation', () {
@@ -255,7 +304,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, greaterThan(550000), reason: 'Low rate should increase qualifying amount');
+      expect(
+        provider.loanAmount!,
+        greaterThan(550000),
+        reason: 'Low rate should increase qualifying amount',
+      );
     });
 
     test('Very high interest rate (10%)', () {
@@ -267,7 +320,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, lessThan(280000), reason: 'High rate should decrease qualifying amount');
+      expect(
+        provider.loanAmount!,
+        lessThan(280000),
+        reason: 'High rate should decrease qualifying amount',
+      );
     });
 
     test('Short term (10 years)', () {
@@ -279,7 +336,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, lessThan(250000), reason: '10-year term should significantly reduce qualifying amount');
+      expect(
+        provider.loanAmount!,
+        lessThan(250000),
+        reason: '10-year term should significantly reduce qualifying amount',
+      );
     });
 
     test('Long term (40 years)', () {
@@ -291,7 +352,11 @@ void main() {
       provider.calculateMaxQualifyingLoan(useRatio1: true);
 
       expect(provider.loanAmount, isNotNull);
-      expect(provider.loanAmount!, greaterThan(450000), reason: '40-year term should increase qualifying amount');
+      expect(
+        provider.loanAmount!,
+        greaterThan(450000),
+        reason: '40-year term should increase qualifying amount',
+      );
     });
 
     test('Income with cents', () {

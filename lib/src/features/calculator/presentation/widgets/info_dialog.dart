@@ -4,10 +4,7 @@ class InfoDialog extends StatelessWidget {
   const InfoDialog({super.key});
 
   static void show(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const InfoDialog(),
-    );
+    showDialog(context: context, builder: (context) => const InfoDialog());
   }
 
   @override
@@ -37,10 +34,7 @@ class InfoDialog extends StatelessWidget {
             const SizedBox(height: 8),
             const Divider(),
             const SizedBox(height: 8),
-            Text(
-              'Version 1.0.0',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text('Version 1.0.0', style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -62,15 +56,12 @@ class InfoDialog extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(height: 4),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );

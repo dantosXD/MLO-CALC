@@ -31,10 +31,14 @@ class FinancialValidators {
       return const ValidationResult.invalid('Interest rate must be positive');
     }
     if (rate < AppConstants.minInterestRate) {
-      return const ValidationResult.invalid('Interest rate too low (minimum ${AppConstants.minInterestRate}%)');
+      return const ValidationResult.invalid(
+        'Interest rate too low (minimum ${AppConstants.minInterestRate}%)',
+      );
     }
     if (rate > AppConstants.maxInterestRate) {
-      return const ValidationResult.invalid('Interest rate too high (maximum ${AppConstants.maxInterestRate}%)');
+      return const ValidationResult.invalid(
+        'Interest rate too high (maximum ${AppConstants.maxInterestRate}%)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -48,10 +52,14 @@ class FinancialValidators {
       return const ValidationResult.invalid('Loan amount must be positive');
     }
     if (amount < AppConstants.minLoanAmount) {
-      return const ValidationResult.invalid('Loan amount too low (minimum \$${AppConstants.minLoanAmount})');
+      return const ValidationResult.invalid(
+        'Loan amount too low (minimum \$${AppConstants.minLoanAmount})',
+      );
     }
     if (amount > AppConstants.maxLoanAmount) {
-      return const ValidationResult.invalid('Loan amount too high (maximum \$100M)');
+      return const ValidationResult.invalid(
+        'Loan amount too high (maximum \$100M)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -65,10 +73,14 @@ class FinancialValidators {
       return const ValidationResult.invalid('Term must be positive');
     }
     if (years < AppConstants.minTermYears) {
-      return const ValidationResult.invalid('Term too short (minimum ${AppConstants.minTermYears} year)');
+      return const ValidationResult.invalid(
+        'Term too short (minimum ${AppConstants.minTermYears} year)',
+      );
     }
     if (years > AppConstants.maxTermYears) {
-      return const ValidationResult.invalid('Term too long (maximum ${AppConstants.maxTermYears} years)');
+      return const ValidationResult.invalid(
+        'Term too long (maximum ${AppConstants.maxTermYears} years)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -82,7 +94,9 @@ class FinancialValidators {
       return const ValidationResult.invalid('Payment must be positive');
     }
     if (payment > AppConstants.maxPayment) {
-      return const ValidationResult.invalid('Payment too high (maximum \$1M/month)');
+      return const ValidationResult.invalid(
+        'Payment too high (maximum \$1M/month)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -96,7 +110,9 @@ class FinancialValidators {
       return const ValidationResult.invalid('Price must be positive');
     }
     if (price < AppConstants.minPrice) {
-      return const ValidationResult.invalid('Price too low (minimum \$${AppConstants.minPrice})');
+      return const ValidationResult.invalid(
+        'Price too low (minimum \$${AppConstants.minPrice})',
+      );
     }
     if (price > AppConstants.maxPrice) {
       return const ValidationResult.invalid('Price too high (maximum \$200M)');
@@ -105,7 +121,10 @@ class FinancialValidators {
   }
 
   /// Validates down payment (percentage or amount)
-  static ValidationResult validateDownPayment(double? downPayment, double? price) {
+  static ValidationResult validateDownPayment(
+    double? downPayment,
+    double? price,
+  ) {
     if (downPayment == null) {
       return const ValidationResult.invalid('Down payment is required');
     }
@@ -116,16 +135,20 @@ class FinancialValidators {
     // Heuristic: values under 100 are percentages, otherwise flat amounts
     // But check for bad percentages (> 100 but < typical min home price)
     if (downPayment > 100 && downPayment < 10000) {
-      return const ValidationResult.invalid('Down payment percentage cannot exceed 100%');
+      return const ValidationResult.invalid(
+        'Down payment percentage cannot exceed 100%',
+      );
     }
-    
+
     // If it's a flat amount (>= 10000)
     if (downPayment >= 10000) {
       if (price != null && downPayment >= price) {
-        return const ValidationResult.invalid('Down payment cannot equal or exceed price');
+        return const ValidationResult.invalid(
+          'Down payment cannot equal or exceed price',
+        );
       }
     }
-    
+
     return const ValidationResult.valid();
   }
 
@@ -136,7 +159,9 @@ class FinancialValidators {
       return const ValidationResult.invalid('Property tax cannot be negative');
     }
     if (tax > AppConstants.maxPropertyTax) {
-      return const ValidationResult.invalid('Property tax too high (maximum \$1M/year)');
+      return const ValidationResult.invalid(
+        'Property tax too high (maximum \$1M/year)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -148,7 +173,9 @@ class FinancialValidators {
       return const ValidationResult.invalid('Insurance cannot be negative');
     }
     if (insurance > AppConstants.maxInsurance) {
-      return const ValidationResult.invalid('Insurance too high (maximum \$100K/year)');
+      return const ValidationResult.invalid(
+        'Insurance too high (maximum \$100K/year)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -157,25 +184,34 @@ class FinancialValidators {
   static ValidationResult validateMonthlyExpenses(double? expenses) {
     if (expenses == null) return const ValidationResult.valid(); // Optional
     if (expenses < 0) {
-      return const ValidationResult.invalid('Monthly expenses cannot be negative');
+      return const ValidationResult.invalid(
+        'Monthly expenses cannot be negative',
+      );
     }
     if (expenses > AppConstants.maxMonthlyExpenses) {
-      return const ValidationResult.invalid('Monthly expenses too high (maximum \$50K/month)');
+      return const ValidationResult.invalid(
+        'Monthly expenses too high (maximum \$50K/month)',
+      );
     }
     return const ValidationResult.valid();
   }
 
   /// Validates annual income
   static ValidationResult validateAnnualIncome(double? income) {
-    if (income == null) return const ValidationResult.valid(); // Optional for some calculations
+    if (income == null)
+      return const ValidationResult.valid(); // Optional for some calculations
     if (income <= 0) {
       return const ValidationResult.invalid('Annual income must be positive');
     }
     if (income < AppConstants.minAnnualIncome) {
-      return const ValidationResult.invalid('Annual income too low (minimum \$${AppConstants.minAnnualIncome})');
+      return const ValidationResult.invalid(
+        'Annual income too low (minimum \$${AppConstants.minAnnualIncome})',
+      );
     }
     if (income > AppConstants.maxAnnualIncome) {
-      return const ValidationResult.invalid('Annual income too high (maximum \$100M)');
+      return const ValidationResult.invalid(
+        'Annual income too high (maximum \$100M)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -187,7 +223,9 @@ class FinancialValidators {
       return const ValidationResult.invalid('Monthly debt cannot be negative');
     }
     if (debt > AppConstants.maxMonthlyDebt) {
-      return const ValidationResult.invalid('Monthly debt too high (maximum \$500K/month)');
+      return const ValidationResult.invalid(
+        'Monthly debt too high (maximum \$500K/month)',
+      );
     }
     return const ValidationResult.valid();
   }
@@ -233,7 +271,9 @@ class FinancialValidators {
   /// Validates input length to prevent overflow
   static ValidationResult validateInputLength(String input) {
     if (input.length > AppConstants.maxInputLength) {
-      return const ValidationResult.invalid('Input too long (maximum ${AppConstants.maxInputLength} characters)');
+      return const ValidationResult.invalid(
+        'Input too long (maximum ${AppConstants.maxInputLength} characters)',
+      );
     }
     return const ValidationResult.valid();
   }

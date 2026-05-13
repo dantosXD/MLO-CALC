@@ -85,7 +85,11 @@ class DecimalUtils {
   /// Safe division that handles divide-by-zero
   ///
   /// Returns [defaultValue] if divisor is zero or near-zero.
-  static double safeDivide(double numerator, double divisor, {double defaultValue = 0.0}) {
+  static double safeDivide(
+    double numerator,
+    double divisor, {
+    double defaultValue = 0.0,
+  }) {
     if (divisor.abs() < 1e-10) {
       return defaultValue;
     }

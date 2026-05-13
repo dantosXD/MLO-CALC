@@ -5,8 +5,8 @@ class QualifyingRatio {
   final String name;
   final String? description;
   final double housingRatio; // Front-end DTI
-  final double debtRatio;    // Back-end DTI
-  final bool isBuiltIn;      // Cannot delete built-in ratios
+  final double debtRatio; // Back-end DTI
+  final bool isBuiltIn; // Cannot delete built-in ratios
 
   const QualifyingRatio({
     required this.id,

@@ -46,10 +46,7 @@ class QualificationService {
     }
 
     return CalcResult.success(
-      QualificationResult(
-        loanAmount: loanAmount,
-        monthlyPiPayment: maxPi,
-      ),
+      QualificationResult(loanAmount: loanAmount, monthlyPiPayment: maxPi),
     );
   }
 

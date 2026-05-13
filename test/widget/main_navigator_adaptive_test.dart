@@ -12,9 +12,7 @@ void main() {
   });
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({
-      'calculator_layout': 'classic',
-    });
+    SharedPreferences.setMockInitialValues({'calculator_layout': 'classic'});
   });
 
   tearDown(() {

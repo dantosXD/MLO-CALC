@@ -4,9 +4,7 @@ import 'package:loan_ranger/src/features/calculator/domain/models/calculation_re
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
 
 class FakeLoanMath extends LoanMath {
-  const FakeLoanMath({
-    required this.payment,
-  });
+  const FakeLoanMath({required this.payment});
 
   final double payment;
 

@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/theme/calculator_palette.dart';
+
+// Record holding only the fields AnimatedDisplay actually renders.
+// context.select re-renders only when one of these changes, not on any
+// unrelated CalculatorProvider mutation (e.g. closingCosts, errors).
+typedef _DisplaySnapshot = ({
+  double? loanAmount,
+  double? interestRate,
+  double? termYears,
+  double? displayPayment,
+  PaymentDisplayMode displayMode,
+  double? propertyTax,
+  double? homeInsurance,
+  double? mortgageInsurance,
+  double? monthlyExpenses,
+});
 
 class AnimatedDisplay extends StatelessWidget {
   final String displayValue;
@@ -18,12 +34,26 @@ class AnimatedDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final calculatorProvider = Provider.of<CalculatorProvider>(context);
+    final s = context.select<CalculatorProvider, _DisplaySnapshot>(
+      (p) => (
+        loanAmount: p.loanAmount,
+        interestRate: p.interestRate,
+        termYears: p.termYears,
+        displayPayment: p.displayPayment,
+        displayMode: p.displayMode,
+        propertyTax: p.propertyTax,
+        homeInsurance: p.homeInsurance,
+        mortgageInsurance: p.mortgageInsurance,
+        monthlyExpenses: p.monthlyExpenses,
+      ),
+    );
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final palette = theme.extension<CalculatorPalette>();
     final colorScheme = theme.colorScheme;
-    final gradient = palette?.backgroundGradient ??
+    final gradient =
+        palette?.backgroundGradient ??
         LinearGradient(
           colors: [
             colorScheme.primaryContainer,
@@ -37,205 +67,220 @@ class AnimatedDisplay extends StatelessWidget {
 
     return GestureDetector(
       onVerticalDragEnd: (details) {
-        // Swipe up = forward, Swipe down = reverse
         if (details.primaryVelocity != null) {
+          final provider = context.read<CalculatorProvider>();
           if (details.primaryVelocity! < -500) {
-            // Swipe up
-            calculatorProvider.cycleDisplayMode();
+            provider.cycleDisplayMode();
           } else if (details.primaryVelocity! > 500) {
-            // Swipe down
-            calculatorProvider.cycleDisplayMode(reverse: true);
+            provider.cycleDisplayMode(reverse: true);
           }
         }
       },
       child: Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: palette?.keyShadow ??
-                Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
-            blurRadius: isDark ? 28 : 18,
-            offset: Offset(0, isDark ? 12 : 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Main Display Value
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: (palette?.displayBackground ??
-                          colorScheme.surfaceContainerHighest)
-                      .withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.35),
-                    width: 1,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  palette?.keyShadow ??
+                  Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+              blurRadius: isDark ? 28 : 18,
+              offset: Offset(0, isDark ? 12 : 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Main Display Value
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Expanded(
-                      child: FittedBox(
-                        alignment: Alignment.centerRight,
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          _formatDisplayValue(displayValue),
-                          key: ValueKey<String>(displayValue),
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: isError ? colorScheme.error : accentOn,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                offset: const Offset(0, 2),
-                                blurRadius: 4,
-                              ),
-                            ],
+                  decoration: BoxDecoration(
+                    color:
+                        (palette?.displayBackground ??
+                                colorScheme.surfaceContainerHighest)
+                            .withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: accent.withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        child: FittedBox(
+                          alignment: Alignment.centerRight,
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _formatDisplayValue(displayValue),
+                            key: ValueKey<String>(displayValue),
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: isError ? colorScheme.error : accentOn,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  offset: const Offset(0, 2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        subtitle ?? _getDisplayLabel(calculatorProvider),
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: accentOn,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.8,
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          subtitle ?? _labelFor(s.displayMode),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: accentOn,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
+              const SizedBox(height: 6),
 
-            // Status Grid - Compact (Loan Info)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildCompactStatusItem(
-                  context,
-                  'L/A',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.loanAmount, maxDigits: 7),
-                  calculatorProvider.loanAmount != null,
-                ),
-                _buildCompactStatusItem(
-                  context,
-                  'Rate',
-                  calculatorProvider.interestRate != null
-                    ? CurrencyFormatter.formatPercent(
-                        calculatorProvider.interestRate,
-                        decimals: 3,
-                      )
-                    : '--',
-                  calculatorProvider.interestRate != null,
-                ),
-                _buildCompactStatusItem(
-                  context,
-                  'Term',
-                  calculatorProvider.termYears != null
-                    ? '${calculatorProvider.termYears!.toStringAsFixed(1)}y'
-                    : '--',
-                  calculatorProvider.termYears != null,
-                ),
-                _buildCompactStatusItem(
-                  context,
-                  'Pmt',
-                  CurrencyFormatter.formatCompactCurrency(calculatorProvider.displayPayment, maxDigits: 7),
-                  calculatorProvider.displayPayment != null,
-                ),
-              ],
-            ),
-            
-            // PITI Components Row - Only show if any are set
-            if (_hasPitiComponents(calculatorProvider)) ...[
-              const SizedBox(height: 4),
+              // Status Grid - Compact (Loan Info)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  if (calculatorProvider.propertyTax != null)
-                    _buildCompactStatusItem(
-                      context,
-                      'Tax',
-                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.propertyTax! / 12, maxDigits: 7),
-                      true,
+                  _buildCompactStatusItem(
+                    context,
+                    'L/A',
+                    CurrencyFormatter.formatCompactCurrency(
+                      s.loanAmount,
+                      maxDigits: 7,
                     ),
-                  if (calculatorProvider.homeInsurance != null)
-                    _buildCompactStatusItem(
-                      context,
-                      'Ins',
-                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.homeInsurance! / 12, maxDigits: 7),
-                      true,
+                    s.loanAmount != null,
+                  ),
+                  _buildCompactStatusItem(
+                    context,
+                    'Rate',
+                    s.interestRate != null
+                        ? CurrencyFormatter.formatPercent(
+                            s.interestRate,
+                            decimals: 3,
+                          )
+                        : '--',
+                    s.interestRate != null,
+                  ),
+                  _buildCompactStatusItem(
+                    context,
+                    'Term',
+                    s.termYears != null
+                        ? '${s.termYears!.toStringAsFixed(1)}y'
+                        : '--',
+                    s.termYears != null,
+                  ),
+                  _buildCompactStatusItem(
+                    context,
+                    'Pmt',
+                    CurrencyFormatter.formatCompactCurrency(
+                      s.displayPayment,
+                      maxDigits: 7,
                     ),
-                  if (calculatorProvider.mortgageInsurance != null)
-                    _buildCompactStatusItem(
-                      context,
-                      'PMI',
-                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.mortgageInsurance! / 12, maxDigits: 7),
-                      true,
-                    ),
-                  if (calculatorProvider.monthlyExpenses != null)
-                    _buildCompactStatusItem(
-                      context,
-                      'HOA',
-                      CurrencyFormatter.formatCompactCurrency(calculatorProvider.monthlyExpenses, maxDigits: 7),
-                      true,
-                    ),
+                    s.displayPayment != null,
+                  ),
                 ],
               ),
+
+              // PITI Components Row - Only show if any are set
+              if (s.propertyTax != null ||
+                  s.homeInsurance != null ||
+                  s.mortgageInsurance != null ||
+                  s.monthlyExpenses != null) ...[
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (s.propertyTax != null)
+                      _buildCompactStatusItem(
+                        context,
+                        'Tax',
+                        CurrencyFormatter.formatCompactCurrency(
+                          s.propertyTax! / 12,
+                          maxDigits: 7,
+                        ),
+                        true,
+                      ),
+                    if (s.homeInsurance != null)
+                      _buildCompactStatusItem(
+                        context,
+                        'Ins',
+                        CurrencyFormatter.formatCompactCurrency(
+                          s.homeInsurance! / 12,
+                          maxDigits: 7,
+                        ),
+                        true,
+                      ),
+                    if (s.mortgageInsurance != null)
+                      _buildCompactStatusItem(
+                        context,
+                        'PMI',
+                        CurrencyFormatter.formatCompactCurrency(
+                          s.mortgageInsurance! / 12,
+                          maxDigits: 7,
+                        ),
+                        true,
+                      ),
+                    if (s.monthlyExpenses != null)
+                      _buildCompactStatusItem(
+                        context,
+                        'HOA',
+                        CurrencyFormatter.formatCompactCurrency(
+                          s.monthlyExpenses,
+                          maxDigits: 7,
+                        ),
+                        true,
+                      ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
       ),
     );
   }
-  
-  bool _hasPitiComponents(CalculatorProvider provider) {
-    return provider.propertyTax != null ||
-           provider.homeInsurance != null ||
-           provider.mortgageInsurance != null ||
-           provider.monthlyExpenses != null;
-  }
 
-  String _getDisplayLabel(CalculatorProvider provider) {
-    switch (provider.displayMode) {
-      case PaymentDisplayMode.interestOnly:
-        return 'INTEREST ONLY';
-      case PaymentDisplayMode.piti:
-        return 'MONTHLY PITI';
-      case PaymentDisplayMode.standardPI:
-        return 'MONTHLY P&I';
-    }
-  }
+  static String _labelFor(PaymentDisplayMode mode) => switch (mode) {
+    PaymentDisplayMode.interestOnly => 'INTEREST ONLY',
+    PaymentDisplayMode.piti => 'MONTHLY PITI',
+    PaymentDisplayMode.standardPI => 'MONTHLY P&I',
+  };
 
   String _formatDisplayValue(String rawValue) {
-    // Try to parse and format the display value
     final double? numValue = double.tryParse(rawValue);
     if (numValue != null && !isError) {
       return CurrencyFormatter.formatNumber(numValue, decimals: 2);

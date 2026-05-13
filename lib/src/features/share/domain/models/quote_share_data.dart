@@ -31,7 +31,9 @@ class QuoteShareData {
   final double? price;
   final double? downPayment;
 
-  static QuoteShareData fromCalculatorProvider(LoanParametersReadModel provider) {
+  static QuoteShareData fromCalculatorProvider(
+    LoanParametersReadModel provider,
+  ) {
     final monthlyTax = (provider.propertyTax ?? 0) / 12;
     final monthlyInsurance = (provider.homeInsurance ?? 0) / 12;
     final monthlyMortgageInsurance = (provider.mortgageInsurance ?? 0) / 12;
@@ -45,8 +47,9 @@ class QuoteShareData {
       pitiPayment: provider.pitiPayment,
       monthlyTax: monthlyTax == 0 ? null : monthlyTax,
       monthlyInsurance: monthlyInsurance == 0 ? null : monthlyInsurance,
-      monthlyMortgageInsurance:
-          monthlyMortgageInsurance == 0 ? null : monthlyMortgageInsurance,
+      monthlyMortgageInsurance: monthlyMortgageInsurance == 0
+          ? null
+          : monthlyMortgageInsurance,
       monthlyHoa: monthlyHoa == 0 ? null : monthlyHoa,
       cashToClose: provider.cashToClose,
       price: provider.price,
@@ -68,8 +71,9 @@ class QuoteShareData {
       pitiPayment: entry.pitiPayment,
       monthlyTax: monthlyTax == 0 ? null : monthlyTax,
       monthlyInsurance: monthlyInsurance == 0 ? null : monthlyInsurance,
-      monthlyMortgageInsurance:
-          monthlyMortgageInsurance == 0 ? null : monthlyMortgageInsurance,
+      monthlyMortgageInsurance: monthlyMortgageInsurance == 0
+          ? null
+          : monthlyMortgageInsurance,
       monthlyHoa: monthlyHoa == 0 ? null : monthlyHoa,
       cashToClose: null,
       price: entry.price,
@@ -90,17 +94,19 @@ class QuoteShareData {
     tokens['loan_amount'] = loanAmount != null
         ? CurrencyFormatter.formatCurrency(loanAmount, showDecimals: false)
         : '';
-    tokens['interest_rate'] =
-        interestRate != null
-            ? CurrencyFormatter.formatPercent(interestRate, decimals: 3)
-            : '';
-    tokens['term_years'] =
-        termYears != null ? '${termYears!.toStringAsFixed(1)} years' : '';
+    tokens['interest_rate'] = interestRate != null
+        ? CurrencyFormatter.formatPercent(interestRate, decimals: 3)
+        : '';
+    tokens['term_years'] = termYears != null
+        ? '${termYears!.toStringAsFixed(1)} years'
+        : '';
 
-    tokens['pi_payment'] =
-        piPayment != null ? CurrencyFormatter.formatCurrency(piPayment) : '';
-    tokens['piti_payment'] =
-        pitiPayment != null ? CurrencyFormatter.formatCurrency(pitiPayment) : '';
+    tokens['pi_payment'] = piPayment != null
+        ? CurrencyFormatter.formatCurrency(piPayment)
+        : '';
+    tokens['piti_payment'] = pitiPayment != null
+        ? CurrencyFormatter.formatCurrency(pitiPayment)
+        : '';
 
     tokens['monthly_tax'] = monthlyTax != null
         ? CurrencyFormatter.formatCurrency(monthlyTax)
@@ -119,8 +125,9 @@ class QuoteShareData {
         ? CurrencyFormatter.formatCurrency(cashToClose)
         : '';
 
-    tokens['price'] =
-        price != null ? CurrencyFormatter.formatCurrency(price, showDecimals: false) : '';
+    tokens['price'] = price != null
+        ? CurrencyFormatter.formatCurrency(price, showDecimals: false)
+        : '';
     tokens['down_payment'] = downPayment != null
         ? CurrencyFormatter.formatCurrency(downPayment, showDecimals: false)
         : '';
@@ -132,7 +139,8 @@ class QuoteShareData {
     tokens['mlo_phone'] = mloTokens?['mlo_phone'] ?? '';
     tokens['mlo_email'] = mloTokens?['mlo_email'] ?? '';
 
-    tokens['disclaimer'] = mloTokens?['disclaimer'] ??
+    tokens['disclaimer'] =
+        mloTokens?['disclaimer'] ??
         'Estimates only. Not a loan offer. Taxes/insurance/MI may vary.';
 
     return tokens;

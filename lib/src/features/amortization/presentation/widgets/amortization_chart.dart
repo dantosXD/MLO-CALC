@@ -3,31 +3,64 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 
-class AmortizationChart extends StatelessWidget {
+class AmortizationChart extends StatefulWidget {
   final List<AmortizationEntry> data;
 
-  const AmortizationChart({
-    super.key,
-    required this.data,
-  });
+  const AmortizationChart({super.key, required this.data});
+
+  @override
+  State<AmortizationChart> createState() => _AmortizationChartState();
+}
+
+class _AmortizationChartState extends State<AmortizationChart> {
+  late List<FlSpot> _principalSpots;
+  late List<FlSpot> _interestSpots;
+  late double _maxY;
+
+  @override
+  void initState() {
+    super.initState();
+    _buildCache(widget.data);
+  }
+
+  @override
+  void didUpdateWidget(AmortizationChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.data, widget.data)) {
+      _buildCache(widget.data);
+    }
+  }
+
+  void _buildCache(List<AmortizationEntry> data) {
+    _principalSpots = List.unmodifiable(
+      data.asMap().entries.map(
+        (e) => FlSpot(e.key.toDouble(), e.value.principal),
+      ),
+    );
+    _interestSpots = List.unmodifiable(
+      data.asMap().entries.map(
+        (e) => FlSpot(e.key.toDouble(), e.value.interest),
+      ),
+    );
+
+    double maxPrincipal = 0;
+    double maxInterest = 0;
+    for (final entry in data) {
+      if (entry.principal > maxPrincipal) maxPrincipal = entry.principal;
+      if (entry.interest > maxInterest) maxInterest = entry.interest;
+    }
+    final maxValue = maxPrincipal > maxInterest ? maxPrincipal : maxInterest;
+    _maxY = (maxValue * 1.2).ceilToDouble();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final data = widget.data;
     if (data.isEmpty) {
       return const SizedBox.shrink();
     }
 
     final colorScheme = Theme.of(context).colorScheme;
-
-    // Sample data for chart (every 12 months to reduce clutter)
-    final sampledData = <AmortizationEntry>[];
-    for (int i = 0; i < data.length; i += 12) {
-      sampledData.add(data[i]);
-    }
-    // Always add the last entry
-    if (data.last != sampledData.last) {
-      sampledData.add(data.last);
-    }
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -51,7 +84,7 @@ class AmortizationChart extends StatelessWidget {
                     horizontalInterval: 50000,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
-                        color: colorScheme.outline.withAlpha(51),
+                        color: colorScheme.outline.withValues(alpha: 0.20),
                         strokeWidth: 1,
                       );
                     },
@@ -79,7 +112,9 @@ class AmortizationChart extends StatelessWidget {
                             child: Text(
                               'Yr $year',
                               style: TextStyle(
-                                color: colorScheme.onSurface.withAlpha(179),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.70,
+                                ),
                                 fontSize: 12,
                               ),
                             ),
@@ -95,7 +130,9 @@ class AmortizationChart extends StatelessWidget {
                           return Text(
                             '\$${(value / 1000).toStringAsFixed(0)}k',
                             style: TextStyle(
-                              color: colorScheme.onSurface.withAlpha(179),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.70,
+                              ),
                               fontSize: 12,
                             ),
                           );
@@ -113,16 +150,10 @@ class AmortizationChart extends StatelessWidget {
                   minX: 0,
                   maxX: data.length.toDouble() - 1,
                   minY: 0,
-                  maxY: _getMaxY(),
+                  maxY: _maxY,
                   lineBarsData: [
-                    // Principal line
                     LineChartBarData(
-                      spots: data.asMap().entries.map((entry) {
-                        return FlSpot(
-                          entry.key.toDouble(),
-                          entry.value.principal,
-                        );
-                      }).toList(),
+                      spots: _principalSpots,
                       isCurved: true,
                       color: colorScheme.primary,
                       barWidth: 3,
@@ -130,17 +161,11 @@ class AmortizationChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: colorScheme.primary.withAlpha(51),
+                        color: colorScheme.primary.withValues(alpha: 0.20),
                       ),
                     ),
-                    // Interest line
                     LineChartBarData(
-                      spots: data.asMap().entries.map((entry) {
-                        return FlSpot(
-                          entry.key.toDouble(),
-                          entry.value.interest,
-                        );
-                      }).toList(),
+                      spots: _interestSpots,
                       isCurved: true,
                       color: colorScheme.secondary,
                       barWidth: 3,
@@ -148,7 +173,7 @@ class AmortizationChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: colorScheme.secondary.withAlpha(51),
+                        color: colorScheme.secondary.withValues(alpha: 0.20),
                       ),
                     ),
                   ],
@@ -178,15 +203,9 @@ class AmortizationChart extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _LegendItem(
-                  color: colorScheme.primary,
-                  label: 'Principal',
-                ),
+                _LegendItem(color: colorScheme.primary, label: 'Principal'),
                 const SizedBox(width: 24),
-                _LegendItem(
-                  color: colorScheme.secondary,
-                  label: 'Interest',
-                ),
+                _LegendItem(color: colorScheme.secondary, label: 'Interest'),
               ],
             ),
           ],
@@ -194,29 +213,13 @@ class AmortizationChart extends StatelessWidget {
       ),
     );
   }
-
-  double _getMaxY() {
-    double maxPrincipal = 0;
-    double maxInterest = 0;
-
-    for (final entry in data) {
-      if (entry.principal > maxPrincipal) maxPrincipal = entry.principal;
-      if (entry.interest > maxInterest) maxInterest = entry.interest;
-    }
-
-    final maxValue = maxPrincipal > maxInterest ? maxPrincipal : maxInterest;
-    return (maxValue * 1.2).ceilToDouble();
-  }
 }
 
 class _LegendItem extends StatelessWidget {
   final Color color;
   final String label;
 
-  const _LegendItem({
-    required this.color,
-    required this.label,
-  });
+  const _LegendItem({required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -231,10 +234,7 @@ class _LegendItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }

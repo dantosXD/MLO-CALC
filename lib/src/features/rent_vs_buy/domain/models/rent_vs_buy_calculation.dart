@@ -1,11 +1,11 @@
 /// Comprehensive Rent vs Buy analysis model
-/// 
+///
 /// This model captures all inputs and outputs for a rent vs buy comparison,
 /// with full transparency into how each value is calculated.
 class RentVsBuyCalculation {
   // INPUTS
   final RentVsBuyInputs inputs;
-  
+
   // CALCULATED RESULTS
   final MonthlyBuyingCosts buyingCosts;
   final MonthlyRentingCosts rentingCosts;
@@ -33,7 +33,7 @@ class RentVsBuyInputs {
   final double downPaymentPercent;
   final double interestRate;
   final double termYears;
-  
+
   // Buying Costs
   final double propertyTaxRate; // Annual rate as percentage of home value
   final double homeInsuranceAnnual;
@@ -41,16 +41,17 @@ class RentVsBuyInputs {
   final double maintenancePercent; // Annual as percentage of home value
   final double closingCostsPercent;
   final double pmiRate; // Annual PMI rate if LTV > 80%
-  
+
   // Renting Costs
   final double monthlyRent;
   final double annualRentIncrease; // Percentage
   final double rentersInsuranceMonthly;
-  
+
   // Economic Assumptions
   final double homeAppreciationRate; // Annual percentage
   final double investmentReturnRate; // What renter earns on saved down payment
-  final double marginalTaxRate; // For mortgage interest deduction (if itemizing)
+  final double
+  marginalTaxRate; // For mortgage interest deduction (if itemizing)
   final int analysisYears;
 
   const RentVsBuyInputs({
@@ -88,7 +89,7 @@ class MonthlyBuyingCosts {
   final double hoa;
   final double maintenance;
   final double taxBenefit; // Negative (reduces cost)
-  
+
   const MonthlyBuyingCosts({
     required this.principalAndInterest,
     required this.propertyTax,
@@ -99,23 +100,24 @@ class MonthlyBuyingCosts {
     required this.taxBenefit,
   });
 
-  double get total => 
-      principalAndInterest + 
-      propertyTax + 
-      homeInsurance + 
-      pmi + 
-      hoa + 
-      maintenance - 
+  double get total =>
+      principalAndInterest +
+      propertyTax +
+      homeInsurance +
+      pmi +
+      hoa +
+      maintenance -
       taxBenefit;
 
-  double get totalPiti => principalAndInterest + propertyTax + homeInsurance + pmi;
+  double get totalPiti =>
+      principalAndInterest + propertyTax + homeInsurance + pmi;
 }
 
 class MonthlyRentingCosts {
   final double rent;
   final double rentersInsurance;
   final double opportunityCost; // Lost investment return on down payment
-  
+
   const MonthlyRentingCosts({
     required this.rent,
     required this.rentersInsurance,

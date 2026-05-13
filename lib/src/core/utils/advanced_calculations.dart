@@ -45,7 +45,6 @@ class AdvancedCalculations {
   static const int maxNewtonIterations = 100; // Max iterations for APR solving
   static const double convergenceTolerance = 0.0001; // Convergence threshold
 
-
   /// Calculate ARM (Adjustable Rate Mortgage) schedule
   ///
   /// Parameters:
@@ -84,21 +83,28 @@ class AdvancedCalculations {
       if (monthlyRate <= 0) {
         payment = DecimalUtils.roundToCents(currentBalance / remainingMonths);
       } else {
-        payment = DecimalUtils.roundToCents(currentBalance *
-            (monthlyRate * pow(1 + monthlyRate, remainingMonths)) /
-            (pow(1 + monthlyRate, remainingMonths) - 1));
+        payment = DecimalUtils.roundToCents(
+          currentBalance *
+              (monthlyRate * pow(1 + monthlyRate, remainingMonths)) /
+              (pow(1 + monthlyRate, remainingMonths) - 1),
+        );
       }
 
       // Determine how many months this rate applies
-      final int periodEndMonth = min(currentMonth + adjustmentMonths, totalMonths);
+      final int periodEndMonth = min(
+        currentMonth + adjustmentMonths,
+        totalMonths,
+      );
       final int monthsInPeriod = periodEndMonth - currentMonth;
 
       // Amortize for this period
       for (int i = 0; i < monthsInPeriod && currentBalance > 0; i++) {
-        final double interestPaid =
-            DecimalUtils.roundToCents(currentBalance * monthlyRate);
-        final double principalPaid =
-            DecimalUtils.roundToCents(payment - interestPaid);
+        final double interestPaid = DecimalUtils.roundToCents(
+          currentBalance * monthlyRate,
+        );
+        final double principalPaid = DecimalUtils.roundToCents(
+          payment - interestPaid,
+        );
 
         currentBalance = DecimalUtils.ensureNonNegative(
           DecimalUtils.roundToCents(currentBalance - principalPaid),
@@ -107,14 +113,17 @@ class AdvancedCalculations {
         totalPaid = DecimalUtils.roundToCents(totalPaid + payment);
       }
 
-      periods.add(ARMPeriod(
-        startMonth: currentMonth + 1,
-        endMonth: periodEndMonth,
-        interestRate: currentRate,
-        monthlyPayment: DecimalUtils.roundToCents(payment),
-        remainingBalance:
-            currentBalance > 0 ? DecimalUtils.roundToCents(currentBalance) : 0,
-      ));
+      periods.add(
+        ARMPeriod(
+          startMonth: currentMonth + 1,
+          endMonth: periodEndMonth,
+          interestRate: currentRate,
+          monthlyPayment: DecimalUtils.roundToCents(payment),
+          remainingBalance: currentBalance > 0
+              ? DecimalUtils.roundToCents(currentBalance)
+              : 0,
+        ),
+      );
 
       currentMonth = periodEndMonth;
 
@@ -160,7 +169,8 @@ class AdvancedCalculations {
     final double monthlyRate = interestRate / 100 / 12;
     final int numPayments = (termYears * 12).round();
 
-    final double monthlyPayment = loanAmount *
+    final double monthlyPayment =
+        loanAmount *
         (monthlyRate * pow(1 + monthlyRate, numPayments)) /
         (pow(1 + monthlyRate, numPayments) - 1);
 
@@ -190,8 +200,8 @@ class AdvancedCalculations {
       }
 
       // Present value of payments at test rate
-      final double pv = monthlyPayment *
-          (1 - pow(1 + testRate, -numPayments)) / testRate;
+      final double pv =
+          monthlyPayment * (1 - pow(1 + testRate, -numPayments)) / testRate;
 
       // Difference from net loan amount
       final double difference = pv - netLoanAmount;
@@ -205,7 +215,8 @@ class AdvancedCalculations {
       if (difference.abs() < tolerance) break;
 
       // Derivative for Newton's method
-      final double pvPrime = monthlyPayment *
+      final double pvPrime =
+          monthlyPayment *
           (numPayments * pow(1 + testRate, -numPayments - 1) / testRate -
               (1 - pow(1 + testRate, -numPayments)) / (testRate * testRate));
 
@@ -282,24 +293,28 @@ class AdvancedCalculations {
 
     final double monthlyPayment = monthlyRate <= 0
         ? DecimalUtils.roundToCents(loanAmount / totalMonths)
-        : DecimalUtils.roundToCents(loanAmount *
-            (monthlyRate * pow(1 + monthlyRate, totalMonths)) /
-            (pow(1 + monthlyRate, totalMonths) - 1));
+        : DecimalUtils.roundToCents(
+            loanAmount *
+                (monthlyRate * pow(1 + monthlyRate, totalMonths)) /
+                (pow(1 + monthlyRate, totalMonths) - 1),
+          );
 
     double balance = DecimalUtils.roundToCents(loanAmount);
     final int monthsElapsed = (years * 12).round();
 
     for (int i = 0; i < monthsElapsed && i < totalMonths; i++) {
       final double interest = DecimalUtils.roundToCents(balance * monthlyRate);
-      final double principal =
-          DecimalUtils.roundToCents(monthlyPayment - interest);
+      final double principal = DecimalUtils.roundToCents(
+        monthlyPayment - interest,
+      );
       balance = DecimalUtils.ensureNonNegative(
         DecimalUtils.roundToCents(balance - principal),
       );
     }
 
-    final double remainingBalance =
-        balance > 0 ? DecimalUtils.roundToCents(balance) : 0;
+    final double remainingBalance = balance > 0
+        ? DecimalUtils.roundToCents(balance)
+        : 0;
 
     return DecimalUtils.roundToCents(futureValue - remainingBalance);
   }
@@ -320,7 +335,9 @@ class AdvancedCalculations {
     required int daysUntilFirstPayment,
   }) {
     final double dailyRate = (interestRate / 100) / 365;
-    return DecimalUtils.roundToCents(loanAmount * dailyRate * daysUntilFirstPayment);
+    return DecimalUtils.roundToCents(
+      loanAmount * dailyRate * daysUntilFirstPayment,
+    );
   }
 
   /// Calculate after-tax monthly payment
@@ -372,13 +389,15 @@ class AdvancedCalculations {
 
     // Calculate payment at original rate
     final double origMonthlyRate = originalRate / 100 / 12;
-    final double originalPayment = loanAmount *
+    final double originalPayment =
+        loanAmount *
         (origMonthlyRate * pow(1 + origMonthlyRate, numPayments)) /
         (pow(1 + origMonthlyRate, numPayments) - 1);
 
     // Calculate payment at discounted rate
     final double discMonthlyRate = discountedRate / 100 / 12;
-    final double discountedPayment = loanAmount *
+    final double discountedPayment =
+        loanAmount *
         (discMonthlyRate * pow(1 + discMonthlyRate, numPayments)) /
         (pow(1 + discMonthlyRate, numPayments) - 1);
 
@@ -405,14 +424,16 @@ class AdvancedCalculations {
     // Current payment
     final int currentMonths = (currentRemainingTermYears * 12).round();
     final double currentMonthlyRate = currentRate / 100 / 12;
-    final double currentPayment = currentBalance *
+    final double currentPayment =
+        currentBalance *
         (currentMonthlyRate * pow(1 + currentMonthlyRate, currentMonths)) /
         (pow(1 + currentMonthlyRate, currentMonths) - 1);
 
     // New payment
     final int newMonths = (newTermYears * 12).round();
     final double newMonthlyRate = newRate / 100 / 12;
-    final double newPayment = currentBalance *
+    final double newPayment =
+        currentBalance *
         (newMonthlyRate * pow(1 + newMonthlyRate, newMonths)) /
         (pow(1 + newMonthlyRate, newMonths) - 1);
 

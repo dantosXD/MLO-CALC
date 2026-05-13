@@ -109,9 +109,9 @@ Future<void> configureDependencies() async {
     ..registerSingleton<SecureStore>(FlutterSecureStoreBackend())
     ..registerSingleton<ConnectivityService>(ConnectivityService())
     ..registerLazySingleton<AnalyticsService>(
-      () => AnalyticsService(preferenceStore: serviceLocator<PreferenceStore>()),
+      () =>
+          AnalyticsService(preferenceStore: serviceLocator<PreferenceStore>()),
     )
-
     // === Calculator Services ===
     ..registerLazySingleton<CoreCalculationService>(
       () => CoreCalculationService(serviceLocator<LoanMath>()),
@@ -125,7 +125,6 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<ArmCalculatorService>(
       () => ArmCalculatorService(serviceLocator<LoanMath>()),
     )
-
     // === Persistence Services ===
     ..registerLazySingleton<CalculatorPersistenceService>(
       () => CalculatorPersistenceService(
@@ -140,18 +139,14 @@ Future<void> configureDependencies() async {
         preferenceStore: serviceLocator<PreferenceStore>(),
       ),
     )
-
     ..registerSingleton<AppRouter>(
       AppRouter(
         armCalculatorService: serviceLocator<ArmCalculatorService>(),
         armPresetStorage: serviceLocator<ArmPresetStorage>(),
       ),
     )
-
     // === AI/NLP Services ===
-    ..registerLazySingleton<NLPCalculatorService>(
-      NLPCalculatorService.new,
-    );
+    ..registerLazySingleton<NLPCalculatorService>(NLPCalculatorService.new);
 
   // === ADD NEW SERVICES BELOW THIS LINE ===
   // Example:

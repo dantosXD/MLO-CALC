@@ -3,10 +3,7 @@ import 'dart:math' as math;
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 
 class ComparisonData {
-  ComparisonData({
-    required this.views,
-    required this.summary,
-  });
+  ComparisonData({required this.views, required this.summary});
 
   final List<ComparisonEntryView> views;
   final ComparisonSummary summary;
@@ -19,16 +16,13 @@ class ComparisonData {
 
     final ComparisonEntryView? baseline = views
         .where((view) => view.totalCost != null)
-        .fold<ComparisonEntryView?>(
-      null,
-      (prev, curr) {
-        if (prev == null) return curr;
-        if (curr.totalCost != null && curr.totalCost! < prev.totalCost!) {
-          return curr;
-        }
-        return prev;
-      },
-    );
+        .fold<ComparisonEntryView?>(null, (prev, curr) {
+          if (prev == null) return curr;
+          if (curr.totalCost != null && curr.totalCost! < prev.totalCost!) {
+            return curr;
+          }
+          return prev;
+        });
 
     final ComparisonEntryView? resolvedBaseline =
         baseline ?? (views.isNotEmpty ? views.first : null);
@@ -87,10 +81,7 @@ class ComparisonEntryView {
   final bool isBaseline;
   final double? breakEvenMonths;
 
-  ComparisonEntryView copyWith({
-    bool? isBaseline,
-    double? breakEvenMonths,
-  }) {
+  ComparisonEntryView copyWith({bool? isBaseline, double? breakEvenMonths}) {
     return ComparisonEntryView(
       entry: entry,
       monthlyPayment: monthlyPayment,
@@ -131,10 +122,12 @@ class ComparisonSummary {
   double? get interestRange => _range(minInterest, maxInterest);
 
   static ComparisonSummary fromViews(List<ComparisonEntryView> views) {
-    final comparable = views.where((view) =>
-        view.monthlyPayment != null &&
-        view.totalCost != null &&
-        view.totalInterest != null);
+    final comparable = views.where(
+      (view) =>
+          view.monthlyPayment != null &&
+          view.totalCost != null &&
+          view.totalInterest != null,
+    );
 
     if (comparable.isEmpty) {
       return ComparisonSummary(count: views.length, comparableCount: 0);
@@ -186,7 +179,8 @@ double? _estimateBreakEvenMonths(
   }
 
   final double costDelta = candidate.totalCost! - baseline.totalCost!;
-  final double paymentDelta = baseline.monthlyPayment! - candidate.monthlyPayment!;
+  final double paymentDelta =
+      baseline.monthlyPayment! - candidate.monthlyPayment!;
 
   if (paymentDelta.abs() < 1e-6) return null;
 
@@ -216,7 +210,8 @@ int? _estimateMiDropMonth(CalculationEntry entry) {
   for (int month = 1; month <= totalMonths; month++) {
     final double interestPaid = monthlyRate > 0 ? balance * monthlyRate : 0;
     final double principalPaid = payment - interestPaid;
-    if (principalPaid <= 0) break; // payment doesn't cover interest; MI never drops
+    if (principalPaid <= 0)
+      break; // payment doesn't cover interest; MI never drops
     balance -= principalPaid;
     if (balance <= targetBalance) {
       return month;

@@ -3,7 +3,7 @@ import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 
 class MloProfileProvider with ChangeNotifier {
   MloProfileProvider({required PreferenceStore preferenceStore})
-      : _prefs = preferenceStore;
+    : _prefs = preferenceStore;
 
   final PreferenceStore _prefs;
 
@@ -49,7 +49,8 @@ class MloProfileProvider with ChangeNotifier {
       mloCompany = _prefs.getString(_keyCompany) ?? '';
       mloPhone = _prefs.getString(_keyPhone) ?? '';
       mloEmail = _prefs.getString(_keyEmail) ?? '';
-      disclaimerText = _prefs.getString(_keyDisclaimer) ??
+      disclaimerText =
+          _prefs.getString(_keyDisclaimer) ??
           'Estimates only. Not a loan offer. Taxes/insurance/MI may vary.';
       defaultInterestRate = _prefs.getDouble(_keyDefaultRate);
       defaultTermYears = _prefs.getDouble(_keyDefaultTerm);

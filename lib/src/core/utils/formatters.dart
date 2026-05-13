@@ -11,8 +11,10 @@ class CurrencyFormatter {
     decimalDigits: 0,
   );
 
-  static final Map<int, NumberFormat> _decimalFormatCache = <int, NumberFormat>{};
-  static final Map<int, NumberFormat> _percentFormatCache = <int, NumberFormat>{};
+  static final Map<int, NumberFormat> _decimalFormatCache =
+      <int, NumberFormat>{};
+  static final Map<int, NumberFormat> _percentFormatCache =
+      <int, NumberFormat>{};
 
   /// Format as currency with symbol and decimals: $350,000.00
   static String formatCurrency(double? value, {bool showDecimals = true}) {
@@ -84,12 +86,14 @@ class CurrencyFormatter {
       final scaled = absValue / 1000000;
       final decimals = _compactDecimals(scaled, maxDigits - 1);
       final formatted = _trimTrailingZeros(scaled.toStringAsFixed(decimals));
-      return '$sign\$$formatted' 'M';
+      return '$sign\$$formatted'
+          'M';
     } else if (absValue >= 1000) {
       final scaled = absValue / 1000;
       final decimals = _compactDecimals(scaled, maxDigits - 1);
       final formatted = _trimTrailingZeros(scaled.toStringAsFixed(decimals));
-      return '$sign\$$formatted' 'K';
+      return '$sign\$$formatted'
+          'K';
     }
 
     return formatCurrency(value);

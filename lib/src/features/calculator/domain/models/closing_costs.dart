@@ -1,4 +1,3 @@
-
 class ClosingCosts {
   // Loan Charges
   final double originationFee;
@@ -22,7 +21,7 @@ class ClosingCosts {
   final double prepaidInterest; // Usually calculated based on close date
   final double prepaidHomeInsurance; // 12 months usually
   final double prepaidPropertyTaxes;
-  
+
   // Other
   final double otherFees;
 
@@ -45,20 +44,28 @@ class ClosingCosts {
     this.otherFees = 0,
   });
 
-  double get totalLoanCharges => 
+  double get totalLoanCharges =>
       originationFee + discountPoints + processingFee + underwritingFee;
 
-  double get totalServices => 
+  double get totalServices =>
       appraisalFee + creditReportFee + floodCertificationFee;
 
-  double get totalTitleEscrow => 
-      titleInsuranceLender + titleInsuranceOwner + settlementFee + recordingFees + transferTaxes;
+  double get totalTitleEscrow =>
+      titleInsuranceLender +
+      titleInsuranceOwner +
+      settlementFee +
+      recordingFees +
+      transferTaxes;
 
-  double get totalPrepaids => 
+  double get totalPrepaids =>
       prepaidInterest + prepaidHomeInsurance + prepaidPropertyTaxes;
 
-  double get total => 
-      totalLoanCharges + totalServices + totalTitleEscrow + totalPrepaids + otherFees;
+  double get total =>
+      totalLoanCharges +
+      totalServices +
+      totalTitleEscrow +
+      totalPrepaids +
+      otherFees;
 
   ClosingCosts copyWith({
     double? originationFee,
@@ -85,7 +92,8 @@ class ClosingCosts {
       underwritingFee: underwritingFee ?? this.underwritingFee,
       appraisalFee: appraisalFee ?? this.appraisalFee,
       creditReportFee: creditReportFee ?? this.creditReportFee,
-      floodCertificationFee: floodCertificationFee ?? this.floodCertificationFee,
+      floodCertificationFee:
+          floodCertificationFee ?? this.floodCertificationFee,
       titleInsuranceLender: titleInsuranceLender ?? this.titleInsuranceLender,
       titleInsuranceOwner: titleInsuranceOwner ?? this.titleInsuranceOwner,
       settlementFee: settlementFee ?? this.settlementFee,
@@ -100,7 +108,7 @@ class ClosingCosts {
 
   // Factory for default/estimated costs based on loan amount and price
   factory ClosingCosts.estimate({
-    required double loanAmount, 
+    required double loanAmount,
     required double price,
   }) {
     // Rough industry estimates

@@ -7,11 +7,9 @@ import 'nlp_calculator_service.dart';
 
 /// Cache service for NLP responses to enable offline functionality.
 class NlpCacheService {
-  NlpCacheService({
-    SecureStore? secureStore,
-    PreferenceStore? preferenceStore,
-  })  : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
-        _legacyStore = preferenceStore ?? PreferenceStore();
+  NlpCacheService({SecureStore? secureStore, PreferenceStore? preferenceStore})
+    : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
+      _legacyStore = preferenceStore ?? PreferenceStore();
 
   static const String _cacheKey = 'nlp_response_cache';
   static const String _queueKey = 'nlp_pending_queue';
@@ -66,8 +64,9 @@ class NlpCacheService {
   Future<void> _save() async {
     try {
       final cacheJson = jsonEncode(_cache.map((e) => e.toJson()).toList());
-      final queueJson =
-          jsonEncode(_pendingQueue.map((e) => e.toJson()).toList());
+      final queueJson = jsonEncode(
+        _pendingQueue.map((e) => e.toJson()).toList(),
+      );
       await _secureStore.write(key: _cacheKey, value: cacheJson);
       await _secureStore.write(key: _queueKey, value: queueJson);
     } catch (_) {}
@@ -89,7 +88,9 @@ class NlpCacheService {
     await load();
 
     final normalizedQuery = _normalizeQuery(query);
-    _cache.removeWhere((e) => _queriesMatch(e.normalizedQuery, normalizedQuery));
+    _cache.removeWhere(
+      (e) => _queriesMatch(e.normalizedQuery, normalizedQuery),
+    );
     _cache.insert(
       0,
       CachedNlpResponse(
@@ -148,10 +149,12 @@ class NlpCacheService {
   bool _queriesMatch(String a, String b) {
     if (a == b) return true;
 
-    final numbersA =
-        RegExp(r'\d+\.?\d*').allMatches(a).map((m) => m.group(0)).toSet();
-    final numbersB =
-        RegExp(r'\d+\.?\d*').allMatches(b).map((m) => m.group(0)).toSet();
+    final numbersA = RegExp(
+      r'\d+\.?\d*',
+    ).allMatches(a).map((m) => m.group(0)).toSet();
+    final numbersB = RegExp(
+      r'\d+\.?\d*',
+    ).allMatches(b).map((m) => m.group(0)).toSet();
 
     if (numbersA.isEmpty || numbersB.isEmpty) return false;
 
@@ -228,11 +231,11 @@ class CachedNlpResponse {
       DateTime.now().difference(cachedAt) > NlpCacheService._cacheExpiry;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'query': query,
-        'normalizedQuery': normalizedQuery,
-        'response': response.toJson(),
-        'cachedAt': cachedAt.toIso8601String(),
-      };
+    'query': query,
+    'normalizedQuery': normalizedQuery,
+    'response': response.toJson(),
+    'cachedAt': cachedAt.toIso8601String(),
+  };
 
   factory CachedNlpResponse.fromJson(Map<String, dynamic> json) {
     return CachedNlpResponse(
@@ -258,10 +261,10 @@ class PendingNlpRequest {
   });
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'query': query,
-        'queuedAt': queuedAt.toIso8601String(),
-      };
+    'id': id,
+    'query': query,
+    'queuedAt': queuedAt.toIso8601String(),
+  };
 
   factory PendingNlpRequest.fromJson(Map<String, dynamic> json) {
     return PendingNlpRequest(

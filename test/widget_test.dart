@@ -14,9 +14,7 @@ void main() {
   });
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({
-      'calculator_layout': 'classic',
-    });
+    SharedPreferences.setMockInitialValues({'calculator_layout': 'classic'});
   });
   // A helper function to wrap the app in providers for testing
   Widget createTestableWidget() {
@@ -66,7 +64,9 @@ void main() {
     expect(findButton('='), findsOneWidget);
   });
 
-  testWidgets('Arithmetic operations test - Addition', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Addition', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -82,7 +82,9 @@ void main() {
     expect(getDisplayValue(tester), '8');
   });
 
-  testWidgets('Arithmetic operations test - Subtraction', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Subtraction', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -98,7 +100,9 @@ void main() {
     expect(getDisplayValue(tester), '5');
   });
 
-  testWidgets('Arithmetic operations test - Multiplication', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Multiplication', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -114,7 +118,9 @@ void main() {
     expect(getDisplayValue(tester), '42');
   });
 
-  testWidgets('Arithmetic operations test - Division', (WidgetTester tester) async {
+  testWidgets('Arithmetic operations test - Division', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -183,7 +189,7 @@ void main() {
     await tapButton(tester, '3');
 
     await tapButton(tester, 'AC');
-    
+
     // Allow the save timer (750ms) to complete
     await tester.pump(const Duration(milliseconds: 800));
 

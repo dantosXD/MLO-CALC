@@ -138,8 +138,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
               }),
             ),
             _SliderTile(
-              title:
-                  'Term Δ (${CurrencyFormatter.formatYears(_termDelta)})',
+              title: 'Term Δ (${CurrencyFormatter.formatYears(_termDelta)})',
               min: -5,
               max: 5,
               value: _termDelta,
@@ -169,13 +168,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   DataColumn(label: Text('Adj Loan')),
                 ],
                 rows: widget.data.views
-                  .map(
-                    (view) => _buildSensitivityRow(
-                      view,
-                      _currency,
-                    ),
-                  )
-                  .toList(),
+                    .map((view) => _buildSensitivityRow(view, _currency))
+                    .toList(),
               ),
             ),
           ],
@@ -192,26 +186,37 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     return DataRow(
       cells: [
         DataCell(Text(view.entry.title)),
-        DataCell(Text(
-          projection.adjustedPayment != null
-              ? currency.format(projection.adjustedPayment)
-              : '—',
-        )),
-        DataCell(Text(
-          projection.adjustedRate == null
-              ? '—'
-              : CurrencyFormatter.formatPercent(projection.adjustedRate, decimals: 3),
-        )),
-        DataCell(Text(
-          projection.adjustedTerm == null
-              ? '—'
-              : CurrencyFormatter.formatYears(projection.adjustedTerm),
-        )),
-        DataCell(Text(
-          projection.adjustedLoan != null
-              ? currency.format(projection.adjustedLoan)
-              : '—',
-        )),
+        DataCell(
+          Text(
+            projection.adjustedPayment != null
+                ? currency.format(projection.adjustedPayment)
+                : '—',
+          ),
+        ),
+        DataCell(
+          Text(
+            projection.adjustedRate == null
+                ? '—'
+                : CurrencyFormatter.formatPercent(
+                    projection.adjustedRate,
+                    decimals: 3,
+                  ),
+          ),
+        ),
+        DataCell(
+          Text(
+            projection.adjustedTerm == null
+                ? '—'
+                : CurrencyFormatter.formatYears(projection.adjustedTerm),
+          ),
+        ),
+        DataCell(
+          Text(
+            projection.adjustedLoan != null
+                ? currency.format(projection.adjustedLoan)
+                : '—',
+          ),
+        ),
       ],
     );
   }
@@ -227,6 +232,9 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     if (cached != null) {
       return cached;
     }
+    if (_projectionCache.length >= 200) {
+      _projectionCache.remove(_projectionCache.keys.first);
+    }
 
     final double? baseRate = view.entry.interestRate;
     final double? baseTerm = view.termYears;
@@ -241,8 +249,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
     double? adjustedLoan;
     if (price != null && downPaymentPercent != null) {
-      final double percent =
-          (downPaymentPercent + _downPaymentDelta).clamp(0, 90);
+      final double percent = (downPaymentPercent + _downPaymentDelta).clamp(
+        0,
+        90,
+      );
       adjustedLoan = price * (1 - percent / 100);
     } else if (baseLoan != null) {
       adjustedLoan = baseLoan;
@@ -285,7 +295,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           left: 16,
           right: 16,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -323,10 +333,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 }
 
 class _ComparisonCard extends StatelessWidget {
-  const _ComparisonCard({
-    required this.view,
-    required this.baselinePayment,
-  });
+  const _ComparisonCard({required this.view, required this.baselinePayment});
 
   final ComparisonEntryView view;
   final double? baselinePayment;
@@ -334,22 +341,21 @@ class _ComparisonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final double? delta = (view.monthlyPayment != null &&
+    final double? delta =
+        (view.monthlyPayment != null &&
             baselinePayment != null &&
             !view.isBaseline)
         ? view.monthlyPayment! - baselinePayment!
         : null;
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     // On mobile, use full width; on larger screens, use fixed width
     final cardWidth = screenWidth < 600 ? double.infinity : 340.0;
 
     return SizedBox(
       width: cardWidth,
       child: Card(
-        color: view.isBaseline
-            ? theme.colorScheme.primaryContainer
-            : null,
+        color: view.isBaseline ? theme.colorScheme.primaryContainer : null,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -359,8 +365,9 @@ class _ComparisonCard extends StatelessWidget {
                 view.entry.title,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color:
-                      view.isBaseline ? theme.colorScheme.onPrimaryContainer : null,
+                  color: view.isBaseline
+                      ? theme.colorScheme.onPrimaryContainer
+                      : null,
                 ),
               ),
               const SizedBox(height: 8),
@@ -400,7 +407,10 @@ class _ComparisonCard extends StatelessWidget {
                 label: 'Break-even (mo)',
                 value: view.breakEvenMonths == null
                     ? '—'
-                    : CurrencyFormatter.formatNumber(view.breakEvenMonths, decimals: 1),
+                    : CurrencyFormatter.formatNumber(
+                        view.breakEvenMonths,
+                        decimals: 1,
+                      ),
               ),
             ],
           ),
@@ -411,11 +421,7 @@ class _ComparisonCard extends StatelessWidget {
 }
 
 class _MetricRow extends StatelessWidget {
-  const _MetricRow({
-    required this.label,
-    required this.value,
-    this.highlight,
-  });
+  const _MetricRow({required this.label, required this.value, this.highlight});
 
   final String label;
   final String value;
@@ -436,26 +442,19 @@ class _MetricRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
           ),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text(value, style: Theme.of(context).textTheme.titleMedium),
               if (deltaLabel != null)
                 Text(
                   deltaLabel,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(color: color),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: color),
                 ),
             ],
           ),
@@ -511,17 +510,13 @@ class _SummaryChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: 4),
           Text(
             value,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -576,10 +571,7 @@ class _AdjustedProjection {
   final double? adjustedTerm;
   final double? adjustedLoan;
 
-  void _cacheTo(
-    Map<String, _AdjustedProjection> cache,
-    String key,
-  ) {
+  void _cacheTo(Map<String, _AdjustedProjection> cache, String key) {
     cache[key] = this;
   }
 }

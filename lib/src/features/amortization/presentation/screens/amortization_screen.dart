@@ -55,7 +55,7 @@ class AmortizationScreen extends StatelessWidget {
                         size: 64,
                         color: Theme.of(
                           context,
-                        ).colorScheme.secondary.withAlpha(128),
+                        ).colorScheme.secondary.withValues(alpha: 0.50),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -184,13 +184,13 @@ class AmortizationScreen extends StatelessWidget {
                               ? Theme.of(context)
                                     .colorScheme
                                     .surfaceContainerHighest
-                                    .withAlpha(51)
+                                    .withValues(alpha: 0.20)
                               : null,
                           border: Border(
                             bottom: BorderSide(
                               color: Theme.of(
                                 context,
-                              ).dividerColor.withAlpha(51),
+                              ).dividerColor.withValues(alpha: 0.20),
                             ),
                           ),
                         ),
@@ -217,14 +217,18 @@ class AmortizationScreen extends StatelessWidget {
                             Expanded(
                               flex: 2,
                               child: Text(
-                                CurrencyFormatter.formatCurrency(entry.principal),
+                                CurrencyFormatter.formatCurrency(
+                                  entry.principal,
+                                ),
                                 textAlign: TextAlign.right,
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
-                                CurrencyFormatter.formatCurrency(entry.interest),
+                                CurrencyFormatter.formatCurrency(
+                                  entry.interest,
+                                ),
                                 textAlign: TextAlign.right,
                               ),
                             ),
