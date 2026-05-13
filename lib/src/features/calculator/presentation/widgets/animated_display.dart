@@ -235,12 +235,23 @@ class AnimatedDisplay extends StatelessWidget {
   }
 
   String _formatDisplayValue(String rawValue) {
-    // Try to parse and format the display value
     final double? numValue = double.tryParse(rawValue);
-    if (numValue != null && !isError) {
-      return CurrencyFormatter.formatNumber(numValue, decimals: 2);
+    if (numValue == null || isError) return rawValue;
+
+    final dotIndex = rawValue.indexOf('.');
+    if (dotIndex == -1) {
+      return CurrencyFormatter.formatNumber(numValue, decimals: 0);
     }
-    return rawValue;
+
+    // Format only the integer part with commas; keep the decimal portion
+    // exactly as typed so "3.141" never rounds to "3.14".
+    final sign = numValue < 0 ? '-' : '';
+    final intFormatted = CurrencyFormatter.formatNumber(
+      numValue.truncateToDouble().abs(),
+      decimals: 0,
+    );
+    final decimalPart = rawValue.substring(dotIndex); // includes '.'
+    return '$sign$intFormatted$decimalPart';
   }
 
   Widget _buildCompactStatusItem(
