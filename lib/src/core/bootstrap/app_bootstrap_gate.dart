@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../services/analytics_service.dart';
-import '../services/connectivity_service.dart';
 import '../../features/calculator/application/providers/calculator_provider.dart';
 import '../../features/calculator/application/providers/layout_preference_provider.dart';
 import '../../features/loan_programs/application/providers/loan_programs_provider.dart';
@@ -10,6 +8,8 @@ import '../../features/nlp/application/providers/nlp_settings_provider.dart';
 import '../../features/qualification/application/providers/qualifying_ratios_provider.dart';
 import '../../features/settings/domain/providers/mlo_profile_provider.dart';
 import '../../features/share/application/providers/share_templates_provider.dart';
+import '../services/analytics_service.dart';
+import '../services/connectivity_service.dart';
 import '../utils/unit_conversion.dart';
 
 class AppBootstrapGate extends StatefulWidget {

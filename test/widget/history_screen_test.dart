@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loan_ranger/main.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';

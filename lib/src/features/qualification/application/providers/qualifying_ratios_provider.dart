@@ -1,8 +1,9 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:uuid/uuid.dart';
-import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 
 /// Provider to manage qualifying ratios with persistence
 class QualifyingRatiosProvider with ChangeNotifier {

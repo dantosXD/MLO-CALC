@@ -5,8 +5,8 @@ import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/animated_display.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/calculator_button.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUpAll(() async {

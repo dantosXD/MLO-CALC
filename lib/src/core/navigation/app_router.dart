@@ -1,21 +1,20 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
-
 import 'package:loan_ranger/src/core/navigation/feature_catalog.dart';
-import 'package:loan_ranger/src/features/comparison/domain/models/comparison_data.dart';
 import 'package:loan_ranger/src/features/arm/domain/services/arm_calculator_service.dart';
 import 'package:loan_ranger/src/features/arm/domain/services/arm_preset_service.dart';
 import 'package:loan_ranger/src/features/arm/presentation/screens/arm_wizard_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_layout_preview_screen.dart';
+import 'package:loan_ranger/src/features/comparison/domain/models/comparison_data.dart';
 import 'package:loan_ranger/src/features/comparison/presentation/screens/comparison_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/domain/models/loan_program.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/widgets/loan_program_editor.dart';
 import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
 import 'package:loan_ranger/src/features/settings/presentation/screens/settings_screen.dart';
 import 'package:loan_ranger/src/features/workspace/presentation/screens/workspace_dashboard_screen.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 
 import '../models/loan_parameters_read_model.dart';
 

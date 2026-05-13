@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
-import 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/theme/calculator_palette.dart';
+import 'package:provider/provider.dart';
 
 // Record holding only the fields AnimatedDisplay actually renders.
 // context.select re-renders only when one of these changes, not on any

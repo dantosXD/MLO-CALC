@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/core/navigation/app_router.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
-import 'package:loan_ranger/src/core/models/calculation_history.dart';
+import 'package:provider/provider.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});

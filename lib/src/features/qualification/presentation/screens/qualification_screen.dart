@@ -544,7 +544,6 @@ class _QualificationScreenState extends State<QualificationScreen> {
 
   void _showRatioEditor(BuildContext context, QualifyingRatio? ratio) {
     final isEditing = ratio != null;
-    final messenger = ScaffoldMessenger.maybeOf(context);
     final nameController = TextEditingController(text: ratio?.name ?? '');
     final descController = TextEditingController(
       text: ratio?.description ?? '',
@@ -635,7 +634,7 @@ class _QualificationScreenState extends State<QualificationScreen> {
                   : (double.tryParse(debtText) ?? (ratio?.debtRatio ?? 36.0));
 
               if (name.isEmpty) {
-                messenger?.showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please enter a name')),
                 );
                 return;

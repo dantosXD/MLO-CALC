@@ -1,15 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/navigation/app_router.dart';
 import 'package:loan_ranger/src/core/utils/advanced_calculations.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
-import 'package:loan_ranger/src/core/navigation/app_router.dart';
-import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing_costs_sheet.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
-import 'package:provider/provider.dart';
-
+import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing_costs_sheet.dart';
 import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
 import 'package:printing/printing.dart';
+import 'package:provider/provider.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});

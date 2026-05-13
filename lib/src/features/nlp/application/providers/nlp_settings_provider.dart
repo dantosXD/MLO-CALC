@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/core/persistence/secure_store.dart';
 import 'package:loan_ranger/src/core/services/connectivity_service.dart';
-import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_cache_service.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 
 class NlpSettingsProvider with ChangeNotifier {
   static const _keyName = 'geminiApiKey';

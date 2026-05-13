@@ -1,6 +1,6 @@
-import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 
 class QuoteShareData {
   const QuoteShareData({

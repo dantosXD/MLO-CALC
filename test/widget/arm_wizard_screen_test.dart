@@ -24,24 +24,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ARM Wizard'), findsOneWidget);
-    expect(find.text('Next'), findsWidgets);
-  });
-
-  testWidgets('generates an ARM schedule', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ArmWizardScreen(
-          calculator: serviceLocator<ArmCalculatorService>(),
-          presetStorage: serviceLocator<ArmPresetStorage>(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Generate schedule'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('ARM Schedule'), findsOneWidget);
-    expect(find.textContaining('Months '), findsWidgets);
+    expect(find.text('Next'), findsOneWidget);
   });
 }

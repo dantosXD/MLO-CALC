@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:loan_ranger/src/core/navigation/app_router.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:provider/provider.dart';
+
 import '../../application/providers/loan_programs_provider.dart';
+
 import '../../domain/models/loan_program.dart';
 
 class LoanProgramsScreen extends StatelessWidget {

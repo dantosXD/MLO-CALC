@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:provider/provider.dart';
 
-import 'package:loan_ranger/src/core/utils/formatters.dart';
 import '../../application/providers/arm_wizard_provider.dart';
 import '../../domain/models/arm_scenario.dart';
 import '../../domain/services/arm_calculator_service.dart';

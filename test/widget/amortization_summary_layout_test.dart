@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/features/amortization/presentation/screens/amortization_screen.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
-import 'package:loan_ranger/src/features/amortization/presentation/screens/amortization_screen.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
+
 import 'package:provider/provider.dart';
 
 CalculatorProvider buildCalculatorProvider() {

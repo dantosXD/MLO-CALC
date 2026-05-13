@@ -60,12 +60,6 @@ library;
 
 import 'package:get_it/get_it.dart';
 
-import '../math/loan_math.dart';
-import '../navigation/app_router.dart';
-import '../persistence/preference_store.dart';
-import '../persistence/secure_store.dart';
-import '../services/analytics_service.dart';
-import '../services/connectivity_service.dart';
 import '../../features/arm/domain/services/arm_calculator_service.dart';
 import '../../features/arm/domain/services/arm_preset_service.dart';
 import '../../features/calculator/domain/services/amortization_service.dart';
@@ -74,6 +68,12 @@ import '../../features/calculator/domain/services/persistence_service.dart';
 import '../../features/calculator/domain/services/qualification_service.dart';
 import '../../features/nlp/domain/services/nlp_cache_service.dart';
 import '../../features/nlp/domain/services/nlp_calculator_service.dart';
+import '../math/loan_math.dart';
+import '../navigation/app_router.dart';
+import '../persistence/preference_store.dart';
+import '../persistence/secure_store.dart';
+import '../services/analytics_service.dart';
+import '../services/connectivity_service.dart';
 
 /// Global service locator instance
 ///

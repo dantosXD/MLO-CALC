@@ -1,6 +1,7 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
+
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class NLPCalculatorService {
   GenerativeModel? _model;

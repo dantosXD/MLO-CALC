@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:loan_ranger/src/core/models/amortization_entry.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/amortization_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
-import 'package:loan_ranger/src/core/models/amortization_entry.dart';
+import 'package:provider/provider.dart';
+
 import '../widgets/amortization_chart.dart';
-import 'package:loan_ranger/src/core/utils/formatters.dart';
 
 class AmortizationScreen extends StatelessWidget {
   const AmortizationScreen({super.key});

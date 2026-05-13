@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+
 import '../../domain/models/rent_vs_buy_calculation.dart';
+
 import '../../domain/services/rent_vs_buy_calculator.dart';
 
 final NumberFormat _currency = NumberFormat.simpleCurrency();
