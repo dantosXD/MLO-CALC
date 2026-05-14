@@ -38,9 +38,7 @@ void main() {
             value: provider,
           ),
         ],
-        child: const MaterialApp(
-          home: Scaffold(body: QualificationScreen()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: QualificationScreen())),
       );
     }
 

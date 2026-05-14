@@ -62,8 +62,10 @@ class QualifyingRatio {
 
   static String _formatRatioValue(double value) {
     // Format with up to 2 decimal places, trimming trailing zeros
-    final raw = CurrencyFormatter.formatPercent(value, decimals: 2)
-        .replaceAll('%', '');
+    final raw = CurrencyFormatter.formatPercent(
+      value,
+      decimals: 2,
+    ).replaceAll('%', '');
     if (!raw.contains('.')) return raw;
     var trimmed = raw.replaceAll(RegExp(r'0+$'), '');
     trimmed = trimmed.replaceAll(RegExp(r'\.$'), '');
