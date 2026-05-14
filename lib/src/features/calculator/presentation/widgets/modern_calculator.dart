@@ -416,10 +416,22 @@ class _DisplayCard extends StatelessWidget {
 
   String _formatDisplayValue(String rawValue) {
     final double? numValue = double.tryParse(rawValue);
-    if (numValue != null) {
-      return CurrencyFormatter.formatNumber(numValue, decimals: 2);
+    if (numValue == null) return rawValue;
+
+    final dotIndex = rawValue.indexOf('.');
+    if (dotIndex == -1) {
+      return CurrencyFormatter.formatNumber(numValue, decimals: 0);
     }
-    return rawValue;
+
+    // Format integer part with commas; preserve the decimal portion exactly
+    // as typed so "5.125" is never rounded to "5.13".
+    final sign = numValue < 0 ? '-' : '';
+    final intFormatted = CurrencyFormatter.formatNumber(
+      numValue.truncateToDouble().abs(),
+      decimals: 0,
+    );
+    final decimalPart = rawValue.substring(dotIndex);
+    return '$sign$intFormatted$decimalPart';
   }
 
   void _setFromDisplay(
