@@ -70,7 +70,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
               );
 
               if (!context.mounted || selected == null) return;
-              ShareQuoteDialog.show(
+              await ShareQuoteDialog.show(
                 context,
                 data: QuoteShareData.fromCalculationEntry(selected.entry),
                 scenarioName: selected.entry.title,

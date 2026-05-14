@@ -198,8 +198,9 @@ class FinancialValidators {
 
   /// Validates annual income
   static ValidationResult validateAnnualIncome(double? income) {
-    if (income == null)
+    if (income == null) {
       return const ValidationResult.valid(); // Optional for some calculations
+    }
     if (income <= 0) {
       return const ValidationResult.invalid('Annual income must be positive');
     }

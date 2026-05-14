@@ -574,18 +574,24 @@ class _CalculatorLayoutSection extends StatelessWidget {
               'Classic is the original button-based layout. '
               'Modern uses a form-based input.',
         ),
+        // ignore: deprecated_member_use
         RadioListTile<CalculatorLayout>(
           title: const Text('Classic'),
           subtitle: const Text('Familiar calculator button pad'),
           value: CalculatorLayout.classic,
+          // ignore: deprecated_member_use
           groupValue: pref.layout,
+          // ignore: deprecated_member_use
           onChanged: (v) => pref.setLayout(v!),
         ),
+        // ignore: deprecated_member_use
         RadioListTile<CalculatorLayout>(
           title: const Text('Modern'),
           subtitle: const Text('Form-based with labeled fields'),
           value: CalculatorLayout.modern,
+          // ignore: deprecated_member_use
           groupValue: pref.layout,
+          // ignore: deprecated_member_use
           onChanged: (v) => pref.setLayout(v!),
         ),
       ],

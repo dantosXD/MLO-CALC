@@ -125,8 +125,9 @@ class ReportService {
   static String _calculateLTV(LoanParametersReadModel provider) {
     if (provider.price == null ||
         provider.loanAmount == null ||
-        provider.price == 0)
+        provider.price == 0) {
       return '0%';
+    }
     return CurrencyFormatter.formatPercent(
       (provider.loanAmount! / provider.price!) * 100,
       decimals: 3,

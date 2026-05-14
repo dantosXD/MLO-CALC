@@ -52,7 +52,7 @@ class _NlpDialogState extends State<NlpDialog> {
   }
 
   Future<void> _toggleListening() async {
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
 
     if (_isListening) {
       await widget.speechToText.stop();
@@ -134,7 +134,7 @@ class _NlpDialogState extends State<NlpDialog> {
     final query = _controller.text.trim();
     if (query.isEmpty) {
       setState(() => _status = 'Please say or type a question.');
-      HapticFeedback.selectionClick();
+      unawaited(HapticFeedback.selectionClick());
       _notifyStateChange();
       return;
     }
@@ -166,7 +166,7 @@ class _NlpDialogState extends State<NlpDialog> {
           cached.response,
         );
 
-        HapticFeedback.mediumImpact();
+        unawaited(HapticFeedback.mediumImpact());
         if (!mounted) return;
         navigator.pop();
         messenger.showSnackBar(
@@ -189,7 +189,7 @@ class _NlpDialogState extends State<NlpDialog> {
         // Queue request for later
         await settings.cache.queueRequest(query);
         setState(() => _status = 'Offline - request queued for later');
-        HapticFeedback.selectionClick();
+        unawaited(HapticFeedback.selectionClick());
 
         await Future.delayed(const Duration(seconds: 2));
         if (!mounted) return;
@@ -212,7 +212,7 @@ class _NlpDialogState extends State<NlpDialog> {
 
       final String resultMessage = await calculator.applyNlpRequest(request);
 
-      HapticFeedback.mediumImpact();
+      unawaited(HapticFeedback.mediumImpact());
       if (!mounted) return;
       navigator.pop();
       messenger.showSnackBar(SnackBar(content: Text(resultMessage)));
@@ -224,7 +224,7 @@ class _NlpDialogState extends State<NlpDialog> {
       } else {
         setState(() => _status = 'Error: $e');
       }
-      HapticFeedback.heavyImpact();
+      unawaited(HapticFeedback.heavyImpact());
       _notifyStateChange();
     } finally {
       if (mounted) {
