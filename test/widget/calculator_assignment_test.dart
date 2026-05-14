@@ -2,25 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/main.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
-import 'package:loan_ranger/src/core/navigation/app_router.dart';
-import 'package:loan_ranger/src/core/persistence/preference_store.dart';
-import 'package:loan_ranger/src/core/services/analytics_service.dart';
-import 'package:loan_ranger/src/core/theme/theme_provider.dart';
-import 'package:loan_ranger/src/core/utils/unit_conversion.dart';
-import 'package:loan_ranger/src/features/calculator/application/providers/calculator_display_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
-import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/animated_display.dart';
-import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
-import 'package:loan_ranger/src/features/loan_programs/application/providers/loan_programs_provider.dart';
-import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
-import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
-import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
-import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,30 +34,7 @@ void main() {
 
   Widget createTestableWidget() {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider.value(value: serviceLocator<AppRouter>()),
-        ChangeNotifierProvider(
-          create: (context) => MloProfileProvider(
-            preferenceStore: serviceLocator<PreferenceStore>(),
-          ),
-        ),
-        ChangeNotifierProvider(create: (context) => LayoutPreferenceProvider()),
-        ChangeNotifierProvider(
-          create: (context) => CalculatorDisplayNotifier(),
-        ),
-        ChangeNotifierProvider(create: (context) => buildCalculatorProvider()),
-        ChangeNotifierProvider(create: (context) => ComparisonProvider()),
-        ChangeNotifierProvider(
-          create: (context) => NlpSettingsProvider(
-            calculatorService: serviceLocator<NLPCalculatorService>(),
-          ),
-        ),
-        ChangeNotifierProvider(create: (context) => LoanProgramsProvider()),
-        ChangeNotifierProvider(create: (context) => UnitConversionProvider()),
-        Provider(create: (context) => AnalyticsService()),
-        ChangeNotifierProvider(create: (context) => QualifyingRatiosProvider()),
-      ],
+      providers: buildAppProviders(),
       child: const LoanRangerApp(),
     );
   }
@@ -92,6 +56,9 @@ void main() {
 
   Future<void> tapButton(WidgetTester tester, String text) async {
     await tester.tap(findButton(text).first, warnIfMissed: false);
+    // Pump long enough for double-tap gesture disambiguation (kDoubleTapTimeout)
+    // so buttons with onDoubleTap fire their onTap callback.
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
   }
 

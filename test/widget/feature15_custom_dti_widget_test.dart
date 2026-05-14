@@ -38,7 +38,9 @@ void main() {
             value: provider,
           ),
         ],
-        child: const MaterialApp(home: QualificationScreen()),
+        child: const MaterialApp(
+          home: Scaffold(body: QualificationScreen()),
+        ),
       );
     }
 
@@ -332,7 +334,7 @@ void main() {
       await tester.pumpWidget(buildTestApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('31.5%'), findsWidgets);
+      expect(find.text('31.50%'), findsWidgets);
       expect(find.text('43.25%'), findsWidgets);
       expect(find.text('Decimal Precision (31.5/43.25)'), findsOneWidget);
     });

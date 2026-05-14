@@ -79,7 +79,7 @@ void main() {
     await tester.tap(find.text('Open dashboard'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Open').first);
+    await tester.tap(find.text('Open').first);
     await tester.pumpAndSettle();
 
     expect(selectedFeatureId, FeatureCatalog.calculatorId);

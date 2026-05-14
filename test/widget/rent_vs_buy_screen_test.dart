@@ -15,11 +15,22 @@ void main() {
   });
 
   testWidgets('accepts a fractional term and shows a result', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(const MaterialApp(home: RentVsBuyScreen()));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.widgetWithText(TextField, '30').first, '7.5');
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Calculate'));
+    await tester.pumpAndSettle();
+
+    // Scroll down to reveal the results section which renders below the button
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Renting May Be Better'), findsOneWidget);

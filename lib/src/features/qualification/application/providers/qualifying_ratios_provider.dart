@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -18,7 +19,9 @@ class QualifyingRatiosProvider with ChangeNotifier {
   bool _isLoading = true;
 
   QualifyingRatiosProvider({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore();
+    : _preferences = preferenceStore ?? PreferenceStore() {
+    scheduleMicrotask(load);
+  }
 
   // Getters
   bool get isLoading => _isLoading;

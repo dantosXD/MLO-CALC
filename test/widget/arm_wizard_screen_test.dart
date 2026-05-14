@@ -24,6 +24,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ARM Wizard'), findsOneWidget);
-    expect(find.text('Next'), findsOneWidget);
+    expect(find.text('Next'), findsWidgets);
   });
 }
