@@ -89,75 +89,72 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
           final scenario = provider.scenario;
           final steps = _buildSteps(context, scenario);
 
-          return Padding(
+          return ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Stepper(
-                    currentStep: _currentStep,
-                    onStepContinue: () {
-                      if (_currentStep < steps.length - 1) {
-                        setState(() {
-                          _currentStep++;
-                        });
-                      }
-                    },
-                    onStepCancel: () {
-                      if (_currentStep > 0) {
-                        setState(() {
-                          _currentStep--;
-                        });
-                      }
-                    },
-                    controlsBuilder: (_, details) {
-                      return Row(
-                        children: [
-                          ElevatedButton(
-                            onPressed: details.onStepContinue,
-                            child: Text(
-                              _currentStep == steps.length - 1
-                                  ? 'Done'
-                                  : 'Next',
-                            ),
+            children: [
+              SizedBox(
+                height: 560,
+                child: Stepper(
+                  currentStep: _currentStep,
+                  onStepContinue: () {
+                    if (_currentStep < steps.length - 1) {
+                      setState(() {
+                        _currentStep++;
+                      });
+                    }
+                  },
+                  onStepCancel: () {
+                    if (_currentStep > 0) {
+                      setState(() {
+                        _currentStep--;
+                      });
+                    }
+                  },
+                  controlsBuilder: (_, details) {
+                    return Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: details.onStepContinue,
+                          child: Text(
+                            _currentStep == steps.length - 1 ? 'Done' : 'Next',
                           ),
-                          const SizedBox(width: 12),
-                          if (_currentStep > 0)
-                            TextButton(
-                              onPressed: details.onStepCancel,
-                              child: const Text('Back'),
-                            ),
-                        ],
-                      );
-                    },
-                    steps: steps,
-                  ),
+                        ),
+                        const SizedBox(width: 12),
+                        if (_currentStep > 0)
+                          TextButton(
+                            onPressed: details.onStepCancel,
+                            child: const Text('Back'),
+                          ),
+                      ],
+                    );
+                  },
+                  steps: steps,
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonalIcon(
-                    icon: provider.isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.auto_graph),
-                    label: const Text('Generate schedule'),
-                    onPressed: provider.isLoading
-                        ? null
-                        : () async {
-                            await provider.calculate();
-                          },
-                  ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  icon: provider.isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_graph),
+                  label: const Text('Generate schedule'),
+                  onPressed: provider.isLoading
+                      ? null
+                      : () async {
+                          await provider.calculate();
+                        },
                 ),
-                const SizedBox(height: 24),
-                if (provider.result != null)
-                  _ArmResultCard(result: provider.result!, theme: theme),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              if (provider.result != null)
+                _ArmResultCard(result: provider.result!, theme: theme),
+              const SizedBox(height: 24),
+            ],
           );
         },
       ),

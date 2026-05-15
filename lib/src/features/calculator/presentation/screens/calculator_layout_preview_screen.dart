@@ -113,28 +113,43 @@ class _ModernCalculatorPreview extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: Consumer2<CalculatorProvider, CalculatorDisplayNotifier>(
-          builder: (context, calc, display, _) {
-            return Column(
-              children: [
-                // Display + secondary fields (no scroll, compact)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-                  child: _DisplayCard(calc: calc, display: display),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final height = constraints.maxHeight < 640
+                ? 640.0
+                : constraints.maxHeight;
+            return SingleChildScrollView(
+              child: SizedBox(
+                height: height,
+                child: Consumer2<CalculatorProvider, CalculatorDisplayNotifier>(
+                  builder: (context, calc, display, _) {
+                    return Column(
+                      children: [
+                        // Display + secondary fields (no scroll, compact)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                          child: _DisplayCard(calc: calc, display: display),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: _SecondaryFieldsRow(
+                            calc: calc,
+                            display: display,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        // Keypad takes remaining space
+                        Expanded(
+                          child: _ModernKeypad(
+                            displayProvider: display,
+                            calculatorProvider: calc,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: _SecondaryFieldsRow(calc: calc, display: display),
-                ),
-                const SizedBox(height: 6),
-                // Keypad takes remaining space
-                Expanded(
-                  child: _ModernKeypad(
-                    displayProvider: display,
-                    calculatorProvider: calc,
-                  ),
-                ),
-              ],
+              ),
             );
           },
         ),

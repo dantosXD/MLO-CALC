@@ -174,378 +174,423 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
     final Widget calculatorUI = Container(
       color: const Color(0xFF2C3E50),
-      child: Column(
-        children: [
-          // Display Screen - Rebuilds when display-related values change in either provider
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Consumer2<CalculatorProvider, CalculatorDisplayNotifier>(
-                builder: (context, calc, display, _) {
-                  return AnimatedDisplay(
-                    key: const ValueKey('display'),
-                    displayValue: display.displayValue,
-                    subtitle: display.inputError ?? calc.inputError,
-                    isError:
-                        display.displayValue == 'Error' ||
-                        display.inputError != null ||
-                        calc.inputError != null,
-                  );
-                },
-              ),
-            ),
-          ),
-
-          // Calculator Buttons
-          Expanded(
-            flex: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(6.0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final height = constraints.maxHeight < 620
+              ? 620.0
+              : constraints.maxHeight;
+          return SingleChildScrollView(
+            child: SizedBox(
+              height: height,
               child: Column(
                 children: [
-                  // Row 1: Price, L/A, Term, Pmt
+                  // Display Screen - Rebuilds when display-related values change in either provider
                   Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          text: 'Price',
-                          onPressed: () {
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setPrice(value: value);
-                            }
-                          },
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: 'L/A',
-                          onPressed: () {
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setLoanAmount(value: value);
-                            }
-                          },
-                          onDoubleTap: () => _clearField(
-                            context,
-                            'Loan Amount',
-                            calculatorProvider.clearLoanAmount,
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child:
+                          Consumer2<
+                            CalculatorProvider,
+                            CalculatorDisplayNotifier
+                          >(
+                            builder: (context, calc, display, _) {
+                              return AnimatedDisplay(
+                                key: const ValueKey('display'),
+                                displayValue: display.displayValue,
+                                subtitle: display.inputError ?? calc.inputError,
+                                isError:
+                                    display.displayValue == 'Error' ||
+                                    display.inputError != null ||
+                                    calc.inputError != null,
+                              );
+                            },
                           ),
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: 'Term',
-                          onPressed: () {
-                            // If there's a value in the display, set it as the term
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setTermYears(value: value);
-                            } else {
-                              // Otherwise, solve for term if we have loan amount, payment, and interest rate
-                              calculatorProvider.calculateTerm();
-                            }
-                          },
-                          onDoubleTap: () => _clearField(
-                            context,
-                            'Term',
-                            calculatorProvider.clearTermYears,
+                    ),
+                  ),
+
+                  // Calculator Buttons
+                  Expanded(
+                    flex: 6,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Column(
+                        children: [
+                          // Row 1: Price, L/A, Term, Pmt
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CalculatorButton(
+                                  text: 'Price',
+                                  onPressed: () {
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setPrice(value: value);
+                                    }
+                                  },
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: 'L/A',
+                                  onPressed: () {
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setLoanAmount(
+                                        value: value,
+                                      );
+                                    }
+                                  },
+                                  onDoubleTap: () => _clearField(
+                                    context,
+                                    'Loan Amount',
+                                    calculatorProvider.clearLoanAmount,
+                                  ),
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: 'Term',
+                                  onPressed: () {
+                                    // If there's a value in the display, set it as the term
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setTermYears(
+                                        value: value,
+                                      );
+                                    } else {
+                                      // Otherwise, solve for term if we have loan amount, payment, and interest rate
+                                      calculatorProvider.calculateTerm();
+                                    }
+                                  },
+                                  onDoubleTap: () => _clearField(
+                                    context,
+                                    'Term',
+                                    calculatorProvider.clearTermYears,
+                                  ),
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                Selector<CalculatorProvider, bool>(
+                                  selector: (_, calc) => calc.isInterestOnly,
+                                  builder: (context, isInterestOnly, _) {
+                                    return CalculatorButton(
+                                      text: isInterestOnly ? 'I/O' : 'Pmt',
+                                      onPressed: () {
+                                        final value = double.tryParse(
+                                          displayProvider.displayValue,
+                                        );
+                                        // Skip if value is same as current payment (avoid reset)
+                                        if (value != null &&
+                                            value != 0 &&
+                                            value !=
+                                                calculatorProvider.payment) {
+                                          displayProvider.clear();
+                                          calculatorProvider.setPayment(
+                                            value: value,
+                                          );
+                                        }
+                                      },
+                                      onLongPress: () => _showPaymentOptions(
+                                        context,
+                                        calculatorProvider,
+                                      ),
+                                      onDoubleTap: () => _clearField(
+                                        context,
+                                        'Payment',
+                                        calculatorProvider.clearPayment,
+                                      ),
+                                      backgroundColor: isInterestOnly
+                                          ? const Color(0xFF7B68EE)
+                                          : const Color(0xFF3A5062),
+                                      foregroundColor: Colors.white,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        Selector<CalculatorProvider, bool>(
-                          selector: (_, calc) => calc.isInterestOnly,
-                          builder: (context, isInterestOnly, _) {
-                            return CalculatorButton(
-                              text: isInterestOnly ? 'I/O' : 'Pmt',
-                              onPressed: () {
-                                final value = double.tryParse(
-                                  displayProvider.displayValue,
-                                );
-                                // Skip if value is same as current payment (avoid reset)
-                                if (value != null &&
-                                    value != 0 &&
-                                    value != calculatorProvider.payment) {
-                                  displayProvider.clear();
-                                  calculatorProvider.setPayment(value: value);
-                                }
-                              },
-                              onLongPress: () => _showPaymentOptions(
-                                context,
-                                calculatorProvider,
-                              ),
-                              onDoubleTap: () => _clearField(
-                                context,
-                                'Payment',
-                                calculatorProvider.clearPayment,
-                              ),
-                              backgroundColor: isInterestOnly
-                                  ? const Color(0xFF7B68EE)
-                                  : const Color(0xFF3A5062),
-                              foregroundColor: Colors.white,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Row 2: DnPmt, Int, Tax, Ins
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          text: 'DnPmt',
-                          onPressed: () {
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setDownPayment(value: value);
-                            }
-                          },
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: 'Int',
-                          onPressed: () {
-                            // If there's a value in the display, set it as the interest rate
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setInterestRate(value: value);
-                            } else {
-                              // Otherwise, solve for interest rate if we have loan amount, payment, and term
-                              calculatorProvider.calculateInterestRate();
-                            }
-                          },
-                          onDoubleTap: () => _clearField(
-                            context,
-                            'Rate',
-                            calculatorProvider.clearInterestRate,
+                          // Row 2: DnPmt, Int, Tax, Ins
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CalculatorButton(
+                                  text: 'DnPmt',
+                                  onPressed: () {
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setDownPayment(
+                                        value: value,
+                                      );
+                                    }
+                                  },
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: 'Int',
+                                  onPressed: () {
+                                    // If there's a value in the display, set it as the interest rate
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setInterestRate(
+                                        value: value,
+                                      );
+                                    } else {
+                                      // Otherwise, solve for interest rate if we have loan amount, payment, and term
+                                      calculatorProvider
+                                          .calculateInterestRate();
+                                    }
+                                  },
+                                  onDoubleTap: () => _clearField(
+                                    context,
+                                    'Rate',
+                                    calculatorProvider.clearInterestRate,
+                                  ),
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: 'Tax',
+                                  onPressed: () {
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setPropertyTax(
+                                        value: value,
+                                      );
+                                    }
+                                  },
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: 'Ins',
+                                  onPressed: () {
+                                    final value = double.tryParse(
+                                      displayProvider.displayValue,
+                                    );
+                                    if (value != null && value != 0) {
+                                      displayProvider.clear();
+                                      calculatorProvider.setHomeInsurance(
+                                        value: value,
+                                      );
+                                    }
+                                  },
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ],
+                            ),
                           ),
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: 'Tax',
-                          onPressed: () {
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setPropertyTax(value: value);
-                            }
-                          },
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: 'Ins',
-                          onPressed: () {
-                            final value = double.tryParse(
-                              displayProvider.displayValue,
-                            );
-                            if (value != null && value != 0) {
-                              displayProvider.clear();
-                              calculatorProvider.setHomeInsurance(value: value);
-                            }
-                          },
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Row 3: AC, Backspace, %, ÷
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          text: 'AC',
-                          onPressed: () {
-                            calculatorProvider.clearAll();
-                            displayProvider.clearAll();
-                          },
-                          backgroundColor: const Color(0xFF8B3A3A),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: 'Backspace',
-                          semanticLabel: 'Backspace',
-                          icon: Icons.backspace_outlined,
-                          onPressed: () => displayProvider.backspace(),
-                          onLongPress: () {
-                            displayProvider.clear();
-                          },
-                          backgroundColor: AppConstants.backspaceNormalColor,
-                          foregroundColor: Colors.white,
-                          animationType: ButtonAnimationType.wiggle,
-                        ),
-                        CalculatorButton(
-                          text: '%',
-                          onPressed: () => displayProvider.calculatePercent(),
-                          backgroundColor: const Color(0xFF3A5062),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '÷',
-                          onPressed: () =>
-                              displayProvider.performOperation('/'),
-                          backgroundColor: const Color(0xFF4A6278),
-                          foregroundColor: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Row 4: 7, 8, 9, x
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          text: '7',
-                          onPressed: () => displayProvider.inputDigit('7'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '8',
-                          onPressed: () => displayProvider.inputDigit('8'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '9',
-                          onPressed: () => displayProvider.inputDigit('9'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '×',
-                          onPressed: () =>
-                              displayProvider.performOperation('x'),
-                          backgroundColor: const Color(0xFF4A6278),
-                          foregroundColor: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Row 5: 4, 5, 6, -
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          text: '4',
-                          onPressed: () => displayProvider.inputDigit('4'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '5',
-                          onPressed: () => displayProvider.inputDigit('5'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '6',
-                          onPressed: () => displayProvider.inputDigit('6'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '−',
-                          onPressed: () =>
-                              displayProvider.performOperation('-'),
-                          backgroundColor: const Color(0xFF4A6278),
-                          foregroundColor: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Row 6: 1, 2, 3, +
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          text: '1',
-                          onPressed: () => displayProvider.inputDigit('1'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '2',
-                          onPressed: () => displayProvider.inputDigit('2'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '3',
-                          onPressed: () => displayProvider.inputDigit('3'),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '+',
-                          onPressed: () =>
-                              displayProvider.performOperation('+'),
-                          backgroundColor: const Color(0xFF4A6278),
-                          foregroundColor: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Row 7: M, 0 (long-press for 000), ., =
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Memory button with long-press popup
-                        _MemoryButton(provider: displayProvider),
-                        _ZeroButton(
-                          key: const Key('btn_0'),
-                          provider: displayProvider,
-                        ),
-                        CalculatorButton(
-                          text: '.',
-                          onPressed: () => displayProvider.inputDecimal(),
-                          backgroundColor: const Color(0xFF34495E),
-                          foregroundColor: Colors.white,
-                        ),
-                        CalculatorButton(
-                          text: '=',
-                          onPressed: () => displayProvider.calculateResult(),
-                          backgroundColor: const Color(0xFFE67E22),
-                          foregroundColor: Colors.white,
-                        ),
-                      ],
+                          // Row 3: AC, Backspace, %, ÷
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CalculatorButton(
+                                  text: 'AC',
+                                  onPressed: () {
+                                    calculatorProvider.clearAll();
+                                    displayProvider.clearAll();
+                                  },
+                                  backgroundColor: const Color(0xFF8B3A3A),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: 'Backspace',
+                                  semanticLabel: 'Backspace',
+                                  icon: Icons.backspace_outlined,
+                                  onPressed: () => displayProvider.backspace(),
+                                  onLongPress: () {
+                                    displayProvider.clear();
+                                  },
+                                  backgroundColor:
+                                      AppConstants.backspaceNormalColor,
+                                  foregroundColor: Colors.white,
+                                  animationType: ButtonAnimationType.wiggle,
+                                ),
+                                CalculatorButton(
+                                  text: '%',
+                                  onPressed: () =>
+                                      displayProvider.calculatePercent(),
+                                  backgroundColor: const Color(0xFF3A5062),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '÷',
+                                  onPressed: () =>
+                                      displayProvider.performOperation('/'),
+                                  backgroundColor: const Color(0xFF4A6278),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Row 4: 7, 8, 9, x
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CalculatorButton(
+                                  text: '7',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('7'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '8',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('8'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '9',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('9'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '×',
+                                  onPressed: () =>
+                                      displayProvider.performOperation('x'),
+                                  backgroundColor: const Color(0xFF4A6278),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Row 5: 4, 5, 6, -
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CalculatorButton(
+                                  text: '4',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('4'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '5',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('5'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '6',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('6'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '−',
+                                  onPressed: () =>
+                                      displayProvider.performOperation('-'),
+                                  backgroundColor: const Color(0xFF4A6278),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Row 6: 1, 2, 3, +
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CalculatorButton(
+                                  text: '1',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('1'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '2',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('2'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '3',
+                                  onPressed: () =>
+                                      displayProvider.inputDigit('3'),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '+',
+                                  onPressed: () =>
+                                      displayProvider.performOperation('+'),
+                                  backgroundColor: const Color(0xFF4A6278),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Row 7: M, 0 (long-press for 000), ., =
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Memory button with long-press popup
+                                _MemoryButton(provider: displayProvider),
+                                _ZeroButton(
+                                  key: const Key('btn_0'),
+                                  provider: displayProvider,
+                                ),
+                                CalculatorButton(
+                                  text: '.',
+                                  onPressed: () =>
+                                      displayProvider.inputDecimal(),
+                                  backgroundColor: const Color(0xFF34495E),
+                                  foregroundColor: Colors.white,
+                                ),
+                                CalculatorButton(
+                                  text: '=',
+                                  onPressed: () =>
+                                      displayProvider.calculateResult(),
+                                  backgroundColor: const Color(0xFFE67E22),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
 
