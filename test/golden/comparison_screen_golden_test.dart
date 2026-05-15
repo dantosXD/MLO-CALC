@@ -1,13 +1,46 @@
 @Tags(['golden'])
 library;
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
 import 'package:loan_ranger/src/features/comparison/presentation/screens/comparison_screen.dart';
 
+// Allows up to 3 % cross-platform pixel variance (Windows vs Linux CI).
+class _TolerantComparator extends LocalFileComparator {
+  _TolerantComparator(super.testFile, {required this.precisionTolerance});
+
+  final double precisionTolerance;
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final ComparisonResult result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+    final bool passed =
+        result.passed || result.diffPercent <= precisionTolerance;
+    if (passed) {
+      result.dispose();
+      return true;
+    }
+    final String error = await generateFailureOutput(result, golden, basedir);
+    result.dispose();
+    throw FlutterError(error);
+  }
+}
+
 void main() {
+  setUpAll(() {
+    goldenFileComparator = _TolerantComparator(
+      Uri.file('test/golden/comparison_screen_golden_test.dart'),
+      precisionTolerance: 0.03,
+    );
+  });
+
   testWidgets('comparison screen golden snapshot', (tester) async {
     final entries = [
       CalculationEntry(

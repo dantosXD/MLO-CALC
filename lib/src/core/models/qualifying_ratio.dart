@@ -60,8 +60,17 @@ class QualifyingRatio {
   String get displayName =>
       '$name (${_formatRatioValue(housingRatio)}/${_formatRatioValue(debtRatio)})';
 
-  static String _formatRatioValue(double value) =>
-      CurrencyFormatter.formatPercent(value, decimals: 2).replaceAll('%', '');
+  static String _formatRatioValue(double value) {
+    // Format with up to 2 decimal places, trimming trailing zeros
+    final raw = CurrencyFormatter.formatPercent(
+      value,
+      decimals: 2,
+    ).replaceAll('%', '');
+    if (!raw.contains('.')) return raw;
+    var trimmed = raw.replaceAll(RegExp(r'0+$'), '');
+    trimmed = trimmed.replaceAll(RegExp(r'\.$'), '');
+    return trimmed;
+  }
 }
 
 /// Default built-in qualifying ratios

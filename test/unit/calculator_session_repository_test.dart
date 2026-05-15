@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loan_ranger/src/core/persistence/secure_store.dart';
 import 'package:loan_ranger/src/core/scenarios/scenario_catalog.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/repositories/calculator_session_repository.dart';
@@ -34,7 +35,9 @@ void main() {
           'calculationHistory': '{"entries":[]}',
         });
 
-        final service = CalculatorPersistenceService();
+        final service = CalculatorPersistenceService(
+          secureStore: InMemorySecureStore(),
+        );
         final snapshot = await service.load();
 
         expect(snapshot.schemaVersion, 2);
@@ -76,7 +79,9 @@ void main() {
         );
 
         final repository = CalculatorSessionRepository(
-          persistenceService: CalculatorPersistenceService(),
+          persistenceService: CalculatorPersistenceService(
+            secureStore: InMemorySecureStore(),
+          ),
         );
 
         await repository.save(
@@ -101,9 +106,9 @@ void main() {
           historyController: historyController,
         );
 
+        // Session data is written to SecureStore, not SharedPreferences.
+        // Verify only that legacy flat keys are absent.
         final prefs = await SharedPreferences.getInstance();
-        final rawScenarioSession = prefs.getString('scenarioSession');
-        expect(rawScenarioSession, isNotNull);
         expect(prefs.getDouble('loanAmount'), isNull);
 
         final snapshot = await repository.load();

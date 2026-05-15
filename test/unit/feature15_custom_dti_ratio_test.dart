@@ -339,7 +339,7 @@ void main() {
       );
 
       // Act
-      provider.selectRatio(custom);
+      await provider.selectRatio(custom);
 
       // Assert
       expect(provider.selectedRatio?.id, equals(custom.id));
