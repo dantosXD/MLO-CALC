@@ -47,7 +47,6 @@ class AmortizationController with ChangeNotifier {
 
     _state = _state.copyWith(isComputing: true, activeFingerprint: fingerprint);
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 50));
 
     try {
       final data = await _amortizationService.buildSchedule(
