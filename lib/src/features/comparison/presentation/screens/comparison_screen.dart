@@ -21,14 +21,6 @@ class ComparisonScreen extends StatefulWidget {
 }
 
 class _ComparisonScreenState extends State<ComparisonScreen> {
-  static const LoanMath _loanMath = LoanMath();
-
-  double _rateDelta = 0;
-  double _termDelta = 0;
-  double _downPaymentDelta = 0;
-  final Map<String, _AdjustedProjection> _projectionCache =
-      <String, _AdjustedProjection>{};
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,14 +100,83 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             const SizedBox(height: 24),
             _ComparisonSummaryView(summary: widget.data.summary),
             const SizedBox(height: 24),
-            _buildSensitivitySection(_currency),
+            _SensitivitySection(views: widget.data.views),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSensitivitySection(NumberFormat currency) {
+  void _showExportDialog(BuildContext context, String csv) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Export Preview',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              height: 200,
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  csv,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Copy the CSV text above to share with borrowers or import into spreadsheets.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sensitivity Section — isolated StatefulWidget so slider rebuilds are local
+// ---------------------------------------------------------------------------
+
+class _SensitivitySection extends StatefulWidget {
+  const _SensitivitySection({required this.views});
+
+  final List<ComparisonEntryView> views;
+
+  @override
+  State<_SensitivitySection> createState() => _SensitivitySectionState();
+}
+
+class _SensitivitySectionState extends State<_SensitivitySection> {
+  static const LoanMath _loanMath = LoanMath();
+
+  double _rateDelta = 0;
+  double _termDelta = 0;
+  double _downPaymentDelta = 0;
+  final Map<String, _AdjustedProjection> _projectionCache =
+      <String, _AdjustedProjection>{};
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -167,7 +228,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   DataColumn(label: Text('Adj Term')),
                   DataColumn(label: Text('Adj Loan')),
                 ],
-                rows: widget.data.views
+                rows: widget.views
                     .map((view) => _buildSensitivityRow(view, _currency))
                     .toList(),
               ),
@@ -283,51 +344,6 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       loanAmount: principal,
       interestRate: rate,
       termYears: termYears,
-    );
-  }
-
-  void _showExportDialog(BuildContext context, String csv) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Export Preview',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              height: 200,
-              child: SingleChildScrollView(
-                child: SelectableText(
-                  csv,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Copy the CSV text above to share with borrowers or import into spreadsheets.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
