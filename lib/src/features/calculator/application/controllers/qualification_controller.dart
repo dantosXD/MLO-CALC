@@ -5,6 +5,7 @@ import 'package:loan_ranger/src/core/utils/type_utils.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/states/qualification_state.dart';
+import 'package:loan_ranger/src/features/calculator/domain/models/calculation_result.dart';
 import 'package:loan_ranger/src/features/calculator/domain/models/calculator_state.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 
@@ -108,26 +109,27 @@ class QualificationController with ChangeNotifier {
       monthlyEscrows: _quoteController.monthlyEscrowExpenses,
     );
 
-    if (!result.isSuccess || result.value == null) {
-      _state = _state.copyWith(
-        calculationError: result.error ?? 'Unable to qualify',
-      );
-      notifyListeners();
-      return;
+    switch (result) {
+      case CalcFailure(:final error):
+        _state = _state.copyWith(
+          calculationError: error,
+        );
+        notifyListeners();
+        return;
+      case CalcSuccess(:final value):
+        final outcome = value;
+        _state = _state.copyWith(clearCalculationError: true);
+        _quoteController.applyQualificationResult(outcome);
+        _historyController.addQualificationEntry(
+          annualIncome: _state.annualIncome!,
+          monthlyDebt: _state.monthlyDebt ?? 0,
+          interestRate: _quoteController.interestRate!,
+          termYears: _quoteController.termYears!,
+          maxLoanAmount: outcome.loanAmount,
+          monthlyPiPayment: outcome.monthlyPiPayment,
+        );
+        notifyListeners();
     }
-
-    final outcome = result.value!;
-    _state = _state.copyWith(clearCalculationError: true);
-    _quoteController.applyQualificationResult(outcome);
-    _historyController.addQualificationEntry(
-      annualIncome: _state.annualIncome!,
-      monthlyDebt: _state.monthlyDebt ?? 0,
-      interestRate: _quoteController.interestRate!,
-      termYears: _quoteController.termYears!,
-      maxLoanAmount: outcome.loanAmount,
-      monthlyPiPayment: outcome.monthlyPiPayment,
-    );
-    notifyListeners();
   }
 
   void calculateMinimumIncome({bool usePrimaryRatio = true}) {
@@ -158,20 +160,21 @@ class QualificationController with ChangeNotifier {
       monthlyDebt: _state.monthlyDebt ?? 0,
     );
 
-    if (!result.isSuccess || result.value == null) {
-      _state = _state.copyWith(
-        calculationError: result.error ?? 'Unable to calculate income',
-      );
-      notifyListeners();
-      return;
+    switch (result) {
+      case CalcFailure(:final error):
+        _state = _state.copyWith(
+          calculationError: error,
+        );
+        notifyListeners();
+        return;
+      case CalcSuccess(:final value):
+        _state = _state.copyWith(
+          annualIncome: value,
+          clearCalculationError: true,
+        );
+        _quoteController.presentValue(value);
+        notifyListeners();
     }
-
-    _state = _state.copyWith(
-      annualIncome: result.value,
-      clearCalculationError: true,
-    );
-    _quoteController.presentValue(result.value!);
-    notifyListeners();
   }
 
 }
