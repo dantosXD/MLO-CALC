@@ -176,6 +176,14 @@ class _SensitivitySectionState extends State<_SensitivitySection> {
       <String, _AdjustedProjection>{};
 
   @override
+  void didUpdateWidget(_SensitivitySection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.views, widget.views)) {
+      _projectionCache.clear();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
