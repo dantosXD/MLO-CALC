@@ -565,7 +565,7 @@ class LoanQuoteController with ChangeNotifier {
     notifyListeners();
   }
 
-  bool _validateValue(double? value, dynamic Function(double) validator) {
+  bool _validateValue(double? value, ValidationResult Function(double) validator) {
     if (value != null) {
       final validation = validator(value);
       if (!validation.isValid) {
