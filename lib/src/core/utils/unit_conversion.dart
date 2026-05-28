@@ -14,8 +14,8 @@ class UnitConversionProvider with ChangeNotifier {
   static const String _downPaymentKey = 'unit_down_payment';
   static const String _termKey = 'unit_term';
 
-  UnitConversionProvider({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore();
+  UnitConversionProvider({required PreferenceStore preferenceStore})
+    : _preferences = preferenceStore;
 
   final PreferenceStore _preferences;
 

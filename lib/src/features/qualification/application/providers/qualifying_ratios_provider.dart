@@ -18,8 +18,8 @@ class QualifyingRatiosProvider with ChangeNotifier {
   QualifyingRatio? _selectedRatio;
   bool _isLoading = true;
 
-  QualifyingRatiosProvider({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore() {
+  QualifyingRatiosProvider({required PreferenceStore preferenceStore})
+    : _preferences = preferenceStore {
     scheduleMicrotask(load);
   }
 

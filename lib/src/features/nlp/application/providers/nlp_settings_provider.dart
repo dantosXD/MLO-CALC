@@ -11,20 +11,18 @@ class NlpSettingsProvider with ChangeNotifier {
   static const _keyName = 'geminiApiKey';
 
   NlpSettingsProvider({
-    ConnectivityService? connectivity,
-    NlpCacheService? cache,
+    required ConnectivityService connectivity,
+    required NlpCacheService cache,
     required NLPCalculatorService calculatorService,
-    SecureStore? secureStore,
-    PreferenceStore? preferenceStore,
-  }) : _connectivity = connectivity ?? ConnectivityService(),
-       _ownsConnectivity = connectivity == null,
-       _cache = cache ?? NlpCacheService(),
+    required SecureStore secureStore,
+    required PreferenceStore preferenceStore,
+  }) : _connectivity = connectivity,
+       _cache = cache,
        _calculatorService = calculatorService,
-       _secureStore = secureStore ?? FlutterSecureStoreBackend(),
-       _legacyStore = preferenceStore ?? PreferenceStore();
+       _secureStore = secureStore,
+       _legacyStore = preferenceStore;
 
   final ConnectivityService _connectivity;
-  final bool _ownsConnectivity;
   final NlpCacheService _cache;
   final NLPCalculatorService _calculatorService;
   final SecureStore _secureStore;
@@ -106,9 +104,6 @@ class NlpSettingsProvider with ChangeNotifier {
   @override
   void dispose() {
     _connectivity.removeListener(_onConnectivityChanged);
-    if (_ownsConnectivity) {
-      _connectivity.dispose();
-    }
     super.dispose();
   }
 }

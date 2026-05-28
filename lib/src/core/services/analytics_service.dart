@@ -107,8 +107,8 @@ class UsageStats {
 ///
 /// All data is stored locally - no external tracking.
 class AnalyticsService {
-  AnalyticsService({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore();
+  AnalyticsService({required PreferenceStore preferenceStore})
+    : _preferences = preferenceStore;
 
   static const String _eventsKey = 'analytics_events';
   static const String _statsKey = 'analytics_stats';
