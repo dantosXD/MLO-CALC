@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
+import 'package:loan_ranger/src/core/utils/type_utils.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/loan_quote_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/states/qualification_state.dart';
@@ -40,8 +41,8 @@ class QualificationController with ChangeNotifier {
 
   void restoreFromHistoryEntry(CalculationEntry entry) {
     _state = _state.copyWith(
-      annualIncome: _toDouble(entry.inputs['annualIncome']),
-      monthlyDebt: _toDouble(entry.inputs['monthlyDebt']),
+      annualIncome: TypeUtils.toDouble(entry.inputs['annualIncome']),
+      monthlyDebt: TypeUtils.toDouble(entry.inputs['monthlyDebt']),
       clearCalculationError: true,
     );
     notifyListeners();
@@ -173,11 +174,4 @@ class QualificationController with ChangeNotifier {
     notifyListeners();
   }
 
-  double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value);
-    return null;
-  }
 }

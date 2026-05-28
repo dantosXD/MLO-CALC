@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:loan_ranger/src/core/scenarios/scenario_catalog.dart';
+import 'package:loan_ranger/src/core/utils/type_utils.dart';
 
 class ScenarioStateSnapshot {
   const ScenarioStateSnapshot({
@@ -43,7 +44,7 @@ class ScenarioStateSnapshot {
     }
 
     return raw.map<String, double?>((Object? key, Object? value) {
-      return MapEntry<String, double?>(key.toString(), _toDouble(value));
+      return MapEntry<String, double?>(key.toString(), TypeUtils.toDouble(value));
     });
   }
 
@@ -281,13 +282,6 @@ class CalculatorStateSnapshot {
       }),
     );
   }
-}
-
-double? _toDouble(Object? value) {
-  if (value is num) {
-    return value.toDouble();
-  }
-  return null;
 }
 
 int? _toInt(Object? value) {

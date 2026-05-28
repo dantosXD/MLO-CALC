@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
+import 'package:loan_ranger/src/core/utils/type_utils.dart';
 import 'package:loan_ranger/src/core/validators/financial_validators.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
 import 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart';
@@ -158,28 +159,28 @@ class LoanQuoteController with ChangeNotifier {
     _manualInputOrder.clear();
     _state = _state.copyWith(
       loanAmount:
-          _toDouble(inputs['loanAmount']) ??
-          _toDouble(results['loanAmount']) ??
-          _toDouble(results['maxLoanAmount']),
+          TypeUtils.toDouble(inputs['loanAmount']) ??
+          TypeUtils.toDouble(results['loanAmount']) ??
+          TypeUtils.toDouble(results['maxLoanAmount']),
       interestRate:
-          _toDouble(inputs['interestRate']) ??
-          _toDouble(results['interestRate']),
+          TypeUtils.toDouble(inputs['interestRate']) ??
+          TypeUtils.toDouble(results['interestRate']),
       termYears:
-          _toDouble(inputs['termYears']) ?? _toDouble(results['termYears']),
-      payment: _toDouble(results['payment']) ?? _toDouble(inputs['payment']),
-      price: _toDouble(inputs['price']),
-      downPayment: _toDouble(inputs['downPayment']),
-      propertyTax: _toDouble(inputs['propertyTax']),
-      homeInsurance: _toDouble(inputs['homeInsurance']),
-      mortgageInsurance: _toDouble(inputs['mortgageInsurance']),
-      monthlyExpenses: _toDouble(inputs['monthlyExpenses']),
+          TypeUtils.toDouble(inputs['termYears']) ?? TypeUtils.toDouble(results['termYears']),
+      payment: TypeUtils.toDouble(results['payment']) ?? TypeUtils.toDouble(inputs['payment']),
+      price: TypeUtils.toDouble(inputs['price']),
+      downPayment: TypeUtils.toDouble(inputs['downPayment']),
+      propertyTax: TypeUtils.toDouble(inputs['propertyTax']),
+      homeInsurance: TypeUtils.toDouble(inputs['homeInsurance']),
+      mortgageInsurance: TypeUtils.toDouble(inputs['mortgageInsurance']),
+      monthlyExpenses: TypeUtils.toDouble(inputs['monthlyExpenses']),
       clearCalculationError: true,
       presentedValue:
-          _toDouble(results['payment']) ??
-          _toDouble(inputs['payment']) ??
-          _toDouble(results['loanAmount']) ??
-          _toDouble(results['maxLoanAmount']) ??
-          _toDouble(inputs['loanAmount']),
+          TypeUtils.toDouble(results['payment']) ??
+          TypeUtils.toDouble(inputs['payment']) ??
+          TypeUtils.toDouble(results['loanAmount']) ??
+          TypeUtils.toDouble(results['maxLoanAmount']) ??
+          TypeUtils.toDouble(inputs['loanAmount']),
       isInterestOnly: false,
       displayMode: PaymentDisplayMode.standardPI,
     );
@@ -771,11 +772,4 @@ class LoanQuoteController with ChangeNotifier {
     notifyListeners();
   }
 
-  double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value);
-    return null;
-  }
 }
