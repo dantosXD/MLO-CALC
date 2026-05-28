@@ -323,14 +323,14 @@ class _ProgramCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _getTypeColor(program.type).withValues(alpha: 0.12),
+                  color: _getTypeColor(program.type, context).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
                     _getTypeAbbrev(program.type),
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: _getTypeColor(program.type),
+                      color: _getTypeColor(program.type, context),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -418,13 +418,13 @@ class _ProgramCard extends StatelessWidget {
                       ),
                     ),
                   if (onDelete != null)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: ListTile(
-                        leading: Icon(Icons.delete, color: Colors.red),
+                        leading: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
                         title: Text(
                           'Delete',
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(color: Theme.of(context).colorScheme.error),
                         ),
                         contentPadding: EdgeInsets.zero,
                       ),
@@ -438,22 +438,23 @@ class _ProgramCard extends StatelessWidget {
     );
   }
 
-  Color _getTypeColor(LoanProgramType type) {
+  Color _getTypeColor(LoanProgramType type, BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     switch (type) {
       case LoanProgramType.conventional:
-        return Colors.blue;
+        return cs.primary;
       case LoanProgramType.fha:
-        return Colors.green;
+        return cs.secondary;
       case LoanProgramType.va:
-        return Colors.purple;
+        return cs.tertiary;
       case LoanProgramType.usda:
-        return Colors.brown;
+        return cs.primaryContainer;
       case LoanProgramType.jumbo:
-        return Colors.orange;
+        return cs.tertiaryContainer;
       case LoanProgramType.nonQm:
-        return Colors.teal;
+        return cs.secondaryContainer;
       case LoanProgramType.custom:
-        return Colors.grey;
+        return cs.outline;
     }
   }
 
