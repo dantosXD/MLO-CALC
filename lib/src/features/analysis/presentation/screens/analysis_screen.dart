@@ -119,7 +119,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               onApr: () => _showAprSheet(context, calculatorProvider),
               onRentVsBuy: () => _openRentVsBuy(context),
               onClosingCosts: () => _openClosingCosts(context),
-              onGenerateReport: () =>
+              onGenerateReport: () async =>
                   _generateReport(context, calculatorProvider),
             ),
 
@@ -367,7 +367,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
-  void _generateReport(
+  Future<void> _generateReport(
     BuildContext context,
     CalculatorProvider provider,
   ) async {
