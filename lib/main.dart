@@ -48,8 +48,10 @@ Future<void> main() async {
 List<SingleChildWidget> buildAppProviders() => [
   ChangeNotifierProvider(create: (_) => ThemeProvider()),
   ChangeNotifierProvider(
-    create: (_) =>
-        MloProfileProvider(preferenceStore: serviceLocator<PreferenceStore>()),
+    create: (_) => MloProfileProvider(
+      preferenceStore: serviceLocator<PreferenceStore>(),
+      secureStore: serviceLocator<SecureStore>(),
+    ),
   ),
   ChangeNotifierProvider.value(value: serviceLocator<ConnectivityService>()),
   Provider.value(value: serviceLocator<AnalyticsService>()),
