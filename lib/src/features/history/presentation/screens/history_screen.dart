@@ -74,29 +74,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   : ListView.builder(
                       itemCount: entries.length,
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                      itemBuilder: (context, i) => Consumer<ComparisonProvider>(
-                        builder: (context, comparisonProvider, _) =>
-                            _HistoryCard(
-                              entry: entries[i],
-                              onApply: () => calculatorProvider
-                                  .applyHistoryEntry(entries[i]),
-                              onDelete: () =>
-                                  historyController.remove(entries[i].id),
-                              selected: comparisonProvider.isSelected(
-                                entries[i].id,
-                              ),
-                              selectionMode: _selectionMode,
-                              onSelect: () => comparisonProvider
-                                  .toggleSelection(entries[i].id),
-                              onLongPress: () {
-                                if (!_selectionMode) {
-                                  _toggleSelectionMode();
-                                  comparisonProvider.toggleSelection(
-                                    entries[i].id,
-                                  );
-                                }
-                              },
-                            ),
+                      itemBuilder: (context, i) =>
+                          Selector<ComparisonProvider, bool>(
+                        selector: (_, comparison) =>
+                            comparison.isSelected(entries[i].id),
+                        builder: (context, isSelected, _) => _HistoryCard(
+                          entry: entries[i],
+                          onApply: () =>
+                              calculatorProvider.applyHistoryEntry(entries[i]),
+                          onDelete: () =>
+                              historyController.remove(entries[i].id),
+                          selected: isSelected,
+                          selectionMode: _selectionMode,
+                          onSelect: () => context
+                              .read<ComparisonProvider>()
+                              .toggleSelection(entries[i].id),
+                          onLongPress: () {
+                            if (!_selectionMode) {
+                              _toggleSelectionMode();
+                              context
+                                  .read<ComparisonProvider>()
+                                  .toggleSelection(entries[i].id);
+                            }
+                          },
+                        ),
                       ),
                     ),
             ),
