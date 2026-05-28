@@ -10,19 +10,41 @@ class WorkspaceDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final historyEntries = context.watch<HistoryController>().entries;
-    final recentEntries = historyEntries.take(3).toList();
     final pinnedFeatures = FeatureCatalog.primaryFeatures
         .where((FeatureCatalogEntry entry) => entry.pinned)
         .toList();
 
+    return Selector<HistoryController, ({List<CalculationEntry> recent, int totalCount})>(
+      selector: (_, h) => (recent: h.entries.take(3).toList(), totalCount: h.entries.length),
+      shouldRebuild: (prev, next) {
+        if (prev.totalCount != next.totalCount) return true;
+        if (prev.recent.length != next.recent.length) return true;
+        for (var i = 0; i < prev.recent.length; i++) {
+          if (prev.recent[i].id != next.recent[i].id) return true;
+        }
+        return false;
+      },
+      builder: (context, history, _) {
+        final recentEntries = history.recent;
+        final totalCount = history.totalCount;
+        return _buildBody(context, recentEntries, totalCount, pinnedFeatures);
+      },
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    List<CalculationEntry> recentEntries,
+    int totalCount,
+    List<FeatureCatalogEntry> pinnedFeatures,
+  ) {
     return Scaffold(
       appBar: AppBar(title: const Text('Workspace Dashboard')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _WorkspaceHero(
-            recentCount: historyEntries.length,
+            recentCount: totalCount,
             scenarioCount: ScenarioCatalog.defaults.length,
           ),
           const SizedBox(height: 20),
