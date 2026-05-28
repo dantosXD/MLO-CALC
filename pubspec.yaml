@@ -51,7 +51,6 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^12.0.1
   url_launcher: ^6.3.2
-  sqflite_common_ffi: ^2.3.6
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +62,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  # Desktop/test-only SQLite FFI driver — used only in bin/ tooling scripts,
+  # never imported in lib/ or on iOS/Android production builds.
+  sqflite_common_ffi: ^2.3.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
