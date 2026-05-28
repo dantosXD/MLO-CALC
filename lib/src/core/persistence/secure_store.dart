@@ -12,7 +12,15 @@ abstract class SecureStore {
 
 class FlutterSecureStoreBackend implements SecureStore {
   FlutterSecureStoreBackend({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ??
+          const FlutterSecureStorage(
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.first_unlock_this_device,
+            ),
+            aOptions: AndroidOptions(
+              encryptedSharedPreferences: true,
+            ),
+          );
 
   final FlutterSecureStorage _storage;
 
