@@ -14,8 +14,14 @@ class WorkspaceDashboardScreen extends StatelessWidget {
         .where((FeatureCatalogEntry entry) => entry.pinned)
         .toList();
 
+    // totalCount is projected alongside the top-3 list so the hero badge
+    // (which shows the full history count) updates when entries are added/removed
+    // beyond position 3 — without requiring a separate subscription.
     return Selector<HistoryController, ({List<CalculationEntry> recent, int totalCount})>(
-      selector: (_, h) => (recent: h.entries.take(3).toList(), totalCount: h.entries.length),
+      selector: (_, h) {
+        final all = h.entries;
+        return (recent: all.take(3).toList(), totalCount: all.length);
+      },
       shouldRebuild: (prev, next) {
         if (prev.totalCount != next.totalCount) return true;
         if (prev.recent.length != next.recent.length) return true;
