@@ -41,6 +41,11 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
   RentVsBuyCalculation? _result;
   bool _showMethodology = false;
 
+  // Cached FlSpot lists — updated only when _result changes.
+  RentVsBuyCalculation? _cachedResult;
+  List<FlSpot> _buyingSpots = const [];
+  List<FlSpot> _rentingSpots = const [];
+
   @override
   void dispose() {
     _homePriceController.dispose();
@@ -89,6 +94,18 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
     setState(() {
       _result = _calculator.calculate(inputs);
     });
+    _updateSpotCache(_result!);
+  }
+
+  void _updateSpotCache(RentVsBuyCalculation result) {
+    if (identical(result, _cachedResult)) return;
+    _cachedResult = result;
+    _buyingSpots = result.projections
+        .map((p) => FlSpot(p.year.toDouble(), p.netWorthBuying))
+        .toList();
+    _rentingSpots = result.projections
+        .map((p) => FlSpot(p.year.toDouble(), p.netWorthRenting))
+        .toList();
   }
 
   @override
@@ -553,11 +570,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                   lineBarsData: [
                     // Buying Line
                     LineChartBarData(
-                      spots: result.projections
-                          .map(
-                            (p) => FlSpot(p.year.toDouble(), p.netWorthBuying),
-                          )
-                          .toList(),
+                      spots: _buyingSpots,
                       isCurved: true,
                       color: Colors.blue,
                       barWidth: 3,
@@ -565,11 +578,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                     ),
                     // Renting Line
                     LineChartBarData(
-                      spots: result.projections
-                          .map(
-                            (p) => FlSpot(p.year.toDouble(), p.netWorthRenting),
-                          )
-                          .toList(),
+                      spots: _rentingSpots,
                       isCurved: true,
                       color: Colors.orange,
                       barWidth: 3,
