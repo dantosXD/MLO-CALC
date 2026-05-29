@@ -214,7 +214,7 @@ class _CalculatorButtonState extends State<CalculatorButton>
                 button: true,
                 enabled: true,
                 label: semanticLabel,
-                onTap: widget.onPressed,
+                onTap: _usesImmediateTap ? null : widget.onPressed,
                 onLongPress: widget.onLongPress,
                 child: ExcludeSemantics(child: button),
               ),

@@ -81,10 +81,13 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   bool _dirty = false;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
     final p = context.read<MloProfileProvider>();
     _nameCtrl.text = p.mloName;
     _nmlsCtrl.text = p.mloNmls;
@@ -211,10 +214,13 @@ class _DisclaimerSection extends StatefulWidget {
 class _DisclaimerSectionState extends State<_DisclaimerSection> {
   final _ctrl = TextEditingController();
   bool _dirty = false;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
     _ctrl.text = context.read<MloProfileProvider>().disclaimerText;
   }
 
@@ -299,10 +305,13 @@ class _CalculatorDefaultsSectionState
   final _taxCtrl = TextEditingController();
   final _insCtrl = TextEditingController();
   bool _dirty = false;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
     final p = context.read<MloProfileProvider>();
     _rateCtrl.text = p.defaultInterestRate?.toString() ?? '';
     _termCtrl.text = p.defaultTermYears?.toString() ?? '';

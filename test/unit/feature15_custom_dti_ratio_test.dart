@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,7 +15,7 @@ void main() {
       await prefs.clear();
 
       // Create a fresh provider instance (loads asynchronously in constructor)
-      provider = QualifyingRatiosProvider();
+      provider = QualifyingRatiosProvider(preferenceStore: PreferenceStore());
       // Wait for async loading to complete
       await Future.delayed(const Duration(milliseconds: 100));
     });
@@ -145,7 +146,7 @@ void main() {
       );
 
       // Act - Recreate provider (simulating app restart)
-      final newProvider = QualifyingRatiosProvider();
+      final newProvider = QualifyingRatiosProvider(preferenceStore: PreferenceStore());
       // Wait for async loading
       await Future.delayed(const Duration(milliseconds: 100));
 

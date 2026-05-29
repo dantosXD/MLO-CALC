@@ -82,7 +82,7 @@ class _AmortizationChartState extends State<AmortizationChart> {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    horizontalInterval: 50000,
+                    horizontalInterval: _maxY > 0 ? (_maxY / 5).clamp(10000.0, 200000.0) : 50000.0,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
                         color: colorScheme.outline.withValues(alpha: 0.20),

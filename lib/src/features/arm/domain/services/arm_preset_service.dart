@@ -1,20 +1,19 @@
-import 'dart:async';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../models/arm_scenario.dart';
+import '../../../../core/persistence/secure_store.dart';
 
 class ArmPresetStorage {
+  ArmPresetStorage({required SecureStore secureStore}) : _store = secureStore;
+
   static const String _storageKey = 'armScenario';
 
+  final SecureStore _store;
+
   Future<void> save(ArmScenario scenario) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey, scenario.toJsonString());
+    await _store.write(key: _storageKey, value: scenario.toJsonString());
   }
 
   Future<ArmScenario?> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString(_storageKey);
+    final value = await _store.read(_storageKey);
     if (value == null || value.isEmpty) {
       return null;
     }

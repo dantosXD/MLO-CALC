@@ -7,10 +7,10 @@ import '../models/calculator_state.dart';
 
 class CalculatorPersistenceService {
   CalculatorPersistenceService({
-    SecureStore? secureStore,
-    PreferenceStore? legacyStore,
-  }) : _secureStore = secureStore ?? FlutterSecureStoreBackend(),
-       _legacyStore = legacyStore ?? PreferenceStore();
+    required SecureStore secureStore,
+    required PreferenceStore legacyStore,
+  }) : _secureStore = secureStore,
+       _legacyStore = legacyStore;
 
   static const String _scenarioSessionKey = 'scenarioSession';
   static const List<String> _legacyKeys = <String>[

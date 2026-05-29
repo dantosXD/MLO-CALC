@@ -4,6 +4,9 @@ library;
 import 'dart:convert';
 
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
 
 enum CalculationEntryType {
   payment,
@@ -309,7 +312,7 @@ class CalculationEntry {
     String? notes,
   }) {
     final now = DateTime.now();
-    final id = now.millisecondsSinceEpoch.toString();
+    final id = _uuid.v4();
     final entryType = CalculationEntryType.fromJsonValue(type);
 
     final inputs = CalculationEntryInputs(
@@ -362,7 +365,7 @@ class CalculationEntry {
     String? notes,
   }) {
     final now = DateTime.now();
-    final id = now.millisecondsSinceEpoch.toString();
+    final id = _uuid.v4();
 
     return CalculationEntry(
       id: id,

@@ -6,8 +6,8 @@ enum CalculatorLayout { classic, modern }
 class LayoutPreferenceProvider extends ChangeNotifier {
   static const String _layoutKey = 'calculator_layout';
 
-  LayoutPreferenceProvider({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore();
+  LayoutPreferenceProvider({required PreferenceStore preferenceStore})
+    : _preferences = preferenceStore;
 
   final PreferenceStore _preferences;
 

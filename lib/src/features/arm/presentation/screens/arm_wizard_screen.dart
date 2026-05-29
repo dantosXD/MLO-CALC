@@ -92,44 +92,53 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
           return ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              SizedBox(
-                height: 560,
-                child: Stepper(
-                  currentStep: _currentStep,
-                  onStepContinue: () {
-                    if (_currentStep < steps.length - 1) {
-                      setState(() {
-                        _currentStep++;
-                      });
-                    }
-                  },
-                  onStepCancel: () {
-                    if (_currentStep > 0) {
-                      setState(() {
-                        _currentStep--;
-                      });
-                    }
-                  },
-                  controlsBuilder: (_, details) {
-                    return Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: details.onStepContinue,
-                          child: Text(
-                            _currentStep == steps.length - 1 ? 'Done' : 'Next',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        if (_currentStep > 0)
-                          TextButton(
-                            onPressed: details.onStepCancel,
-                            child: const Text('Back'),
-                          ),
-                      ],
-                    );
-                  },
-                  steps: steps,
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight = MediaQuery.sizeOf(context).height
+                      - kToolbarHeight
+                      - MediaQuery.paddingOf(context).top
+                      - MediaQuery.paddingOf(context).bottom;
+                  final stepperHeight = (availableHeight * 0.80).clamp(400.0, 640.0);
+                  return SizedBox(
+                    height: stepperHeight,
+                    child: Stepper(
+                      currentStep: _currentStep,
+                      onStepContinue: () {
+                        if (_currentStep < steps.length - 1) {
+                          setState(() {
+                            _currentStep++;
+                          });
+                        }
+                      },
+                      onStepCancel: () {
+                        if (_currentStep > 0) {
+                          setState(() {
+                            _currentStep--;
+                          });
+                        }
+                      },
+                      controlsBuilder: (_, details) {
+                        return Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed: details.onStepContinue,
+                              child: Text(
+                                _currentStep == steps.length - 1 ? 'Done' : 'Next',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            if (_currentStep > 0)
+                              TextButton(
+                                onPressed: details.onStepCancel,
+                                child: const Text('Back'),
+                              ),
+                          ],
+                        );
+                      },
+                      steps: steps,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               SizedBox(

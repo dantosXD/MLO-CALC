@@ -1,11 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:loan_ranger/src/core/persistence/preference_store.dart';
+import 'package:loan_ranger/src/core/persistence/secure_store.dart';
 
 class MloProfileProvider with ChangeNotifier {
-  MloProfileProvider({required PreferenceStore preferenceStore})
-    : _prefs = preferenceStore;
+  MloProfileProvider({
+    required PreferenceStore preferenceStore,
+    required SecureStore secureStore,
+  }) : _prefs = preferenceStore,
+       _secureStore = secureStore;
 
   final PreferenceStore _prefs;
+  final SecureStore _secureStore;
 
   // MLO identity
   String mloName = '';
@@ -44,11 +49,13 @@ class MloProfileProvider with ChangeNotifier {
   Future<void> load() async {
     try {
       await _prefs.load();
-      mloName = _prefs.getString(_keyName) ?? '';
-      mloNmls = _prefs.getString(_keyNmls) ?? '';
+      // PII fields — read from SecureStore
+      mloName = await _secureStore.read(_keyName) ?? '';
+      mloNmls = await _secureStore.read(_keyNmls) ?? '';
+      mloPhone = await _secureStore.read(_keyPhone) ?? '';
+      mloEmail = await _secureStore.read(_keyEmail) ?? '';
+      // Non-PII fields — read from PreferenceStore
       mloCompany = _prefs.getString(_keyCompany) ?? '';
-      mloPhone = _prefs.getString(_keyPhone) ?? '';
-      mloEmail = _prefs.getString(_keyEmail) ?? '';
       disclaimerText =
           _prefs.getString(_keyDisclaimer) ??
           'Estimates only. Not a loan offer. Taxes/insurance/MI may vary.';
@@ -64,7 +71,9 @@ class MloProfileProvider with ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      debugPrint('MloProfileProvider.load error: $e');
+      if (kDebugMode) {
+        debugPrint('MloProfileProvider.load error: $e');
+      }
     }
   }
 
@@ -81,11 +90,13 @@ class MloProfileProvider with ChangeNotifier {
     mloPhone = phone;
     mloEmail = email;
     notifyListeners();
-    await _prefs.setString(_keyName, name);
-    await _prefs.setString(_keyNmls, nmls);
+    // PII fields — write to SecureStore
+    await _secureStore.write(key: _keyName, value: name);
+    await _secureStore.write(key: _keyNmls, value: nmls);
+    await _secureStore.write(key: _keyPhone, value: phone);
+    await _secureStore.write(key: _keyEmail, value: email);
+    // Non-PII — write to PreferenceStore
     await _prefs.setString(_keyCompany, company);
-    await _prefs.setString(_keyPhone, phone);
-    await _prefs.setString(_keyEmail, email);
   }
 
   Future<void> saveDisclaimer(String text) async {

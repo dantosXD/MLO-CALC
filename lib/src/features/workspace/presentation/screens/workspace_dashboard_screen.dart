@@ -10,19 +10,47 @@ class WorkspaceDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final historyEntries = context.watch<HistoryController>().entries;
-    final recentEntries = historyEntries.take(3).toList();
     final pinnedFeatures = FeatureCatalog.primaryFeatures
         .where((FeatureCatalogEntry entry) => entry.pinned)
         .toList();
 
+    // totalCount is projected alongside the top-3 list so the hero badge
+    // (which shows the full history count) updates when entries are added/removed
+    // beyond position 3 — without requiring a separate subscription.
+    return Selector<HistoryController, ({List<CalculationEntry> recent, int totalCount})>(
+      selector: (_, h) {
+        final all = h.entries;
+        return (recent: all.take(3).toList(), totalCount: all.length);
+      },
+      shouldRebuild: (prev, next) {
+        if (prev.totalCount != next.totalCount) return true;
+        if (prev.recent.length != next.recent.length) return true;
+        for (var i = 0; i < prev.recent.length; i++) {
+          if (prev.recent[i].id != next.recent[i].id) return true;
+        }
+        return false;
+      },
+      builder: (context, history, _) {
+        final recentEntries = history.recent;
+        final totalCount = history.totalCount;
+        return _buildBody(context, recentEntries, totalCount, pinnedFeatures);
+      },
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    List<CalculationEntry> recentEntries,
+    int totalCount,
+    List<FeatureCatalogEntry> pinnedFeatures,
+  ) {
     return Scaffold(
       appBar: AppBar(title: const Text('Workspace Dashboard')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _WorkspaceHero(
-            recentCount: historyEntries.length,
+            recentCount: totalCount,
             scenarioCount: ScenarioCatalog.defaults.length,
           ),
           const SizedBox(height: 20),

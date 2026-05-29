@@ -41,6 +41,11 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
   RentVsBuyCalculation? _result;
   bool _showMethodology = false;
 
+  // Cached FlSpot lists — updated only when _result changes.
+  RentVsBuyCalculation? _cachedResult;
+  List<FlSpot> _buyingSpots = const [];
+  List<FlSpot> _rentingSpots = const [];
+
   @override
   void dispose() {
     _homePriceController.dispose();
@@ -89,6 +94,18 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
     setState(() {
       _result = _calculator.calculate(inputs);
     });
+    _updateSpotCache(_result!);
+  }
+
+  void _updateSpotCache(RentVsBuyCalculation result) {
+    if (identical(result, _cachedResult)) return;
+    _cachedResult = result;
+    _buyingSpots = result.projections
+        .map((p) => FlSpot(p.year.toDouble(), p.netWorthBuying))
+        .toList();
+    _rentingSpots = result.projections
+        .map((p) => FlSpot(p.year.toDouble(), p.netWorthRenting))
+        .toList();
   }
 
   @override
@@ -363,8 +380,8 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
 
     return Card(
       color: isBuyingBetter
-          ? Colors.green.withValues(alpha: 0.12)
-          : Colors.orange.withValues(alpha: 0.12),
+          ? theme.colorScheme.primary.withValues(alpha: 0.12)
+          : theme.colorScheme.tertiary.withValues(alpha: 0.12),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -372,14 +389,14 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
             Icon(
               isBuyingBetter ? Icons.home : Icons.apartment,
               size: 48,
-              color: isBuyingBetter ? Colors.green : Colors.orange,
+              color: isBuyingBetter ? theme.colorScheme.primary : theme.colorScheme.tertiary,
             ),
             const SizedBox(height: 8),
             Text(
               isBuyingBetter ? 'Buying is Better' : 'Renting May Be Better',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isBuyingBetter ? Colors.green : Colors.orange,
+                color: isBuyingBetter ? theme.colorScheme.primary : theme.colorScheme.tertiary,
               ),
             ),
             const SizedBox(height: 8),
@@ -432,7 +449,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                       Text(
                         'BUYING',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -464,7 +481,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                       Text(
                         'RENTING',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: Colors.orange,
+                          color: Theme.of(context).colorScheme.tertiary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -553,25 +570,17 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                   lineBarsData: [
                     // Buying Line
                     LineChartBarData(
-                      spots: result.projections
-                          .map(
-                            (p) => FlSpot(p.year.toDouble(), p.netWorthBuying),
-                          )
-                          .toList(),
+                      spots: _buyingSpots,
                       isCurved: true,
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                       barWidth: 3,
                       dotData: const FlDotData(show: false),
                     ),
                     // Renting Line
                     LineChartBarData(
-                      spots: result.projections
-                          .map(
-                            (p) => FlSpot(p.year.toDouble(), p.netWorthRenting),
-                          )
-                          .toList(),
+                      spots: _rentingSpots,
                       isCurved: true,
-                      color: Colors.orange,
+                      color: Theme.of(context).colorScheme.tertiary,
                       barWidth: 3,
                       dotData: const FlDotData(show: false),
                     ),
@@ -583,9 +592,9 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _LegendItem(color: Colors.blue, label: 'Buying'),
+                _LegendItem(color: Theme.of(context).colorScheme.primary, label: 'Buying'),
                 const SizedBox(width: 24),
-                _LegendItem(color: Colors.orange, label: 'Renting'),
+                _LegendItem(color: Theme.of(context).colorScheme.tertiary, label: 'Renting'),
               ],
             ),
           ],
@@ -702,7 +711,7 @@ class _CostRow extends StatelessWidget {
                 : _currency.format(value),
             style: TextStyle(
               fontWeight: isBold ? FontWeight.bold : null,
-              color: isCredit ? Colors.green : null,
+              color: isCredit ? Theme.of(context).colorScheme.primary : null,
             ),
           ),
         ],

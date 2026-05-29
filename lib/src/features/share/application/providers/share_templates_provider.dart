@@ -6,8 +6,8 @@ import '../../domain/models/share_template.dart';
 enum ShareChannel { sms, email, shareSheet, copy, screenshot }
 
 class ShareTemplatesProvider with ChangeNotifier {
-  ShareTemplatesProvider({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore();
+  ShareTemplatesProvider({required PreferenceStore preferenceStore})
+    : _preferences = preferenceStore;
 
   static const String _customTemplatesKey = 'shareCustomTemplates';
   static const String _selectedTemplateKeyPrefix = 'shareSelectedTemplate_';

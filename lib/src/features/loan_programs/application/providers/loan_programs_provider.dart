@@ -15,8 +15,8 @@ class LoanProgramsProvider with ChangeNotifier {
   LoanProgram? _selectedProgram;
   bool _isLoading = true;
 
-  LoanProgramsProvider({PreferenceStore? preferenceStore})
-    : _preferences = preferenceStore ?? PreferenceStore();
+  LoanProgramsProvider({required PreferenceStore preferenceStore})
+    : _preferences = preferenceStore;
 
   /// All available programs (built-in + custom)
   List<LoanProgram> get allPrograms => [

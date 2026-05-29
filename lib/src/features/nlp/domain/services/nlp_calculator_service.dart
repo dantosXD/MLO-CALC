@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:loan_ranger/src/core/utils/type_utils.dart';
 
 class NLPCalculatorService {
   GenerativeModel? _model;
@@ -195,28 +196,20 @@ class CalculationRequest {
   factory CalculationRequest.fromJson(Map<String, dynamic> json) {
     return CalculationRequest(
       action: json['action'] ?? 'unknown',
-      loanAmount: _toDouble(json['loanAmount']),
-      interestRate: _toDouble(json['interestRate']),
-      termYears: _toDouble(json['termYears']),
-      payment: _toDouble(json['payment']),
-      price: _toDouble(json['price']),
-      downPayment: _toDouble(json['downPayment']),
-      propertyTax: _toDouble(json['propertyTax']),
-      homeInsurance: _toDouble(json['homeInsurance']),
-      mortgageInsurance: _toDouble(json['mortgageInsurance']),
-      monthlyExpenses: _toDouble(json['monthlyExpenses']),
-      annualIncome: _toDouble(json['annualIncome']),
-      monthlyDebt: _toDouble(json['monthlyDebt']),
+      loanAmount: TypeUtils.toDouble(json['loanAmount']),
+      interestRate: TypeUtils.toDouble(json['interestRate']),
+      termYears: TypeUtils.toDouble(json['termYears']),
+      payment: TypeUtils.toDouble(json['payment']),
+      price: TypeUtils.toDouble(json['price']),
+      downPayment: TypeUtils.toDouble(json['downPayment']),
+      propertyTax: TypeUtils.toDouble(json['propertyTax']),
+      homeInsurance: TypeUtils.toDouble(json['homeInsurance']),
+      mortgageInsurance: TypeUtils.toDouble(json['mortgageInsurance']),
+      monthlyExpenses: TypeUtils.toDouble(json['monthlyExpenses']),
+      annualIncome: TypeUtils.toDouble(json['annualIncome']),
+      monthlyDebt: TypeUtils.toDouble(json['monthlyDebt']),
       explanation: json['explanation'] ?? 'Calculation requested',
     );
-  }
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value);
-    return null;
   }
 
   Map<String, dynamic> toJson() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/core/di/service_locator.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/amortization_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
@@ -47,7 +48,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
-      provider = QualifyingRatiosProvider();
+      provider = QualifyingRatiosProvider(preferenceStore: PreferenceStore());
       await Future.delayed(const Duration(milliseconds: 100));
     });
 

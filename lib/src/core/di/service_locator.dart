@@ -132,7 +132,9 @@ Future<void> configureDependencies() async {
         legacyStore: serviceLocator<PreferenceStore>(),
       ),
     )
-    ..registerLazySingleton<ArmPresetStorage>(ArmPresetStorage.new)
+    ..registerLazySingleton<ArmPresetStorage>(
+      () => ArmPresetStorage(secureStore: serviceLocator<SecureStore>()),
+    )
     ..registerLazySingleton<NlpCacheService>(
       () => NlpCacheService(
         secureStore: serviceLocator<SecureStore>(),

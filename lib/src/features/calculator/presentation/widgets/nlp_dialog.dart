@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loan_ranger/src/core/utils/constants.dart';
@@ -43,6 +45,47 @@ class _NlpDialogState extends State<NlpDialog> {
     super.dispose();
   }
 
+  /// Maps raw exceptions to user-friendly messages.
+  /// Never exposes internal exception text, stack traces, or PII.
+  String _friendlyError(Object e) {
+    final msg = e.toString();
+    if (e is SocketException || msg.contains('SocketException')) {
+      return 'Unable to connect. Please check your internet connection.';
+    }
+    if (e is TimeoutException || msg.contains('TimeoutException')) {
+      return 'The request timed out. Please try again.';
+    }
+    if (msg.contains('API key') || msg.contains('api key') || msg.contains('apiKey')) {
+      return 'Invalid API key. Please update your Gemini API key in Settings.';
+    }
+    if (msg.contains('quota') || msg.contains('rate limit') || msg.contains('429')) {
+      return 'API quota reached. Please try again later.';
+    }
+    if (msg.contains('not initialized') || msg.contains('not Initialized')) {
+      return 'Service not ready. Please check your API key in Settings.';
+    }
+    // Generic fallback — never expose raw exception text
+    return 'Something went wrong. Please try again.';
+  }
+
+  /// Maps speech-to-text SDK error codes to user-friendly messages.
+  String _friendlySpeechError(String errorCode) {
+    switch (errorCode) {
+      case 'error_speech_timeout':
+      case 'error_no_match':
+        return 'No speech detected. Please try again.';
+      case 'error_audio':
+        return 'Microphone error. Please check microphone permissions.';
+      case 'error_network':
+      case 'error_network_timeout':
+        return 'Network error. Please check your internet connection.';
+      case 'error_permission':
+        return 'Microphone permission denied.';
+      default:
+        return 'Speech recognition failed. Please try again.';
+    }
+  }
+
   void _notifyStateChange() {
     widget.onStateChanged?.call(
       _isListening,
@@ -78,7 +121,10 @@ class _NlpDialogState extends State<NlpDialog> {
       },
       onError: (error) {
         if (!mounted) return;
-        setState(() => _status = 'Error: ${error.errorMsg}');
+        if (kDebugMode) {
+          debugPrint('Speech recognition error: ${error.errorMsg}');
+        }
+        setState(() => _status = 'Error: ${_friendlySpeechError(error.errorMsg)}');
         _notifyStateChange();
       },
     );
@@ -222,7 +268,10 @@ class _NlpDialogState extends State<NlpDialog> {
         await settings.cache.queueRequest(query);
         setState(() => _status = 'Offline - request queued');
       } else {
-        setState(() => _status = 'Error: $e');
+        if (kDebugMode) {
+          debugPrint('NLP dialog error: $e');
+        }
+        setState(() => _status = 'Error: ${_friendlyError(e)}');
       }
       unawaited(HapticFeedback.heavyImpact());
       _notifyStateChange();

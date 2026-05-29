@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/core/persistence/secure_store.dart';
 import 'package:loan_ranger/src/core/scenarios/scenario_catalog.dart';
 import 'package:loan_ranger/src/features/calculator/application/controllers/history_controller.dart';
@@ -37,6 +38,7 @@ void main() {
 
         final service = CalculatorPersistenceService(
           secureStore: InMemorySecureStore(),
+          legacyStore: PreferenceStore(),
         );
         final snapshot = await service.load();
 
@@ -81,6 +83,7 @@ void main() {
         final repository = CalculatorSessionRepository(
           persistenceService: CalculatorPersistenceService(
             secureStore: InMemorySecureStore(),
+            legacyStore: PreferenceStore(),
           ),
         );
 
