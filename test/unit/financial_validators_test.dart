@@ -145,10 +145,13 @@ void main() {
       expect(result.errorMessage, contains('negative'));
     });
 
-    test('Over 100% down payment fails', () {
+    // BUGLOG B2: a value >= 100 is a flat DOLLAR amount, matching the
+    // controller's percent/flat heuristic (< 100 => percent). So 150 is a
+    // $150 down payment, which is valid below the price — not "150%". The real
+    // over-limit guard (down payment >= price) is covered above.
+    test('Mid-range flat down payment (>= \$100) below price is valid', () {
       final result = FinancialValidators.validateDownPayment(150, 300000);
-      expect(result.isValid, isFalse);
-      expect(result.errorMessage, contains('exceed 100%'));
+      expect(result.isValid, isTrue, reason: result.errorMessage);
     });
   });
 

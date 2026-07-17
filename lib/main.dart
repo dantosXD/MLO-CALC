@@ -46,7 +46,10 @@ Future<void> main() async {
 }
 
 List<SingleChildWidget> buildAppProviders() => [
-  ChangeNotifierProvider(create: (_) => ThemeProvider()),
+  ChangeNotifierProvider(
+    create: (_) =>
+        ThemeProvider(preferenceStore: serviceLocator<PreferenceStore>()),
+  ),
   ChangeNotifierProvider(
     create: (_) => MloProfileProvider(
       preferenceStore: serviceLocator<PreferenceStore>(),

@@ -834,7 +834,7 @@ class _PlaceholdersHelp extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: keys.map((k) {
-              final label = '{{{$k}}}';
+              final label = ShareTemplateRenderer.placeholder(k);
 
               return InkWell(
                 onTap: () async {
@@ -883,7 +883,7 @@ class _PlaceholdersHelp extends StatelessWidget {
               runSpacing: 6,
               children: keys.map((k) {
                 final v = tokens[k] ?? '';
-                final label = '{{{$k}}}';
+                final label = ShareTemplateRenderer.placeholder(k);
                 final text = v.isEmpty ? label : '$label → $v';
 
                 return InkWell(

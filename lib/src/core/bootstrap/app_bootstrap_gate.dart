@@ -10,6 +10,7 @@ import '../../features/settings/domain/providers/mlo_profile_provider.dart';
 import '../../features/share/application/providers/share_templates_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/connectivity_service.dart';
+import '../theme/theme_provider.dart';
 import '../utils/unit_conversion.dart';
 
 class AppBootstrapGate extends StatefulWidget {
@@ -45,6 +46,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
     final templates = context.read<ShareTemplatesProvider>();
     final nlp = context.read<NlpSettingsProvider>();
     final mloProfile = context.read<MloProfileProvider>();
+    final theme = context.read<ThemeProvider>();
 
     await connectivity.initialize();
     await analytics.initialize();
@@ -57,6 +59,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
       templates.load(),
       nlp.load(),
       mloProfile.load(),
+      theme.load(),
     ]);
 
     // Apply MLO-defined defaults to fields with no prior session value

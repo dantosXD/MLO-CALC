@@ -23,12 +23,26 @@ class QualificationService {
       return CalcResult.failure('Incomplete rate/term/income data');
     }
 
+    if (ratio.housingRatio <= 0 && ratio.debtRatio <= 0) {
+      return CalcResult.failure('Qualifying ratio has no usable limits');
+    }
+
     final double monthlyIncome = annualIncome / 12;
     final double maxPitiHousing = monthlyIncome * (ratio.housingRatio / 100);
     final double maxTotalDebt = monthlyIncome * (ratio.debtRatio / 100);
     final double maxPitiDebt = maxTotalDebt - monthlyDebt;
 
-    final double maxPiti = min(maxPitiHousing, maxPitiDebt);
+    // A ratio value of 0 means "no constraint" (e.g. VA has no front-end
+    // housing ratio). Only apply a bound for the ratios that are actually set,
+    // otherwise a 0 would be treated as an impossible 0% cap.
+    final double maxPiti;
+    if (ratio.housingRatio <= 0) {
+      maxPiti = maxPitiDebt;
+    } else if (ratio.debtRatio <= 0) {
+      maxPiti = maxPitiHousing;
+    } else {
+      maxPiti = min(maxPitiHousing, maxPitiDebt);
+    }
     final double maxPi = maxPiti - monthlyEscrows;
 
     if (maxPi <= 0) {
@@ -59,10 +73,20 @@ class QualificationService {
       return CalcResult.failure('No payment to evaluate');
     }
 
-    final double minIncomeFront =
-        (pitiPayment / (ratio.housingRatio / 100)) * 12;
+    if (ratio.housingRatio <= 0 && ratio.debtRatio <= 0) {
+      return CalcResult.failure('Qualifying ratio has no usable limits');
+    }
+
+    // A ratio value of 0 means "no constraint" for that side (e.g. VA has no
+    // front-end housing ratio). Skip it instead of dividing by zero, which
+    // previously produced an Infinity minimum income.
+    final double minIncomeFront = ratio.housingRatio > 0
+        ? (pitiPayment / (ratio.housingRatio / 100)) * 12
+        : 0;
     final double totalDebt = pitiPayment + monthlyDebt;
-    final double minIncomeBack = (totalDebt / (ratio.debtRatio / 100)) * 12;
+    final double minIncomeBack = ratio.debtRatio > 0
+        ? (totalDebt / (ratio.debtRatio / 100)) * 12
+        : 0;
 
     return CalcResult.success(max(minIncomeFront, minIncomeBack));
   }

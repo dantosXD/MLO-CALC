@@ -132,16 +132,11 @@ class FinancialValidators {
       return const ValidationResult.invalid('Down payment cannot be negative');
     }
 
-    // Heuristic: values under 100 are percentages, otherwise flat amounts
-    // But check for bad percentages (> 100 but < typical min home price)
-    if (downPayment > 100 && downPayment < 10000) {
-      return const ValidationResult.invalid(
-        'Down payment percentage cannot exceed 100%',
-      );
-    }
-
-    // If it's a flat amount (>= 10000)
-    if (downPayment >= 10000) {
+    // Heuristic MUST match LoanQuoteController._calculateLoanAmountFromPrice:
+    // values under 100 are percentages (0–99.99%), values >= 100 are flat
+    // dollar amounts. A flat amount just has to stay below the price; there is
+    // no separate "percentage over 100" band, since anything >= 100 is dollars.
+    if (downPayment >= 100) {
       if (price != null && downPayment >= price) {
         return const ValidationResult.invalid(
           'Down payment cannot equal or exceed price',
