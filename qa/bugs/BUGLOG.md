@@ -13,10 +13,10 @@ less common path, or silent failure; P3 = edge/misconfig/cosmetic.
 | B2 | Down-payment validator rejects real $100–$9,999 flat amounts (threshold mismatch w/ controller) | P1 | ✅ FIXED (verified live) |
 | B3 | PITI setters (tax/insurance/MI/expenses) skip validation → negative values accepted silently | P2 | ✅ FIXED |
 | B4 | Theme mode not persisted → dark mode resets to light on every restart | P2 | ✅ FIXED |
-| B5 | ARM `_nextRate`: caps of 0 treated as "unset"; lifetime floor applied after cap can exceed cap | P3 | LOG (handoff) |
-| B6 | Rent-vs-buy: rent-increase compounds monthly in break-even but annually in projections | P3 | LOG (handoff) |
+| B5 | ARM `_nextRate`: caps of 0 treated as "unset"; lifetime floor applied after cap can exceed cap | P3 | ✅ FIXED |
+| B6 | Rent-vs-buy: rent-increase compounds monthly in break-even but annually in projections | P3 | ✅ FIXED |
 | B7 | Share dialog hint chips show `{{{token}}}` (triple) vs renderer's `{{token}}` (double) | P3 | ✅ FIXED |
-| B8 | Corrupt persisted JSON (session/history/ARM preset) swallowed silently, partial data loss | P3 | LOG (handoff) |
+| B8 | Corrupt persisted JSON (session/history/ARM preset) swallowed silently, partial data loss | P3 | ✅ FIXED (history) |
 | B9 | Release `web/index.html` `#loading` overlay left in DOM after first frame (cosmetic) | P3 | NOT A BUG |
 
 ### B7 fix
@@ -96,11 +96,33 @@ no-arg default constructor path so existing widget tests that build `ThemeProvid
 
 ---
 
-## Logged, not changed this pass (rationale)
-- **B5 ARM caps/floor:** Real ARMs use non-zero caps; treating 0 as "unset" is defensible, and floor>cap is
-  a data-entry error. Changing semantics risks breaking intended behavior without a product decision.
-- **B6 Rent-vs-buy compounding:** The monthly-vs-annual rent-increase difference is an approximation choice;
-  "correct" depends on intended model. Needs product decision before altering numbers users may rely on.
+## B5 fix — ARM cap is the hard ceiling over floor
+**File:** `lib/src/features/arm/domain/services/arm_calculator_service.dart:148-157`
+**Product decision:** `0` for periodicCap/lifetimeCap = "no constraint" (unset). Cap is the absolute
+maximum rate; floor must not push the rate above it. Fixed by applying floor before cap in `_nextRate`
+so the cap always wins on the final clamp. A floor > cap is user input error; cap wins silently.
+**Regression:** `test/regression/b5_arm_cap_floor_precedence_test.dart` (4 tests).
+
+## B6 fix — Break-even simulation uses annual rent step
+**File:** `lib/src/features/rent_vs_buy/domain/services/rent_vs_buy_calculator.dart:263`
+**Product decision:** Rent increases once per year at lease renewal, not continuously. Annual step is
+the correct model. Changed `_calculateBreakEvenWithEquity` from monthly compound (`rate/12` per month)
+to annual step (`if (month % 12 == 0)` × full annual rate), matching `_generateProjections`.
+**Hand-verified:** for the simple test scenario (0% interest/appreciation), annual step → breakEvenMonth
+≈ 117; monthly compound → 111.
+**Regression:** `test/regression/b6_rent_vs_buy_rent_increase_compounding_test.dart` (3 tests).
+
+## B8 fix — History JSON resilience (partial)
+**File:** `lib/src/core/models/calculation_history.dart:602-618`
+**Product decision:** Keep app usable. Per-entry try/catch + atomic swap: build a fresh list from
+successfully parsed entries, replace `_entries` only after all parsing completes. A corrupt entry is
+skipped; valid entries on either side are preserved. Top-level JSON parse failure returns early without
+touching existing in-memory state (already true for decode failure, now explicit).
+**Scope:** ARM preset service already returns null on failure (correct). Calculator session already catches
+FormatException + TypeError specifically (correct). Only the history list needed this fix.
+**Regression:** `test/regression/b8_history_json_resilience_test.dart` (4 tests).
+
+---
+
+## Previously logged, not changed this pass (rationale)
 - **B7 Share brace hint:** Cosmetic/authoring nuisance; low blast radius. Candidate for a follow-up.
-- **B8 Silent corrupt-JSON recovery:** Deliberate "keep app usable" design; the real gap is the absence of
-  a user-visible notice. UX decision, not a correctness bug.
