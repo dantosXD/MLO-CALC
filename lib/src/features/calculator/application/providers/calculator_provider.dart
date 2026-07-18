@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/dev/dev_seeder_service.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
 import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
@@ -319,6 +320,10 @@ class CalculatorProvider
   void removeHistoryEntry(String id) => _historyController.remove(id);
 
   void clearHistory() => _historyController.clear();
+
+  void seedDevData() {
+    _historyController.replaceFromJson(DevSeederService.generateJsonString());
+  }
 
   Future<String> applyNlpRequest(CalculationRequest request) async {
     void setIf(double? value, void Function({double? value}) setter) {
