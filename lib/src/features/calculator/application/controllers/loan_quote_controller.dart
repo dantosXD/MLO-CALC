@@ -324,30 +324,68 @@ class LoanQuoteController with ChangeNotifier {
   }
 
   void setPropertyTax({double? value}) {
+    if (value != null) {
+      final validation = FinancialValidators.validatePropertyTax(value);
+      if (!validation.isValid) {
+        _state = _state.copyWith(calculationError: validation.errorMessage);
+        notifyListeners();
+        return;
+      }
+    }
     _state = value == null
-        ? _state.copyWith(clearPropertyTax: true)
-        : _state.copyWith(propertyTax: value);
+        ? _state.copyWith(clearPropertyTax: true, clearCalculationError: true)
+        : _state.copyWith(propertyTax: value, clearCalculationError: true);
     notifyListeners();
   }
 
   void setHomeInsurance({double? value}) {
+    if (value != null) {
+      final validation = FinancialValidators.validateInsurance(value);
+      if (!validation.isValid) {
+        _state = _state.copyWith(calculationError: validation.errorMessage);
+        notifyListeners();
+        return;
+      }
+    }
     _state = value == null
-        ? _state.copyWith(clearHomeInsurance: true)
-        : _state.copyWith(homeInsurance: value);
+        ? _state.copyWith(clearHomeInsurance: true, clearCalculationError: true)
+        : _state.copyWith(homeInsurance: value, clearCalculationError: true);
     notifyListeners();
   }
 
   void setMortgageInsurance({double? value}) {
+    if (value != null) {
+      final validation = FinancialValidators.validateInsurance(value);
+      if (!validation.isValid) {
+        _state = _state.copyWith(calculationError: validation.errorMessage);
+        notifyListeners();
+        return;
+      }
+    }
     _state = value == null
-        ? _state.copyWith(clearMortgageInsurance: true)
-        : _state.copyWith(mortgageInsurance: value);
+        ? _state.copyWith(
+            clearMortgageInsurance: true,
+            clearCalculationError: true,
+          )
+        : _state.copyWith(mortgageInsurance: value, clearCalculationError: true);
     notifyListeners();
   }
 
   void setMonthlyExpenses({double? value}) {
+    if (value != null) {
+      final validation = FinancialValidators.validateMonthlyExpenses(value);
+      if (!validation.isValid) {
+        _state = _state.copyWith(calculationError: validation.errorMessage);
+        notifyListeners();
+        return;
+      }
+    }
     _state = value == null
-        ? _state.copyWith(clearMonthlyExpenses: true)
-        : _state.copyWith(monthlyExpenses: value);
+        ? _state.copyWith(
+            clearMonthlyExpenses: true,
+            clearCalculationError: true,
+          )
+        : _state.copyWith(monthlyExpenses: value, clearCalculationError: true);
     notifyListeners();
   }
 

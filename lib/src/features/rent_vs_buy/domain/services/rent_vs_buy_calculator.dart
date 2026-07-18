@@ -260,7 +260,6 @@ class RentVsBuyCalculator {
     final monthlyRate = inputs.interestRate / 100 / 12;
     final monthlyAppreciation = inputs.homeAppreciationRate / 100 / 12;
     final monthlyInvestReturn = inputs.investmentReturnRate / 100 / 12;
-    final monthlyRentIncrease = inputs.annualRentIncrease / 100 / 12;
 
     for (int month = 1; month <= inputs.analysisYears * 12; month++) {
       // Update home value
@@ -287,10 +286,13 @@ class RentVsBuyCalculator {
         totalRentingCost + currentRent + inputs.rentersInsuranceMonthly,
       );
 
-      // Rent increases
-      currentRent = DecimalUtils.roundToCents(
-        currentRent * (1 + monthlyRentIncrease),
-      );
+      // Rent increases once per year at lease renewal (annual step),
+      // matching how _generateProjections models the same increase.
+      if (month % 12 == 0) {
+        currentRent = DecimalUtils.roundToCents(
+          currentRent * (1 + inputs.annualRentIncrease / 100),
+        );
+      }
 
       // Investment grows
       investmentValue = DecimalUtils.roundToCents(

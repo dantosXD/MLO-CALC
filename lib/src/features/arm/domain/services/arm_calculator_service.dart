@@ -145,12 +145,14 @@ class ArmCalculatorService {
 
     double nextRate = current + delta;
 
-    if (lifetimeCap > 0 && nextRate > lifetimeCap) {
-      nextRate = lifetimeCap;
-    }
-
+    // Apply floor before cap so the cap is always the hard ceiling.
+    // If floor > cap (misconfigured data), the cap still wins.
     if (nextRate < lifetimeFloor) {
       nextRate = lifetimeFloor;
+    }
+
+    if (lifetimeCap > 0 && nextRate > lifetimeCap) {
+      nextRate = lifetimeCap;
     }
 
     if (nextRate < 0) {

@@ -600,15 +600,25 @@ class CalculationHistory {
 
   /// Import history from JSON string
   void fromJsonString(String jsonString) {
+    final List<dynamic> jsonList;
     try {
-      final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
-      _entries.clear();
-      for (final json in jsonList) {
-        _entries.add(CalculationEntry.fromJson(json as Map<String, dynamic>));
-      }
+      jsonList = jsonDecode(jsonString) as List<dynamic>;
     } catch (_) {
-      // Keep the app usable if history parsing fails.
+      // Top-level JSON is not parseable; leave existing in-memory entries intact.
+      return;
     }
+
+    final parsed = <CalculationEntry>[];
+    for (final json in jsonList) {
+      try {
+        parsed.add(CalculationEntry.fromJson(json as Map<String, dynamic>));
+      } catch (_) {
+        // Skip individual corrupt entries; preserve the rest.
+      }
+    }
+    _entries
+      ..clear()
+      ..addAll(parsed);
   }
 
   /// Search entries by notes or summary
