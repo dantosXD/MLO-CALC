@@ -95,6 +95,9 @@ class CalculatorProvider
   bool _isHydrating = false;
   Future<void>? _initializeFuture;
 
+  double? _defaultPropertyTaxRate;
+  double? _defaultInsuranceRate;
+
   LoanQuoteController get loanQuoteController => _loanQuoteController;
   QualificationController get qualificationController =>
       _qualificationController;
@@ -166,14 +169,30 @@ class CalculatorProvider
   }
 
   /// Pre-fills fields that have no persisted value with MLO-defined defaults.
-  /// Only rate and term are applied here; percentage-based PITI fields require
-  /// a purchase price which is not known at startup.
-  void applyDefaultsIfEmpty({double? interestRate, double? termYears}) {
+  /// Rate/term/downPayment are applied immediately. Tax and insurance rates are
+  /// stored and auto-converted to monthly dollars the first time setPrice is
+  /// called (conversion: price × rate% / 12).
+  void applyDefaultsIfEmpty({
+    double? interestRate,
+    double? termYears,
+    double? downPaymentPct,
+    double? propertyTaxRate,
+    double? insuranceRate,
+  }) {
     if (this.interestRate == null && interestRate != null) {
       setInterestRate(value: interestRate);
     }
     if (this.termYears == null && termYears != null) {
       setTermYears(value: termYears);
+    }
+    if (downPayment == null && downPaymentPct != null) {
+      setDownPayment(value: downPaymentPct);
+    }
+    if (propertyTaxRate != null) {
+      _defaultPropertyTaxRate = propertyTaxRate;
+    }
+    if (insuranceRate != null) {
+      _defaultInsuranceRate = insuranceRate;
     }
   }
 
@@ -203,7 +222,17 @@ class CalculatorProvider
   void setPayment({double? value}) =>
       _loanQuoteController.setPayment(value: value);
 
-  void setPrice({double? value}) => _loanQuoteController.setPrice(value: value);
+  void setPrice({double? value}) {
+    _loanQuoteController.setPrice(value: value);
+    if (value != null) {
+      if (propertyTax == null && _defaultPropertyTaxRate != null) {
+        setPropertyTax(value: value * _defaultPropertyTaxRate! / 100 / 12);
+      }
+      if (homeInsurance == null && _defaultInsuranceRate != null) {
+        setHomeInsurance(value: value * _defaultInsuranceRate! / 100 / 12);
+      }
+    }
+  }
 
   void setDownPayment({double? value}) =>
       _loanQuoteController.setDownPayment(value: value);
