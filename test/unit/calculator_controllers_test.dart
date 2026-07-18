@@ -181,66 +181,61 @@ void main() {
     // Regression test: generateSchedule must not contain an artificial delay
     // (e.g. Future.delayed). If a delay is reintroduced, this test will catch
     // it because isComputing will remain true longer than the fast-path allows.
-    test(
-      'generateSchedule completes without artificial delay — '
-      'isComputing is false after await and schedule is populated',
-      () async {
-        quoteController.setLoanAmount(value: 300000);
-        quoteController.setInterestRate(value: 6.5);
-        quoteController.setTermYears(value: 30);
+    test('generateSchedule completes without artificial delay — '
+        'isComputing is false after await and schedule is populated', () async {
+      quoteController.setLoanAmount(value: 300000);
+      quoteController.setInterestRate(value: 6.5);
+      quoteController.setTermYears(value: 30);
 
-        // Capture isComputing transitions via notifications.
-        final isComputingSnapshots = <bool>[];
-        amortizationController.addListener(() {
-          isComputingSnapshots.add(
-            amortizationController.isComputingAmortization,
-          );
-        });
-
-        final stopwatch = Stopwatch()..start();
-        await amortizationController.generateSchedule();
-        stopwatch.stop();
-
-        // The schedule must have finished: isComputing must be false.
-        expect(
+      // Capture isComputing transitions via notifications.
+      final isComputingSnapshots = <bool>[];
+      amortizationController.addListener(() {
+        isComputingSnapshots.add(
           amortizationController.isComputingAmortization,
-          isFalse,
-          reason: 'isComputing should be false after generateSchedule returns',
         );
+      });
 
-        // At least one notification was fired while computing (true),
-        // and the final notification left isComputing as false.
-        expect(
-          isComputingSnapshots,
-          contains(true),
-          reason:
-              'isComputing should have been set to true during computation',
-        );
-        expect(
-          isComputingSnapshots.last,
-          isFalse,
-          reason:
-              'The last notification must leave isComputing as false',
-        );
+      final stopwatch = Stopwatch()..start();
+      await amortizationController.generateSchedule();
+      stopwatch.stop();
 
-        // The schedule must be non-empty.
-        expect(
-          amortizationController.amortizationData,
-          isNotEmpty,
-          reason: 'generateSchedule should populate amortizationData',
-        );
+      // The schedule must have finished: isComputing must be false.
+      expect(
+        amortizationController.isComputingAmortization,
+        isFalse,
+        reason: 'isComputing should be false after generateSchedule returns',
+      );
 
-        // Regression guard: a 50 ms artificial delay would push elapsed well
-        // above this threshold even on slow CI hardware. Pure computation for
-        // a 30-year schedule finishes in single-digit milliseconds.
-        expect(
-          stopwatch.elapsedMilliseconds,
-          lessThan(500),
-          reason:
-              'generateSchedule took ${stopwatch.elapsedMilliseconds} ms — '
-              'an artificial Future.delayed may have been reintroduced',
-        );
-      },
-    );
+      // At least one notification was fired while computing (true),
+      // and the final notification left isComputing as false.
+      expect(
+        isComputingSnapshots,
+        contains(true),
+        reason: 'isComputing should have been set to true during computation',
+      );
+      expect(
+        isComputingSnapshots.last,
+        isFalse,
+        reason: 'The last notification must leave isComputing as false',
+      );
+
+      // The schedule must be non-empty.
+      expect(
+        amortizationController.amortizationData,
+        isNotEmpty,
+        reason: 'generateSchedule should populate amortizationData',
+      );
+
+      // Regression guard: a 50 ms artificial delay would push elapsed well
+      // above this threshold even on slow CI hardware. Pure computation for
+      // a 30-year schedule finishes in single-digit milliseconds.
+      expect(
+        stopwatch.elapsedMilliseconds,
+        lessThan(500),
+        reason:
+            'generateSchedule took ${stopwatch.elapsedMilliseconds} ms — '
+            'an artificial Future.delayed may have been reintroduced',
+      );
+    });
   });
 }

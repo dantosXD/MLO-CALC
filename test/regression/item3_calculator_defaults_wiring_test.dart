@@ -7,11 +7,11 @@ import 'package:loan_ranger/src/features/calculator/domain/services/persistence_
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 
 CalculatorProvider _build() => CalculatorProvider(
-      coreCalculationService: serviceLocator<CoreCalculationService>(),
-      amortizationService: serviceLocator<AmortizationService>(),
-      qualificationService: serviceLocator<QualificationService>(),
-      persistenceService: serviceLocator<CalculatorPersistenceService>(),
-    );
+  coreCalculationService: serviceLocator<CoreCalculationService>(),
+  amortizationService: serviceLocator<AmortizationService>(),
+  qualificationService: serviceLocator<QualificationService>(),
+  persistenceService: serviceLocator<CalculatorPersistenceService>(),
+);
 
 void main() {
   setUpAll(() async {
@@ -27,25 +27,34 @@ void main() {
       expect(provider.downPayment, 20.0);
     });
 
-    test('downPaymentPct default does not override an already-set down payment', () {
-      provider.setDownPayment(value: 50000);
-      provider.applyDefaultsIfEmpty(downPaymentPct: 20.0);
-      expect(provider.downPayment, 50000);
-    });
+    test(
+      'downPaymentPct default does not override an already-set down payment',
+      () {
+        provider.setDownPayment(value: 50000);
+        provider.applyDefaultsIfEmpty(downPaymentPct: 20.0);
+        expect(provider.downPayment, 50000);
+      },
+    );
 
-    test('propertyTaxRate default auto-applied as monthly dollars when price set', () {
-      // 1.2% annual of $300k = $3,600/yr = $300/mo
-      provider.applyDefaultsIfEmpty(propertyTaxRate: 1.2);
-      provider.setPrice(value: 300000);
-      expect(provider.propertyTax, closeTo(300, 0.01));
-    });
+    test(
+      'propertyTaxRate default auto-applied as monthly dollars when price set',
+      () {
+        // 1.2% annual of $300k = $3,600/yr = $300/mo
+        provider.applyDefaultsIfEmpty(propertyTaxRate: 1.2);
+        provider.setPrice(value: 300000);
+        expect(provider.propertyTax, closeTo(300, 0.01));
+      },
+    );
 
-    test('insuranceRate default auto-applied as monthly dollars when price set', () {
-      // 0.5% annual of $300k = $1,500/yr = $125/mo
-      provider.applyDefaultsIfEmpty(insuranceRate: 0.5);
-      provider.setPrice(value: 300000);
-      expect(provider.homeInsurance, closeTo(125, 0.01));
-    });
+    test(
+      'insuranceRate default auto-applied as monthly dollars when price set',
+      () {
+        // 0.5% annual of $300k = $1,500/yr = $125/mo
+        provider.applyDefaultsIfEmpty(insuranceRate: 0.5);
+        provider.setPrice(value: 300000);
+        expect(provider.homeInsurance, closeTo(125, 0.01));
+      },
+    );
 
     test('propertyTaxRate default does not override already-set tax', () {
       provider.setPropertyTax(value: 400);

@@ -28,10 +28,7 @@ class SettingsScreen extends StatelessWidget {
           const _CalculatorLayoutSection(),
           const Divider(height: 32),
           const _AiVoiceSection(),
-          if (kDebugMode) ...[
-            const Divider(height: 32),
-            const _DevSection(),
-          ],
+          if (kDebugMode) ...[const Divider(height: 32), const _DevSection()],
           const SizedBox(height: 32),
         ],
       ),

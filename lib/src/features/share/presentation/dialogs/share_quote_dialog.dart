@@ -928,7 +928,10 @@ class _QuoteCardPreview extends StatelessWidget {
       return '$label: $value';
     }
 
-    final tokens = data.toTokenMap(scenarioName: scenarioName, mloTokens: mloTokens);
+    final tokens = data.toTokenMap(
+      scenarioName: scenarioName,
+      mloTokens: mloTokens,
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),

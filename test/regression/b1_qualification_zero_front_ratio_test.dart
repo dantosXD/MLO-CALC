@@ -37,18 +37,20 @@ void main() {
       expect(result.value!.loanAmount.isFinite, isTrue);
     });
 
-    test('calculateMinimumIncome returns a finite value (no divide-by-zero)',
-        () {
-      final result = service.calculateMinimumIncome(
-        ratio: va,
-        pitiPayment: 2000,
-      );
+    test(
+      'calculateMinimumIncome returns a finite value (no divide-by-zero)',
+      () {
+        final result = service.calculateMinimumIncome(
+          ratio: va,
+          pitiPayment: 2000,
+        );
 
-      expect(result, isA<CalcSuccess<double>>());
-      expect(result.value, isNotNull);
-      expect(result.value!.isFinite, isTrue);
-      // Back-end only: (2000 / 0.41) * 12.
-      expect(result.value!, closeTo(58536.59, 1.0));
-    });
+        expect(result, isA<CalcSuccess<double>>());
+        expect(result.value, isNotNull);
+        expect(result.value!.isFinite, isTrue);
+        // Back-end only: (2000 / 0.41) * 12.
+        expect(result.value!, closeTo(58536.59, 1.0));
+      },
+    );
   });
 }

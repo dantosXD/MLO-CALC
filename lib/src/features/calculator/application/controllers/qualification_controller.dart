@@ -111,9 +111,7 @@ class QualificationController with ChangeNotifier {
 
     switch (result) {
       case CalcFailure(:final error):
-        _state = _state.copyWith(
-          calculationError: error,
-        );
+        _state = _state.copyWith(calculationError: error);
         notifyListeners();
         return;
       case CalcSuccess(:final value):
@@ -162,9 +160,7 @@ class QualificationController with ChangeNotifier {
 
     switch (result) {
       case CalcFailure(:final error):
-        _state = _state.copyWith(
-          calculationError: error,
-        );
+        _state = _state.copyWith(calculationError: error);
         notifyListeners();
         return;
       case CalcSuccess(:final value):
@@ -176,5 +172,4 @@ class QualificationController with ChangeNotifier {
         notifyListeners();
     }
   }
-
 }

@@ -323,7 +323,10 @@ class _ProgramCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _getTypeColor(program.type, context).withValues(alpha: 0.12),
+                  color: _getTypeColor(
+                    program.type,
+                    context,
+                  ).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -421,10 +424,15 @@ class _ProgramCard extends StatelessWidget {
                     PopupMenuItem(
                       value: 'delete',
                       child: ListTile(
-                        leading: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
+                        leading: Icon(
+                          Icons.delete,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                         title: Text(
                           'Delete',
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
                         contentPadding: EdgeInsets.zero,
                       ),

@@ -25,14 +25,16 @@ void main() {
       storage = ArmPresetStorage(secureStore: secureStore);
     });
 
-    test('save writes scenario JSON to SecureStore under key armScenario',
-        () async {
-      await storage.save(testScenario);
+    test(
+      'save writes scenario JSON to SecureStore under key armScenario',
+      () async {
+        await storage.save(testScenario);
 
-      final stored = await secureStore.read('armScenario');
-      expect(stored, isNotNull);
-      expect(stored, isNotEmpty);
-    });
+        final stored = await secureStore.read('armScenario');
+        expect(stored, isNotNull);
+        expect(stored, isNotEmpty);
+      },
+    );
 
     test('load returns null when no scenario has been saved', () async {
       final result = await storage.load();
@@ -48,10 +50,14 @@ void main() {
       expect(loaded.termYears, testScenario.termYears);
       expect(loaded.initialRate, testScenario.initialRate);
       expect(loaded.initialFixedYears, testScenario.initialFixedYears);
-      expect(loaded.adjustmentFrequencyYears,
-          testScenario.adjustmentFrequencyYears);
-      expect(loaded.rateChangePerAdjustment,
-          testScenario.rateChangePerAdjustment);
+      expect(
+        loaded.adjustmentFrequencyYears,
+        testScenario.adjustmentFrequencyYears,
+      );
+      expect(
+        loaded.rateChangePerAdjustment,
+        testScenario.rateChangePerAdjustment,
+      );
       expect(loaded.periodicCap, testScenario.periodicCap);
       expect(loaded.lifetimeCap, testScenario.lifetimeCap);
       expect(loaded.lifetimeFloor, testScenario.lifetimeFloor);

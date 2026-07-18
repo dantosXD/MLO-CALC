@@ -389,14 +389,18 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
             Icon(
               isBuyingBetter ? Icons.home : Icons.apartment,
               size: 48,
-              color: isBuyingBetter ? theme.colorScheme.primary : theme.colorScheme.tertiary,
+              color: isBuyingBetter
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.tertiary,
             ),
             const SizedBox(height: 8),
             Text(
               isBuyingBetter ? 'Buying is Better' : 'Renting May Be Better',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isBuyingBetter ? theme.colorScheme.primary : theme.colorScheme.tertiary,
+                color: isBuyingBetter
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.tertiary,
               ),
             ),
             const SizedBox(height: 8),
@@ -592,9 +596,15 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _LegendItem(color: Theme.of(context).colorScheme.primary, label: 'Buying'),
+                _LegendItem(
+                  color: Theme.of(context).colorScheme.primary,
+                  label: 'Buying',
+                ),
                 const SizedBox(width: 24),
-                _LegendItem(color: Theme.of(context).colorScheme.tertiary, label: 'Renting'),
+                _LegendItem(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  label: 'Renting',
+                ),
               ],
             ),
           ],

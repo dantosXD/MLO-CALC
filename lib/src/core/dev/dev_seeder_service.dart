@@ -28,23 +28,22 @@ class DevSeederService {
       double? tax,
       double? insurance,
       String? notes,
-    }) =>
-        CalculationEntry(
-          id: _uuid.v4(),
-          timestamp: daysAgo(daysBack),
-          type: CalculationEntryType.payment,
-          inputs: CalculationEntryInputs(
-            loanAmount: loanAmount,
-            interestRate: rate,
-            termYears: term,
-            price: price,
-            downPayment: downPayment,
-            propertyTax: tax,
-            homeInsurance: insurance,
-          ),
-          results: CalculationEntryResults(payment: pmt),
-          notes: notes,
-        );
+    }) => CalculationEntry(
+      id: _uuid.v4(),
+      timestamp: daysAgo(daysBack),
+      type: CalculationEntryType.payment,
+      inputs: CalculationEntryInputs(
+        loanAmount: loanAmount,
+        interestRate: rate,
+        termYears: term,
+        price: price,
+        downPayment: downPayment,
+        propertyTax: tax,
+        homeInsurance: insurance,
+      ),
+      results: CalculationEntryResults(payment: pmt),
+      notes: notes,
+    );
 
     CalculationEntry loanAmt({
       required int daysBack,
@@ -52,35 +51,30 @@ class DevSeederService {
       required double rate,
       required double term,
       required double loan,
-    }) =>
-        CalculationEntry(
-          id: _uuid.v4(),
-          timestamp: daysAgo(daysBack),
-          type: CalculationEntryType.loanAmount,
-          inputs: CalculationEntryInputs(
-            payment: pmt,
-            interestRate: rate,
-            termYears: term,
-          ),
-          results: CalculationEntryResults(loanAmount: loan),
-        );
+    }) => CalculationEntry(
+      id: _uuid.v4(),
+      timestamp: daysAgo(daysBack),
+      type: CalculationEntryType.loanAmount,
+      inputs: CalculationEntryInputs(
+        payment: pmt,
+        interestRate: rate,
+        termYears: term,
+      ),
+      results: CalculationEntryResults(loanAmount: loan),
+    );
 
     CalculationEntry termCalc({
       required int daysBack,
       required double loan,
       required double rate,
       required double term,
-    }) =>
-        CalculationEntry(
-          id: _uuid.v4(),
-          timestamp: daysAgo(daysBack),
-          type: CalculationEntryType.term,
-          inputs: CalculationEntryInputs(
-            loanAmount: loan,
-            interestRate: rate,
-          ),
-          results: CalculationEntryResults(termYears: term),
-        );
+    }) => CalculationEntry(
+      id: _uuid.v4(),
+      timestamp: daysAgo(daysBack),
+      type: CalculationEntryType.term,
+      inputs: CalculationEntryInputs(loanAmount: loan, interestRate: rate),
+      results: CalculationEntryResults(termYears: term),
+    );
 
     CalculationEntry rateCalc({
       required int daysBack,
@@ -88,18 +82,17 @@ class DevSeederService {
       required double pmt,
       required double term,
       required double rate,
-    }) =>
-        CalculationEntry(
-          id: _uuid.v4(),
-          timestamp: daysAgo(daysBack),
-          type: CalculationEntryType.interestRate,
-          inputs: CalculationEntryInputs(
-            loanAmount: loan,
-            payment: pmt,
-            termYears: term,
-          ),
-          results: CalculationEntryResults(interestRate: rate),
-        );
+    }) => CalculationEntry(
+      id: _uuid.v4(),
+      timestamp: daysAgo(daysBack),
+      type: CalculationEntryType.interestRate,
+      inputs: CalculationEntryInputs(
+        loanAmount: loan,
+        payment: pmt,
+        termYears: term,
+      ),
+      results: CalculationEntryResults(interestRate: rate),
+    );
 
     CalculationEntry qual({
       required int daysBack,
@@ -110,23 +103,22 @@ class DevSeederService {
       required double maxLoan,
       double? piPayment,
       String? notes,
-    }) =>
-        CalculationEntry(
-          id: _uuid.v4(),
-          timestamp: daysAgo(daysBack),
-          type: CalculationEntryType.qualification,
-          inputs: CalculationEntryInputs(
-            annualIncome: income,
-            monthlyDebt: debt,
-            interestRate: rate,
-            termYears: term,
-          ),
-          results: CalculationEntryResults(
-            maxLoanAmount: maxLoan,
-            monthlyPiPayment: piPayment,
-          ),
-          notes: notes,
-        );
+    }) => CalculationEntry(
+      id: _uuid.v4(),
+      timestamp: daysAgo(daysBack),
+      type: CalculationEntryType.qualification,
+      inputs: CalculationEntryInputs(
+        annualIncome: income,
+        monthlyDebt: debt,
+        interestRate: rate,
+        termYears: term,
+      ),
+      results: CalculationEntryResults(
+        maxLoanAmount: maxLoan,
+        monthlyPiPayment: piPayment,
+      ),
+      notes: notes,
+    );
 
     return [
       // ── Payment calculations (10) ──────────────────────────────────────

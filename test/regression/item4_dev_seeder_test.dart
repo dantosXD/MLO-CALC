@@ -9,11 +9,11 @@ import 'package:loan_ranger/src/features/calculator/domain/services/persistence_
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 
 CalculatorProvider _buildProvider() => CalculatorProvider(
-      coreCalculationService: serviceLocator<CoreCalculationService>(),
-      amortizationService: serviceLocator<AmortizationService>(),
-      qualificationService: serviceLocator<QualificationService>(),
-      persistenceService: serviceLocator<CalculatorPersistenceService>(),
-    );
+  coreCalculationService: serviceLocator<CoreCalculationService>(),
+  amortizationService: serviceLocator<AmortizationService>(),
+  qualificationService: serviceLocator<QualificationService>(),
+  persistenceService: serviceLocator<CalculatorPersistenceService>(),
+);
 
 void main() {
   setUpAll(() async {
@@ -33,8 +33,11 @@ void main() {
 
     test('all entries have non-empty ids', () {
       for (final entry in entries) {
-        expect(entry.id.isNotEmpty, isTrue,
-            reason: 'Entry of type ${entry.type} has empty id');
+        expect(
+          entry.id.isNotEmpty,
+          isTrue,
+          reason: 'Entry of type ${entry.type} has empty id',
+        );
       }
     });
 
@@ -67,8 +70,9 @@ void main() {
     });
 
     test('payment entries have realistic loan amounts (100k–900k)', () {
-      final paymentEntries =
-          entries.where((e) => e.type == CalculationEntryType.payment);
+      final paymentEntries = entries.where(
+        (e) => e.type == CalculationEntryType.payment,
+      );
       for (final entry in paymentEntries) {
         final loan = entry.loanAmount;
         expect(loan, isNotNull);
@@ -77,8 +81,9 @@ void main() {
     });
 
     test('payment entries have realistic interest rates (4–12%)', () {
-      final paymentEntries =
-          entries.where((e) => e.type == CalculationEntryType.payment);
+      final paymentEntries = entries.where(
+        (e) => e.type == CalculationEntryType.payment,
+      );
       for (final entry in paymentEntries) {
         final rate = entry.interestRate;
         expect(rate, isNotNull);

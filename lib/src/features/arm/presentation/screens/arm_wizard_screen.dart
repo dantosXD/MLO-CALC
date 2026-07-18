@@ -94,11 +94,15 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
             children: [
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final availableHeight = MediaQuery.sizeOf(context).height
-                      - kToolbarHeight
-                      - MediaQuery.paddingOf(context).top
-                      - MediaQuery.paddingOf(context).bottom;
-                  final stepperHeight = (availableHeight * 0.80).clamp(400.0, 640.0);
+                  final availableHeight =
+                      MediaQuery.sizeOf(context).height -
+                      kToolbarHeight -
+                      MediaQuery.paddingOf(context).top -
+                      MediaQuery.paddingOf(context).bottom;
+                  final stepperHeight = (availableHeight * 0.80).clamp(
+                    400.0,
+                    640.0,
+                  );
                   return SizedBox(
                     height: stepperHeight,
                     child: Stepper(
@@ -123,7 +127,9 @@ class _ArmWizardViewState extends State<_ArmWizardView> {
                             ElevatedButton(
                               onPressed: details.onStepContinue,
                               child: Text(
-                                _currentStep == steps.length - 1 ? 'Done' : 'Next',
+                                _currentStep == steps.length - 1
+                                    ? 'Done'
+                                    : 'Next',
                               ),
                             ),
                             const SizedBox(width: 12),
