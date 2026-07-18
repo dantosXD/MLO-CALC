@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/theme/theme_provider.dart';
-import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:provider/provider.dart';

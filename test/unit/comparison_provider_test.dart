@@ -50,7 +50,7 @@ void main() {
   });
 
   group('ComparisonData edge cases', () {
-    CalculationEntry _makeEntry({
+    CalculationEntry makeEntry({
       required String id,
       required double loanAmount,
       required double interestRate,
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('fromEntries with single entry does not crash', () {
-      final entry = _makeEntry(
+      final entry = makeEntry(
         id: 'solo',
         loanAmount: 300000,
         interestRate: 5.0,
@@ -106,7 +106,7 @@ void main() {
       'breakEvenMonths is null (not Infinity/NaN) when both entries have identical total cost (zero payment delta)',
       () {
         // Two entries with the exact same payment → paymentDelta == 0 → should return null
-        final entry1 = _makeEntry(
+        final entry1 = makeEntry(
           id: 'x1',
           loanAmount: 300000,
           interestRate: 5.0,
@@ -114,7 +114,7 @@ void main() {
           payment: 1610.0,
           price: 375000,
         );
-        final entry2 = _makeEntry(
+        final entry2 = makeEntry(
           id: 'x2',
           loanAmount: 300000,
           interestRate: 5.0,
@@ -136,7 +136,7 @@ void main() {
       () {
         // LTV = 300000 / 375000 = 80% exactly — balance starts AT targetBalance,
         // loop hits balance <= targetBalance on month 1.
-        final entry = _makeEntry(
+        final entry = makeEntry(
           id: 'hi-ltv',
           loanAmount:
               320000, // LTV = 320000/400000 = 80% — just above threshold
@@ -174,7 +174,7 @@ void main() {
       // A "no MI" scenario requires loanAmount/price <= 0.80 at origination — miDropMonth
       // returns 1 (MI drops immediately, meaning it was never really required).
       // We validate the value is 1 (not null, not Infinity/NaN) for the low-LTV path.
-      final entry = _makeEntry(
+      final entry = makeEntry(
         id: 'low-ltv',
         loanAmount: 240000, // LTV = 60% — below 80%
         interestRate: 5.0,
