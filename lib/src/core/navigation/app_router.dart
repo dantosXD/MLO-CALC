@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/navigation/feature_catalog.dart';
 import 'package:loan_ranger/src/features/arm/domain/services/arm_calculator_service.dart';
@@ -10,13 +8,8 @@ import 'package:loan_ranger/src/features/comparison/domain/models/comparison_dat
 import 'package:loan_ranger/src/features/comparison/presentation/screens/comparison_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/domain/models/loan_program.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/widgets/loan_program_editor.dart';
-import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
 import 'package:loan_ranger/src/features/settings/presentation/screens/settings_screen.dart';
 import 'package:loan_ranger/src/features/workspace/presentation/screens/workspace_dashboard_screen.dart';
-import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
-
-import '../models/loan_parameters_read_model.dart';
 
 class AppRouter extends ChangeNotifier {
   AppRouter({
@@ -99,35 +92,11 @@ class AppRouter extends ChangeNotifier {
     return _push((_) => LoanProgramEditor(program: program));
   }
 
-  Future<void> openReportPreview(LoanParametersReadModel provider) async {
-    final data = await ReportService.generateLoanReport(provider: provider);
-    await _push<void>((_) => _PdfPreviewRoute(data: data));
-  }
-
   Future<T?> _push<T>(WidgetBuilder builder) {
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
       return Future<T?>.value();
     }
     return navigator.push<T>(MaterialPageRoute(builder: builder));
-  }
-}
-
-class _PdfPreviewRoute extends StatelessWidget {
-  const _PdfPreviewRoute({required this.data});
-
-  final Uint8List data;
-
-  @override
-  Widget build(BuildContext context) {
-    return PdfPreview(
-      build: (_) async => data,
-      initialPageFormat: PdfPageFormat.a4,
-      canDebug: false,
-      canChangePageFormat: false,
-      allowPrinting: true,
-      allowSharing: true,
-      pdfFileName: 'loan-estimate.pdf',
-    );
   }
 }
