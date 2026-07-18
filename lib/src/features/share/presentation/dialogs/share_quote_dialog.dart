@@ -633,6 +633,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
                 child: _QuoteCardPreview(
                   data: widget.data,
                   scenarioName: _scenarioController.text,
+                  mloTokens: context.read<MloProfileProvider>().toTokenMap(),
                 ),
               ),
             ],
@@ -909,10 +910,15 @@ class _PlaceholdersHelp extends StatelessWidget {
 }
 
 class _QuoteCardPreview extends StatelessWidget {
-  const _QuoteCardPreview({required this.data, required this.scenarioName});
+  const _QuoteCardPreview({
+    required this.data,
+    required this.scenarioName,
+    required this.mloTokens,
+  });
 
   final QuoteShareData data;
   final String? scenarioName;
+  final Map<String, String> mloTokens;
 
   @override
   Widget build(BuildContext context) {
@@ -922,7 +928,7 @@ class _QuoteCardPreview extends StatelessWidget {
       return '$label: $value';
     }
 
-    final tokens = data.toTokenMap(scenarioName: scenarioName);
+    final tokens = data.toTokenMap(scenarioName: scenarioName, mloTokens: mloTokens);
 
     return Container(
       padding: const EdgeInsets.all(16),
