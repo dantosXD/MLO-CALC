@@ -50,7 +50,7 @@ void main() {
   });
 
   group('ComparisonData edge cases', () {
-    CalculationEntry _makeEntry({
+    CalculationEntry makeEntry({
       required String id,
       required double loanAmount,
       required double interestRate,
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('fromEntries with single entry does not crash', () {
-      final entry = _makeEntry(
+      final entry = makeEntry(
         id: 'solo',
         loanAmount: 300000,
         interestRate: 5.0,
@@ -106,7 +106,7 @@ void main() {
       'breakEvenMonths is null (not Infinity/NaN) when both entries have identical total cost (zero payment delta)',
       () {
         // Two entries with the exact same payment → paymentDelta == 0 → should return null
-        final entry1 = _makeEntry(
+        final entry1 = makeEntry(
           id: 'x1',
           loanAmount: 300000,
           interestRate: 5.0,
@@ -114,7 +114,7 @@ void main() {
           payment: 1610.0,
           price: 375000,
         );
-        final entry2 = _makeEntry(
+        final entry2 = makeEntry(
           id: 'x2',
           loanAmount: 300000,
           interestRate: 5.0,
@@ -136,9 +136,10 @@ void main() {
       () {
         // LTV = 300000 / 375000 = 80% exactly — balance starts AT targetBalance,
         // loop hits balance <= targetBalance on month 1.
-        final entry = _makeEntry(
+        final entry = makeEntry(
           id: 'hi-ltv',
-          loanAmount: 320000, // LTV = 320000/400000 = 80% — just above threshold
+          loanAmount:
+              320000, // LTV = 320000/400000 = 80% — just above threshold
           interestRate: 5.0,
           termYears: 30,
           payment: 1717.0,
@@ -156,56 +157,56 @@ void main() {
       },
     );
 
+    test('miDropMonth is null for entry with LTV below 80% (MI not required)', () {
+      // LTV = 240000 / 400000 = 60% — well below 80%, so MI should never drop
+      // (actually never started). The loop will never find balance <= targetBalance
+      // after starting already below it... Let's check: balance starts at 240000,
+      // targetBalance = 400000 * 0.8 = 320000. 240000 < 320000 → condition true
+      // on month 1 → returns 1. To get null we need LTV such that balance never
+      // falls below targetBalance within the term, which can't happen if it starts
+      // below. Use a scenario where loanAmount > price*0.8 but payment barely covers
+      // interest so principal never reduces enough — use 0% rate and large term
+      // or simply test the straightforward low-LTV case and document what actually happens.
+      //
+      // The production code returns the month balance first crosses price*0.8.
+      // With LTV = 60%, balance (240k) is already below target (320k) on month 1 → returns 1.
+      // With LTV = 95% (380k/400k), balance starts above 320k and drops each month.
+      // A "no MI" scenario requires loanAmount/price <= 0.80 at origination — miDropMonth
+      // returns 1 (MI drops immediately, meaning it was never really required).
+      // We validate the value is 1 (not null, not Infinity/NaN) for the low-LTV path.
+      final entry = makeEntry(
+        id: 'low-ltv',
+        loanAmount: 240000, // LTV = 60% — below 80%
+        interestRate: 5.0,
+        termYears: 30,
+        payment: 1288.0,
+        price: 400000,
+      );
+
+      final comparison = ComparisonData.fromEntries([entry]);
+      final view = comparison.views.first;
+
+      // balance starts below targetBalance → loop returns on month 1
+      expect(view.miDropMonth, equals(1));
+    });
+
     test(
-      'miDropMonth is null for entry with LTV below 80% (MI not required)',
+      'ComparisonSummary.fromViews([]) does not produce Infinity or NaN',
       () {
-        // LTV = 240000 / 400000 = 60% — well below 80%, so MI should never drop
-        // (actually never started). The loop will never find balance <= targetBalance
-        // after starting already below it... Let's check: balance starts at 240000,
-        // targetBalance = 400000 * 0.8 = 320000. 240000 < 320000 → condition true
-        // on month 1 → returns 1. To get null we need LTV such that balance never
-        // falls below targetBalance within the term, which can't happen if it starts
-        // below. Use a scenario where loanAmount > price*0.8 but payment barely covers
-        // interest so principal never reduces enough — use 0% rate and large term
-        // or simply test the straightforward low-LTV case and document what actually happens.
-        //
-        // The production code returns the month balance first crosses price*0.8.
-        // With LTV = 60%, balance (240k) is already below target (320k) on month 1 → returns 1.
-        // With LTV = 95% (380k/400k), balance starts above 320k and drops each month.
-        // A "no MI" scenario requires loanAmount/price <= 0.80 at origination — miDropMonth
-        // returns 1 (MI drops immediately, meaning it was never really required).
-        // We validate the value is 1 (not null, not Infinity/NaN) for the low-LTV path.
-        final entry = _makeEntry(
-          id: 'low-ltv',
-          loanAmount: 240000, // LTV = 60% — below 80%
-          interestRate: 5.0,
-          termYears: 30,
-          payment: 1288.0,
-          price: 400000,
-        );
+        final summary = ComparisonSummary.fromViews([]);
 
-        final comparison = ComparisonData.fromEntries([entry]);
-        final view = comparison.views.first;
-
-        // balance starts below targetBalance → loop returns on month 1
-        expect(view.miDropMonth, equals(1));
+        expect(summary.count, 0);
+        expect(summary.comparableCount, 0);
+        expect(summary.minPayment, isNull);
+        expect(summary.maxPayment, isNull);
+        expect(summary.minTotalCost, isNull);
+        expect(summary.maxTotalCost, isNull);
+        expect(summary.minInterest, isNull);
+        expect(summary.maxInterest, isNull);
+        expect(summary.paymentRange, isNull);
+        expect(summary.totalCostRange, isNull);
+        expect(summary.interestRange, isNull);
       },
     );
-
-    test('ComparisonSummary.fromViews([]) does not produce Infinity or NaN', () {
-      final summary = ComparisonSummary.fromViews([]);
-
-      expect(summary.count, 0);
-      expect(summary.comparableCount, 0);
-      expect(summary.minPayment, isNull);
-      expect(summary.maxPayment, isNull);
-      expect(summary.minTotalCost, isNull);
-      expect(summary.maxTotalCost, isNull);
-      expect(summary.minInterest, isNull);
-      expect(summary.maxInterest, isNull);
-      expect(summary.paymentRange, isNull);
-      expect(summary.totalCostRange, isNull);
-      expect(summary.interestRange, isNull);
-    });
   });
 }

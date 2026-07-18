@@ -70,24 +70,30 @@ void main() {
   group('B6: rent increase uses annual step, not monthly compound', () {
     // ── Projections tests (annual step already correct, these document it) ──
 
-    test('year-1 projection rent = monthlyRent × (1 + annualRentIncrease%)', () {
-      // Annual step: 1800 × 1.12 = 2016.00
-      // Monthly compound would give: 1800 × (1.01)^12 ≈ 2028.24 (wrong)
-      final result = _calc.calculate(_projInputs);
-      expect(
-        result.projections.first.rentAtYear,
-        closeTo(1800 * 1.12, 0.02),
-        reason: 'projections must use annual step, not monthly compound',
-      );
-    });
+    test(
+      'year-1 projection rent = monthlyRent × (1 + annualRentIncrease%)',
+      () {
+        // Annual step: 1800 × 1.12 = 2016.00
+        // Monthly compound would give: 1800 × (1.01)^12 ≈ 2028.24 (wrong)
+        final result = _calc.calculate(_projInputs);
+        expect(
+          result.projections.first.rentAtYear,
+          closeTo(1800 * 1.12, 0.02),
+          reason: 'projections must use annual step, not monthly compound',
+        );
+      },
+    );
 
-    test('year-2 projection rent = year-1 rent × (1 + annualRentIncrease%)', () {
-      final result = _calc.calculate(_projInputs);
-      expect(
-        result.projections[1].rentAtYear,
-        closeTo(1800 * 1.12 * 1.12, 0.05),
-      );
-    });
+    test(
+      'year-2 projection rent = year-1 rent × (1 + annualRentIncrease%)',
+      () {
+        final result = _calc.calculate(_projInputs);
+        expect(
+          result.projections[1].rentAtYear,
+          closeTo(1800 * 1.12 * 1.12, 0.05),
+        );
+      },
+    );
 
     // ── Break-even simulation test (this is the regression) ──
 
@@ -106,7 +112,8 @@ void main() {
       expect(
         result.breakEvenMonths,
         closeTo(117, 3), // annual step ≈ 117; monthly compound gives 111
-        reason: 'break-even must use annual rent step; monthly compound gives 111',
+        reason:
+            'break-even must use annual rent step; monthly compound gives 111',
       );
     });
   });

@@ -55,10 +55,14 @@ class _NlpDialogState extends State<NlpDialog> {
     if (e is TimeoutException || msg.contains('TimeoutException')) {
       return 'The request timed out. Please try again.';
     }
-    if (msg.contains('API key') || msg.contains('api key') || msg.contains('apiKey')) {
+    if (msg.contains('API key') ||
+        msg.contains('api key') ||
+        msg.contains('apiKey')) {
       return 'Invalid API key. Please update your Gemini API key in Settings.';
     }
-    if (msg.contains('quota') || msg.contains('rate limit') || msg.contains('429')) {
+    if (msg.contains('quota') ||
+        msg.contains('rate limit') ||
+        msg.contains('429')) {
       return 'API quota reached. Please try again later.';
     }
     if (msg.contains('not initialized') || msg.contains('not Initialized')) {
@@ -124,7 +128,9 @@ class _NlpDialogState extends State<NlpDialog> {
         if (kDebugMode) {
           debugPrint('Speech recognition error: ${error.errorMsg}');
         }
-        setState(() => _status = 'Error: ${_friendlySpeechError(error.errorMsg)}');
+        setState(
+          () => _status = 'Error: ${_friendlySpeechError(error.errorMsg)}',
+        );
         _notifyStateChange();
       },
     );

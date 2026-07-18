@@ -10,8 +10,17 @@ void main() {
       expect(TypeUtils.toDouble(n), 7.0);
     });
     test('parses valid string', () => expect(TypeUtils.toDouble('2.5'), 2.5));
-    test('returns null for invalid string', () => expect(TypeUtils.toDouble('abc'), isNull));
-    test('returns null for null', () => expect(TypeUtils.toDouble(null), isNull));
-    test('returns null for List', () => expect(TypeUtils.toDouble([1, 2]), isNull));
+    test(
+      'returns null for invalid string',
+      () => expect(TypeUtils.toDouble('abc'), isNull),
+    );
+    test(
+      'returns null for null',
+      () => expect(TypeUtils.toDouble(null), isNull),
+    );
+    test(
+      'returns null for List',
+      () => expect(TypeUtils.toDouble([1, 2]), isNull),
+    );
   });
 }

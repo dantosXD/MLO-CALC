@@ -36,8 +36,11 @@ void main() {
         _scenario(lifetimeCap: 4.0, lifetimeFloor: 5.0),
       );
       expect(result.periods.length, greaterThan(1));
-      expect(result.periods[1].rate, 4.0,
-          reason: 'cap (4%) must win over misconfigured floor (5%)');
+      expect(
+        result.periods[1].rate,
+        4.0,
+        reason: 'cap (4%) must win over misconfigured floor (5%)',
+      );
     });
 
     test('floor constrains rate when well-configured below cap', () {
@@ -51,8 +54,11 @@ void main() {
         ),
       );
       expect(result.periods.length, greaterThan(1));
-      expect(result.periods[1].rate, 2.0,
-          reason: 'floor (2%) should constrain a rate that would go to 0%');
+      expect(
+        result.periods[1].rate,
+        2.0,
+        reason: 'floor (2%) should constrain a rate that would go to 0%',
+      );
     });
 
     test('lifetime cap of 0 is unconstrained — rate can rise freely', () {
@@ -61,17 +67,23 @@ void main() {
         _scenario(rateChange: 10.0, lifetimeCap: 0, lifetimeFloor: 0),
       );
       expect(result.periods.length, greaterThan(1));
-      expect(result.periods[1].rate, closeTo(13.0, 0.001),
-          reason: 'cap 0 = unconstrained; rate should reach 3 + 10 = 13%');
+      expect(
+        result.periods[1].rate,
+        closeTo(13.0, 0.001),
+        reason: 'cap 0 = unconstrained; rate should reach 3 + 10 = 13%',
+      );
     });
 
-    test('periodic cap of 0 is unconstrained — large adjustment applies fully', () {
-      // periodicCap = 0 → full 8% jump applies; still bounded by lifetimeCap
-      final result = _service().calculateSchedule(
-        _scenario(rateChange: 8.0, periodicCap: 0, lifetimeCap: 0),
-      );
-      expect(result.periods.length, greaterThan(1));
-      expect(result.periods[1].rate, closeTo(11.0, 0.001));
-    });
+    test(
+      'periodic cap of 0 is unconstrained — large adjustment applies fully',
+      () {
+        // periodicCap = 0 → full 8% jump applies; still bounded by lifetimeCap
+        final result = _service().calculateSchedule(
+          _scenario(rateChange: 8.0, periodicCap: 0, lifetimeCap: 0),
+        );
+        expect(result.periods.length, greaterThan(1));
+        expect(result.periods[1].rate, closeTo(11.0, 0.001));
+      },
+    );
   });
 }

@@ -7,9 +7,11 @@ import 'nlp_calculator_service.dart';
 
 /// Cache service for NLP responses to enable offline functionality.
 class NlpCacheService {
-  NlpCacheService({required SecureStore secureStore, required PreferenceStore preferenceStore})
-    : _secureStore = secureStore,
-      _legacyStore = preferenceStore;
+  NlpCacheService({
+    required SecureStore secureStore,
+    required PreferenceStore preferenceStore,
+  }) : _secureStore = secureStore,
+       _legacyStore = preferenceStore;
 
   static const String _cacheKey = 'nlp_response_cache';
   static const String _queueKey = 'nlp_pending_queue';

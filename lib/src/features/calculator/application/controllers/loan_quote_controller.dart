@@ -167,8 +167,11 @@ class LoanQuoteController with ChangeNotifier {
           TypeUtils.toDouble(inputs['interestRate']) ??
           TypeUtils.toDouble(results['interestRate']),
       termYears:
-          TypeUtils.toDouble(inputs['termYears']) ?? TypeUtils.toDouble(results['termYears']),
-      payment: TypeUtils.toDouble(results['payment']) ?? TypeUtils.toDouble(inputs['payment']),
+          TypeUtils.toDouble(inputs['termYears']) ??
+          TypeUtils.toDouble(results['termYears']),
+      payment:
+          TypeUtils.toDouble(results['payment']) ??
+          TypeUtils.toDouble(inputs['payment']),
       price: TypeUtils.toDouble(inputs['price']),
       downPayment: TypeUtils.toDouble(inputs['downPayment']),
       propertyTax: TypeUtils.toDouble(inputs['propertyTax']),
@@ -367,7 +370,10 @@ class LoanQuoteController with ChangeNotifier {
             clearMortgageInsurance: true,
             clearCalculationError: true,
           )
-        : _state.copyWith(mortgageInsurance: value, clearCalculationError: true);
+        : _state.copyWith(
+            mortgageInsurance: value,
+            clearCalculationError: true,
+          );
     notifyListeners();
   }
 
@@ -604,7 +610,10 @@ class LoanQuoteController with ChangeNotifier {
     notifyListeners();
   }
 
-  bool _validateValue(double? value, ValidationResult Function(double) validator) {
+  bool _validateValue(
+    double? value,
+    ValidationResult Function(double) validator,
+  ) {
     if (value != null) {
       final validation = validator(value);
       if (!validation.isValid) {
@@ -814,5 +823,4 @@ class LoanQuoteController with ChangeNotifier {
         notifyListeners();
     }
   }
-
 }

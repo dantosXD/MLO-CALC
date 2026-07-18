@@ -76,29 +76,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                       itemBuilder: (context, i) =>
                           Selector<ComparisonProvider, bool>(
-                        selector: (_, comparison) =>
-                            comparison.isSelected(entries[i].id),
-                        builder: (context, isSelected, _) => _HistoryCard(
-                          entry: entries[i],
-                          onApply: () =>
-                              calculatorProvider.applyHistoryEntry(entries[i]),
-                          onDelete: () =>
-                              historyController.remove(entries[i].id),
-                          selected: isSelected,
-                          selectionMode: _selectionMode,
-                          onSelect: () => context
-                              .read<ComparisonProvider>()
-                              .toggleSelection(entries[i].id),
-                          onLongPress: () {
-                            if (!_selectionMode) {
-                              _toggleSelectionMode();
-                              context
+                            selector: (_, comparison) =>
+                                comparison.isSelected(entries[i].id),
+                            builder: (context, isSelected, _) => _HistoryCard(
+                              entry: entries[i],
+                              onApply: () => calculatorProvider
+                                  .applyHistoryEntry(entries[i]),
+                              onDelete: () =>
+                                  historyController.remove(entries[i].id),
+                              selected: isSelected,
+                              selectionMode: _selectionMode,
+                              onSelect: () => context
                                   .read<ComparisonProvider>()
-                                  .toggleSelection(entries[i].id);
-                            }
-                          },
-                        ),
-                      ),
+                                  .toggleSelection(entries[i].id),
+                              onLongPress: () {
+                                if (!_selectionMode) {
+                                  _toggleSelectionMode();
+                                  context
+                                      .read<ComparisonProvider>()
+                                      .toggleSelection(entries[i].id);
+                                }
+                              },
+                            ),
+                          ),
                     ),
             ),
           ],

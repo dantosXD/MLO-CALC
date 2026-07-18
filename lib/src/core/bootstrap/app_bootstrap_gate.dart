@@ -66,6 +66,9 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
     calculator.applyDefaultsIfEmpty(
       interestRate: mloProfile.defaultInterestRate,
       termYears: mloProfile.defaultTermYears,
+      downPaymentPct: mloProfile.defaultDownPaymentPct,
+      propertyTaxRate: mloProfile.defaultPropertyTaxRate,
+      insuranceRate: mloProfile.defaultInsuranceRate,
     );
   }
 

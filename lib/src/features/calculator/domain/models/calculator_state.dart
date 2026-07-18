@@ -44,7 +44,10 @@ class ScenarioStateSnapshot {
     }
 
     return raw.map<String, double?>((Object? key, Object? value) {
-      return MapEntry<String, double?>(key.toString(), TypeUtils.toDouble(value));
+      return MapEntry<String, double?>(
+        key.toString(),
+        TypeUtils.toDouble(value),
+      );
     });
   }
 

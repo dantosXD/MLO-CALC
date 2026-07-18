@@ -146,7 +146,9 @@ void main() {
       );
 
       // Act - Recreate provider (simulating app restart)
-      final newProvider = QualifyingRatiosProvider(preferenceStore: PreferenceStore());
+      final newProvider = QualifyingRatiosProvider(
+        preferenceStore: PreferenceStore(),
+      );
       // Wait for async loading
       await Future.delayed(const Duration(milliseconds: 100));
 

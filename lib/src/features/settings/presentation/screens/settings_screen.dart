@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/core/theme/theme_provider.dart';
+import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
@@ -14,19 +16,20 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        children: const [
-          _MloProfileSection(),
-          Divider(height: 32),
-          _DisclaimerSection(),
-          Divider(height: 32),
-          _CalculatorDefaultsSection(),
-          Divider(height: 32),
-          _AppearanceSection(),
-          Divider(height: 32),
-          _CalculatorLayoutSection(),
-          Divider(height: 32),
-          _AiVoiceSection(),
-          SizedBox(height: 32),
+        children: [
+          const _MloProfileSection(),
+          const Divider(height: 32),
+          const _DisclaimerSection(),
+          const Divider(height: 32),
+          const _CalculatorDefaultsSection(),
+          const Divider(height: 32),
+          const _AppearanceSection(),
+          const Divider(height: 32),
+          const _CalculatorLayoutSection(),
+          const Divider(height: 32),
+          const _AiVoiceSection(),
+          if (kDebugMode) ...[const Divider(height: 32), const _DevSection()],
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -748,6 +751,57 @@ class _SettingsTextField extends StatelessWidget {
           vertical: 14,
         ),
       ),
+    );
+  }
+}
+
+// ─── Developer (debug only) ────────────────────────────────────────────────
+
+class _DevSection extends StatefulWidget {
+  const _DevSection();
+
+  @override
+  State<_DevSection> createState() => _DevSectionState();
+}
+
+class _DevSectionState extends State<_DevSection> {
+  bool _seeded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final calc = context.read<CalculatorProvider>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(
+          'Developer',
+          subtitle: 'Debug-only tools — not visible in production builds',
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.dataset_outlined),
+                title: const Text('Seed test history data'),
+                subtitle: const Text(
+                  'Replaces calculation history with 25 realistic entries'
+                  ' spanning the past 90 days.',
+                ),
+                trailing: _seeded
+                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    : null,
+                onTap: () {
+                  calc.seedDevData();
+                  setState(() => _seeded = true);
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

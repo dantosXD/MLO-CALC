@@ -120,10 +120,7 @@ void main() {
     });
 
     test('throws ArgumentError for negative places', () {
-      expect(
-        () => DecimalUtils.roundToDecimal(1.0, -1),
-        throwsArgumentError,
-      );
+      expect(() => DecimalUtils.roundToDecimal(1.0, -1), throwsArgumentError);
     });
   });
 }

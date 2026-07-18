@@ -30,13 +30,15 @@ void main() {
       expect(restored.themeMode, ThemeMode.dark);
     });
 
-    test('default constructor (no store) still works and does not throw',
-        () async {
-      final provider = ThemeProvider();
-      await provider.load();
-      expect(provider.themeMode, ThemeMode.light);
-      provider.toggleTheme();
-      expect(provider.themeMode, ThemeMode.dark);
-    });
+    test(
+      'default constructor (no store) still works and does not throw',
+      () async {
+        final provider = ThemeProvider();
+        await provider.load();
+        expect(provider.themeMode, ThemeMode.light);
+        provider.toggleTheme();
+        expect(provider.themeMode, ThemeMode.dark);
+      },
+    );
   });
 }
