@@ -1,0 +1,73 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:loan_ranger/src/features/updater/application/providers/update_notifier.dart';
+import 'package:loan_ranger/src/features/updater/domain/models/release_info.dart';
+import 'package:loan_ranger/src/features/updater/domain/services/update_service.dart';
+
+class _FakeService extends UpdateService {
+  _FakeService({this.result}) : super(currentVersion: '1.0.0');
+  final ReleaseInfo? result;
+
+  @override
+  Future<ReleaseInfo?> checkForUpdate() async => result;
+
+  @override
+  Future<void> downloadAndInstall(
+    ReleaseInfo info,
+    void Function(double) onProgress,
+  ) async {
+    onProgress(0.5);
+    onProgress(1.0);
+  }
+}
+
+void main() {
+  test('starts idle', () {
+    final n = UpdateNotifier(service: _FakeService());
+    expect(n.state, UpdateState.idle);
+    expect(n.releaseInfo, isNull);
+  });
+
+  test('transitions to updateAvailable when newer version exists', () async {
+    final info = ReleaseInfo(
+      version: '1.1.0',
+      releaseNotes: '',
+      apkDownloadUrl: null,
+    );
+    final n = UpdateNotifier(service: _FakeService(result: info));
+    await n.checkForUpdate();
+    expect(n.state, UpdateState.updateAvailable);
+    expect(n.releaseInfo, info);
+  });
+
+  test('stays idle when no update', () async {
+    final n = UpdateNotifier(service: _FakeService());
+    await n.checkForUpdate();
+    expect(n.state, UpdateState.idle);
+  });
+
+  test('dismissDialog sets dialogDismissed', () {
+    final n = UpdateNotifier(service: _FakeService());
+    expect(n.dialogDismissed, isFalse);
+    n.dismissDialog();
+    expect(n.dialogDismissed, isTrue);
+  });
+
+  test('resetDialogDismissed clears dialogDismissed', () {
+    final n = UpdateNotifier(service: _FakeService());
+    n.dismissDialog();
+    n.resetDialogDismissed();
+    expect(n.dialogDismissed, isFalse);
+  });
+
+  test('install reports download progress', () async {
+    final info = ReleaseInfo(
+      version: '1.1.0',
+      releaseNotes: '',
+      apkDownloadUrl: 'http://x.com/a.apk',
+    );
+    final n = UpdateNotifier(service: _FakeService(result: info));
+    await n.checkForUpdate();
+    await n.install();
+    expect(n.downloadProgress, 1.0);
+  });
+}
