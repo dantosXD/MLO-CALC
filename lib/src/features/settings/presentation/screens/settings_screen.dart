@@ -5,6 +5,8 @@ import 'package:loan_ranger/src/features/calculator/application/providers/calcul
 import 'package:loan_ranger/src/features/calculator/application/providers/layout_preference_provider.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
+import 'package:loan_ranger/src/features/updater/application/providers/update_notifier.dart';
+import 'package:loan_ranger/src/features/updater/presentation/widgets/update_dialog.dart';
 import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -28,6 +30,8 @@ class SettingsScreen extends StatelessWidget {
           const _CalculatorLayoutSection(),
           const Divider(height: 32),
           const _AiVoiceSection(),
+          const Divider(height: 32),
+          const _UpdateSection(),
           if (kDebugMode) ...[const Divider(height: 32), const _DevSection()],
           const SizedBox(height: 32),
         ],
@@ -802,6 +806,65 @@ class _DevSectionState extends State<_DevSection> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── App Updates ───────────────────────────────────────────────────────────
+
+class _UpdateSection extends StatelessWidget {
+  const _UpdateSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<UpdateNotifier>(
+      builder: (context, notifier, _) {
+        final isChecking = notifier.state == UpdateState.checking;
+        final hasUpdate = notifier.state == UpdateState.updateAvailable;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _SectionHeader('App Updates'),
+            ListTile(
+              title: const Text('Check for Updates'),
+              subtitle: hasUpdate
+                  ? Text(
+                      'Version ${notifier.releaseInfo!.version} available',
+                    )
+                  : const Text("You're on the latest version"),
+              trailing: isChecking
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : hasUpdate
+                  ? FilledButton(
+                      onPressed: () => UpdateDialog.showIfNeeded(context),
+                      child: const Text('Install'),
+                    )
+                  : OutlinedButton(
+                      onPressed: () async {
+                        await notifier.checkForUpdate();
+                        if (!context.mounted) return;
+                        if (notifier.state == UpdateState.updateAvailable) {
+                          notifier.resetDialogDismissed();
+                          await UpdateDialog.showIfNeeded(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("You're on the latest version"),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Check Now'),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

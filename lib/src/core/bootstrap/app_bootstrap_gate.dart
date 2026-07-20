@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +10,8 @@ import '../../features/nlp/application/providers/nlp_settings_provider.dart';
 import '../../features/qualification/application/providers/qualifying_ratios_provider.dart';
 import '../../features/settings/domain/providers/mlo_profile_provider.dart';
 import '../../features/share/application/providers/share_templates_provider.dart';
+import '../../features/updater/application/providers/update_notifier.dart';
+import '../../features/updater/presentation/widgets/update_dialog.dart';
 import '../services/analytics_service.dart';
 import '../services/connectivity_service.dart';
 import '../theme/theme_provider.dart';
@@ -47,6 +51,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
     final nlp = context.read<NlpSettingsProvider>();
     final mloProfile = context.read<MloProfileProvider>();
     final theme = context.read<ThemeProvider>();
+    final updater = context.read<UpdateNotifier>();
 
     await connectivity.initialize();
     await analytics.initialize();
@@ -62,6 +67,8 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
       theme.load(),
     ]);
 
+    unawaited(_checkAndShowUpdate(updater));
+
     // Apply MLO-defined defaults to fields with no prior session value
     calculator.applyDefaultsIfEmpty(
       interestRate: mloProfile.defaultInterestRate,
@@ -70,6 +77,12 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
       propertyTaxRate: mloProfile.defaultPropertyTaxRate,
       insuranceRate: mloProfile.defaultInsuranceRate,
     );
+  }
+
+  Future<void> _checkAndShowUpdate(UpdateNotifier updater) async {
+    await updater.checkForUpdate();
+    if (!mounted) return;
+    await UpdateDialog.showIfNeeded(context);
   }
 
   @override
