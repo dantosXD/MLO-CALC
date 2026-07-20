@@ -32,6 +32,9 @@ import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_p
 import 'package:loan_ranger/src/features/share/application/providers/share_templates_provider.dart';
 import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
 import 'package:loan_ranger/src/features/share/presentation/dialogs/share_quote_dialog.dart';
+import 'package:loan_ranger/src/features/updater/application/providers/update_notifier.dart';
+import 'package:loan_ranger/src/features/updater/domain/services/update_service.dart';
+import 'package:loan_ranger/src/features/updater/presentation/widgets/update_banner.dart';
 import 'package:loan_ranger/src/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -114,6 +117,10 @@ List<SingleChildWidget> buildAppProviders() => [
     create: (_) => ShareTemplatesProvider(
       preferenceStore: serviceLocator<PreferenceStore>(),
     ),
+  ),
+  ChangeNotifierProvider(
+    create: (_) =>
+        UpdateNotifier(service: serviceLocator<UpdateService>()),
   ),
 ];
 
@@ -200,9 +207,10 @@ class _MainNavigatorState extends State<MainNavigator> {
             centerTitle: false,
             actions: appBarActions,
           ),
-          body: SafeArea(
-            child: Row(
-              children: [
+          body: UpdateBanner(
+            child: SafeArea(
+              child: Row(
+                children: [
                 if (useRail)
                   NavigationRail(
                     selectedIndex: _selectedIndex,
@@ -235,6 +243,7 @@ class _MainNavigatorState extends State<MainNavigator> {
                   ),
                 ),
               ],
+              ),
             ),
           ),
           bottomNavigationBar: useRail

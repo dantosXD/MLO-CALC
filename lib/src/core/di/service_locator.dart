@@ -59,6 +59,7 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../features/arm/domain/services/arm_calculator_service.dart';
 import '../../features/arm/domain/services/arm_preset_service.dart';
@@ -68,6 +69,7 @@ import '../../features/calculator/domain/services/persistence_service.dart';
 import '../../features/calculator/domain/services/qualification_service.dart';
 import '../../features/nlp/domain/services/nlp_cache_service.dart';
 import '../../features/nlp/domain/services/nlp_calculator_service.dart';
+import '../../features/updater/domain/services/update_service.dart';
 import '../math/loan_math.dart';
 import '../navigation/app_router.dart';
 import '../persistence/preference_store.dart';
@@ -98,6 +100,8 @@ Future<void> configureDependencies() async {
   if (serviceLocator.isRegistered<LoanMath>()) {
     return;
   }
+
+  final packageInfo = await PackageInfo.fromPlatform();
 
   // Core mathematical engine (stateless, can be const)
   const loanMath = LoanMath();
@@ -148,7 +152,10 @@ Future<void> configureDependencies() async {
       ),
     )
     // === AI/NLP Services ===
-    ..registerLazySingleton<NLPCalculatorService>(NLPCalculatorService.new);
+    ..registerLazySingleton<NLPCalculatorService>(NLPCalculatorService.new)
+    ..registerLazySingleton<UpdateService>(
+      () => UpdateService(currentVersion: packageInfo.version),
+    );
 
   // === ADD NEW SERVICES BELOW THIS LINE ===
   // Example:
