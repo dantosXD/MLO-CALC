@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/release_info.dart';
 
 class UpdateService {
-  UpdateService({http.Client? httpClient, String? currentVersion})
+  UpdateService({http.Client? httpClient, String currentVersion = '0.0.0'})
       : _client = httpClient ?? http.Client(),
         _currentVersion = currentVersion;
 
@@ -18,7 +18,7 @@ class UpdateService {
       'https://api.github.com/repos/dantosXD/MLO-CALC/releases/latest';
 
   final http.Client _client;
-  final String? _currentVersion;
+  final String _currentVersion;
 
   static bool isNewer(String remoteTag, String current) {
     final remote =
@@ -40,17 +40,18 @@ class UpdateService {
     return parts;
   }
 
+  static const _timeout = Duration(seconds: 10);
+
   Future<ReleaseInfo?> checkForUpdate() async {
     try {
-      final response = await _client.get(
-        Uri.parse(_apiUrl),
-        headers: {'Accept': 'application/vnd.github+json'},
-      );
+      final response = await _client
+          .get(Uri.parse(_apiUrl), headers: {'Accept': 'application/vnd.github+json'})
+          .timeout(_timeout);
       if (response.statusCode != 200) return null;
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final tag = data['tag_name'] as String? ?? '';
       final version = tag.startsWith('v') ? tag.substring(1) : tag;
-      final current = _currentVersion ?? '0.0.0';
+      final current = _currentVersion;
       if (!isNewer(tag, current)) return null;
       final assets = (data['assets'] as List<dynamic>? ?? []);
       final apkAsset = assets
@@ -62,7 +63,8 @@ class UpdateService {
         releaseNotes: data['body'] as String? ?? '',
         apkDownloadUrl: apkAsset?['browser_download_url'] as String?,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('UpdateService: checkForUpdate failed — $e');
       return null;
     }
   }

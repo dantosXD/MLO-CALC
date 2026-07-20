@@ -4,8 +4,10 @@ import 'package:loan_ranger/src/features/updater/domain/models/release_info.dart
 import 'package:loan_ranger/src/features/updater/domain/services/update_service.dart';
 
 class _FakeService extends UpdateService {
-  _FakeService({this.result}) : super(currentVersion: '1.0.0');
+  _FakeService({this.result, this.throwOnInstall = false})
+      : super(currentVersion: '1.0.0');
   final ReleaseInfo? result;
+  final bool throwOnInstall;
 
   @override
   Future<ReleaseInfo?> checkForUpdate() async => result;
@@ -15,6 +17,7 @@ class _FakeService extends UpdateService {
     ReleaseInfo info,
     void Function(double) onProgress,
   ) async {
+    if (throwOnInstall) throw Exception('network failure');
     onProgress(0.5);
     onProgress(1.0);
   }
@@ -69,5 +72,35 @@ void main() {
     await n.checkForUpdate();
     await n.install();
     expect(n.downloadProgress, 1.0);
+  });
+
+  test('install failure transitions to error state', () async {
+    final info = ReleaseInfo(
+      version: '1.1.0',
+      releaseNotes: '',
+      apkDownloadUrl: 'http://x.com/a.apk',
+    );
+    final n = UpdateNotifier(
+      service: _FakeService(result: info, throwOnInstall: true),
+    );
+    await n.checkForUpdate();
+    await n.install();
+    expect(n.state, UpdateState.error);
+  });
+
+  test('retryFromError resets to updateAvailable', () async {
+    final info = ReleaseInfo(
+      version: '1.1.0',
+      releaseNotes: '',
+      apkDownloadUrl: 'http://x.com/a.apk',
+    );
+    final n = UpdateNotifier(
+      service: _FakeService(result: info, throwOnInstall: true),
+    );
+    await n.checkForUpdate();
+    await n.install();
+    expect(n.state, UpdateState.error);
+    n.retryFromError();
+    expect(n.state, UpdateState.updateAvailable);
   });
 }

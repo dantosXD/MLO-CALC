@@ -25,14 +25,19 @@ class UpdateDialog extends StatelessWidget {
     final notifier = context.watch<UpdateNotifier>();
     final info = notifier.releaseInfo;
     final isDownloading = notifier.state == UpdateState.downloading;
+    final isError = notifier.state == UpdateState.error;
 
     return AlertDialog(
-      title: const Text('Update Available'),
+      title: Text(isError ? 'Download Failed' : 'Update Available'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (info != null) ...[
+          if (isError)
+            const Text(
+              'The download failed. Please try again or install manually.',
+            )
+          else if (info != null) ...[
             Text('Version ${info.version} is ready to install.'),
             if (info.releaseNotes.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -52,6 +57,22 @@ class UpdateDialog extends StatelessWidget {
       ),
       actions: isDownloading
           ? null
+          : isError
+          ? [
+              TextButton(
+                onPressed: () {
+                  notifier.dismissDialog();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Dismiss'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  notifier.retryFromError();
+                },
+                child: const Text('Retry'),
+              ),
+            ]
           : [
               TextButton(
                 onPressed: () {
@@ -63,7 +84,9 @@ class UpdateDialog extends StatelessWidget {
               FilledButton(
                 onPressed: () async {
                   await notifier.install();
-                  if (context.mounted) Navigator.of(context).pop();
+                  if (context.mounted && notifier.state != UpdateState.error) {
+                    Navigator.of(context).pop();
+                  }
                 },
                 child: const Text('Update Now'),
               ),

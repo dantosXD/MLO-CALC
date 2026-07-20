@@ -39,10 +39,21 @@ class UpdateNotifier extends ChangeNotifier {
     _state = UpdateState.downloading;
     _downloadProgress = 0;
     notifyListeners();
-    await _service.downloadAndInstall(info, (progress) {
-      _downloadProgress = progress;
+    try {
+      await _service.downloadAndInstall(info, (progress) {
+        _downloadProgress = progress;
+        notifyListeners();
+      });
+    } catch (_) {
+      _state = UpdateState.error;
       notifyListeners();
-    });
+    }
+  }
+
+  void retryFromError() {
+    if (_state != UpdateState.error) return;
+    _state = UpdateState.updateAvailable;
+    notifyListeners();
   }
 
   void dismissDialog() {
