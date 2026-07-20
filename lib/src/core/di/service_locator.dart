@@ -101,7 +101,13 @@ Future<void> configureDependencies() async {
     return;
   }
 
-  final packageInfo = await PackageInfo.fromPlatform();
+  String appVersion;
+  try {
+    final packageInfo = await PackageInfo.fromPlatform();
+    appVersion = packageInfo.version;
+  } catch (_) {
+    appVersion = '0.0.0';
+  }
 
   // Core mathematical engine (stateless, can be const)
   const loanMath = LoanMath();
@@ -154,7 +160,7 @@ Future<void> configureDependencies() async {
     // === AI/NLP Services ===
     ..registerLazySingleton<NLPCalculatorService>(NLPCalculatorService.new)
     ..registerLazySingleton<UpdateService>(
-      () => UpdateService(currentVersion: packageInfo.version),
+      () => UpdateService(currentVersion: appVersion),
     );
 
   // === ADD NEW SERVICES BELOW THIS LINE ===
