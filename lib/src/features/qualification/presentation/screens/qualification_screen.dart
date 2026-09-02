@@ -3,6 +3,7 @@ import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/core/validators/enhanced_validators.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
+import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -442,11 +443,19 @@ class _QualificationScreenState extends State<QualificationScreen> {
                         backEndLimit: currentRatio.debtRatio,
                       );
 
-                      if (warnings.isEmpty) return const SizedBox.shrink();
-
                       return Column(
                         children: [
-                          ValidationWarningsDisplay(warnings: warnings),
+                          if (warnings.isNotEmpty) ...[
+                            ValidationWarningsDisplay(warnings: warnings),
+                            const SizedBox(height: 16),
+                          ],
+                          _AiDtiAdviceCard(
+                            frontEndDti: frontEndDti,
+                            backEndDti: backEndDti,
+                            annualIncome: calculatorProvider.annualIncome!,
+                            monthlyDebt: calculatorProvider.monthlyDebt ?? 0,
+                            piti: housingPayment,
+                          ),
                           const SizedBox(height: 16),
                         ],
                       );
@@ -966,6 +975,145 @@ class _RatioEditorDialogState extends State<_RatioEditorDialog> {
           child: Text(isEditing ? 'Save' : 'Add'),
         ),
       ],
+    );
+  }
+}
+
+class _AiDtiAdviceCard extends StatefulWidget {
+  const _AiDtiAdviceCard({
+    required this.frontEndDti,
+    required this.backEndDti,
+    required this.annualIncome,
+    required this.monthlyDebt,
+    required this.piti,
+  });
+
+  final double frontEndDti;
+  final double backEndDti;
+  final double annualIncome;
+  final double monthlyDebt;
+  final double piti;
+
+  @override
+  State<_AiDtiAdviceCard> createState() => _AiDtiAdviceCardState();
+}
+
+class _AiDtiAdviceCardState extends State<_AiDtiAdviceCard> {
+  bool _loading = false;
+  String? _advice;
+  bool _expanded = false;
+
+  Future<void> _fetchAdvice() async {
+    setState(() {
+      _loading = true;
+      _expanded = true;
+    });
+    try {
+      final nlpService = context.read<NlpSettingsProvider>().calculatorService;
+      final result = await nlpService.generateDtiAdvice(
+        frontEndDti: widget.frontEndDti,
+        backEndDti: widget.backEndDti,
+        annualIncome: widget.annualIncome,
+        monthlyDebt: widget.monthlyDebt,
+        piti: widget.piti,
+      );
+      if (!mounted) return;
+      setState(() {
+        _advice = result;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _advice = 'Could not load advice at this time.';
+      });
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final settings = context.watch<NlpSettingsProvider>();
+    final hasGemini = settings.hasKey;
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  hasGemini ? Icons.auto_awesome : Icons.lightbulb_outline,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    hasGemini
+                        ? 'Underwriting & DTI Advice (Gemini AI)'
+                        : 'Underwriting & DTI Advice',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                if (!_expanded)
+                  TextButton.icon(
+                    onPressed: _loading ? null : _fetchAdvice,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.psychology, size: 16),
+                    label: const Text('Get Insights'),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.refresh, size: 16),
+                    tooltip: 'Refresh Advice',
+                    onPressed: _loading ? null : _fetchAdvice,
+                  ),
+              ],
+            ),
+            if (_expanded) ...[
+              const Divider(height: 16),
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else if (_advice != null)
+                Text(
+                  _advice!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.4,
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

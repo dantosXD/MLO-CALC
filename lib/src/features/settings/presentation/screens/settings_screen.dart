@@ -622,20 +622,26 @@ class _AiVoiceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<NlpSettingsProvider>();
+    final hasKey = settings.hasKey;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _SectionHeader(
-          'AI / Voice Input',
+          'Gemini AI & Voice Assistant',
           subtitle:
-              'Requires a Google Gemini API key for natural-language queries.',
+              'Optional. Enhances voice with conversational reasoning, client email pitches, and underwriting tips. Standard voice/math works 100% offline without a key.',
         ),
         ListTile(
-          leading: const Icon(Icons.key_outlined),
+          leading: Icon(
+            hasKey ? Icons.auto_awesome : Icons.key_outlined,
+            color: hasKey ? Colors.purple : null,
+          ),
           title: const Text('Gemini API Key'),
-          subtitle: context.watch<NlpSettingsProvider>().apiKey != null
-              ? const Text('Configured', style: TextStyle(color: Colors.green))
-              : const Text('Not set'),
+          subtitle: hasKey
+              ? const Text('Configured & Active', style: TextStyle(color: Colors.green))
+              : const Text('Not set (using offline calculation engine)'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => _showApiKeySheet(context),
         ),
@@ -644,78 +650,214 @@ class _AiVoiceSection extends StatelessWidget {
   }
 
   void _showApiKeySheet(BuildContext context) {
-    final settings = context.read<NlpSettingsProvider>();
-    final controller = TextEditingController(text: settings.apiKey ?? '');
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) {
-        final navigator = Navigator.of(ctx);
-        final messenger = ScaffoldMessenger.of(ctx);
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      showDragHandle: true,
+      builder: (ctx) => const _ApiKeySheet(),
+    );
+  }
+}
+
+class _ApiKeySheet extends StatefulWidget {
+  const _ApiKeySheet();
+
+  @override
+  State<_ApiKeySheet> createState() => _ApiKeySheetState();
+}
+
+class _ApiKeySheetState extends State<_ApiKeySheet> {
+  late final TextEditingController _controller;
+  bool _testing = false;
+  String? _testResult;
+  bool _testSuccess = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = context.read<NlpSettingsProvider>();
+    _controller = TextEditingController(text: settings.apiKey ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _testKey() async {
+    final key = _controller.text.trim();
+    if (key.isEmpty) {
+      setState(() {
+        _testResult = 'Please enter an API key first.';
+        _testSuccess = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _testing = true;
+      _testResult = null;
+    });
+
+    try {
+      final nlpService = context.read<NlpSettingsProvider>().calculatorService;
+      final ok = await nlpService.testApiKey(key);
+      if (!mounted) return;
+      setState(() {
+        _testSuccess = ok;
+        _testResult = ok
+            ? 'Key verified successfully! Gemini is active.'
+            : 'Could not authenticate. Check key or permissions.';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _testSuccess = false;
+        _testResult = 'Validation failed: $e';
+      });
+    } finally {
+      if (mounted) setState(() => _testing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.read<NlpSettingsProvider>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 8,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              const Text(
+              const Icon(Icons.auto_awesome, color: Colors.purple, size: 20),
+              const SizedBox(width: 8),
+              Text(
                 'Gemini API Key',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'API Key',
-                  hintText: 'Enter your Gemini API key',
-                  border: OutlineInputBorder(),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                autofocus: true,
-                obscureText: true,
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      await settings.setApiKey(controller.text);
-                      navigator.pop();
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('API key saved')),
-                      );
-                    },
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Save'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'An API key enables advanced conversational queries, client pitches, and underwriting insights. Free keys are available from Google AI Studio.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black87),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _controller,
+            decoration: const InputDecoration(
+              labelText: 'API Key',
+              hintText: 'AIzaSy...',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.password),
+            ),
+            autofocus: true,
+            obscureText: true,
+            onChanged: (_) {
+              if (_testResult != null) {
+                setState(() => _testResult = null);
+              }
+            },
+          ),
+          if (_testResult != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  _testSuccess ? Icons.check_circle : Icons.error_outline,
+                  color: _testSuccess ? Colors.green : Colors.red,
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _testResult!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _testSuccess ? Colors.green.shade800 : Colors.red.shade800,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  const SizedBox(width: 12),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _testing ? null : _testKey,
+                icon: _testing
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.network_check, size: 16),
+                label: Text(_testing ? 'Testing...' : 'Test Key'),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   TextButton(
                     onPressed: () async {
-                      controller.clear();
+                      _controller.clear();
                       await settings.setApiKey(null);
                       navigator.pop();
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('API key cleared')),
+                        const SnackBar(content: Text('API key removed. Running in offline mode.')),
                       );
                     },
                     child: const Text('Clear'),
                   ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final key = _controller.text.trim();
+                      await settings.setApiKey(key.isEmpty ? null : key);
+                      navigator.pop();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            key.isEmpty
+                                ? 'Key cleared'
+                                : 'API key saved securely',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.check, size: 18),
+                    label: const Text('Save'),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Stored locally using secure storage.',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 8),
+          const Text(
+            'Saved locally using hardware-backed secure storage.',
+            style: TextStyle(fontSize: 11, color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

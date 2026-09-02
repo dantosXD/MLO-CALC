@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:loan_ranger/src/features/share/application/providers/share_templates_provider.dart';
 import 'package:loan_ranger/src/features/share/domain/models/quote_share_data.dart';
@@ -61,6 +63,7 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
   String? _lastRenderedSubject;
 
   bool _busy = false;
+  bool _isGeneratingPitch = false;
   String? _error;
 
   final GlobalKey _screenshotKey = GlobalKey();
@@ -253,6 +256,58 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Template saved')));
+  }
+
+  Future<void> _generateAiPitch() async {
+    setState(() => _isGeneratingPitch = true);
+    unawaited(HapticFeedback.lightImpact());
+    try {
+      final nlpService = context.read<NlpSettingsProvider>().calculatorService;
+      final pitch = await nlpService.generateClientPitch(
+        loanAmount: widget.data.loanAmount ?? 0,
+        interestRate: widget.data.interestRate ?? 0,
+        termYears: widget.data.termYears ?? 30,
+        monthlyPayment: widget.data.piPayment ?? 0,
+        downPayment: widget.data.downPayment,
+        homePrice: widget.data.price,
+        propertyTax: widget.data.monthlyTax != null ? widget.data.monthlyTax! * 12 : null,
+        homeInsurance: widget.data.monthlyInsurance != null ? widget.data.monthlyInsurance! * 12 : null,
+      );
+
+      if (!mounted) return;
+      final borrower = _borrowerController.text.trim();
+      final greeting = borrower.isNotEmpty ? 'Hi $borrower,\n\n' : '';
+      final currentBody = _bodyController.text.trim();
+
+      setState(() {
+        if (currentBody.isEmpty) {
+          _bodyController.text = '$greeting$pitch';
+        } else {
+          _bodyController.text = '$greeting$pitch\n\n---\n$currentBody';
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Text('Client pitch summary generated!'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate pitch: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isGeneratingPitch = false);
+    }
   }
 
   Future<void> _setChannel(ShareChannel channel) async {
@@ -585,6 +640,19 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
                   onPressed: _busy ? null : _reapplyIfSafe,
                   icon: const Icon(Icons.refresh),
                   label: const Text('Reapply template'),
+                ),
+                TextButton.icon(
+                  onPressed: (_busy || _isGeneratingPitch) ? null : _generateAiPitch,
+                  icon: _isGeneratingPitch
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_awesome, size: 16),
+                  label: Text(
+                    _isGeneratingPitch ? 'Drafting pitch...' : '✨ AI Client Pitch',
+                  ),
                 ),
               ],
             ),

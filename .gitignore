@@ -63,3 +63,5 @@ features.db-wal
 /get_feature*.js
 /get_feature*.py
 /get_feature*.bat
+build_log.txt
+zen-mcp-server/

@@ -21,7 +21,7 @@ import 'package:loan_ranger/src/features/calculator/domain/services/core_calcula
 import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/info_dialog.dart';
-import 'package:loan_ranger/src/features/calculator/presentation/widgets/nlp_dialog.dart';
+import 'package:loan_ranger/src/features/calculator/presentation/widgets/nlp_bottom_sheet.dart';
 import 'package:loan_ranger/src/features/comparison/application/providers/comparison_provider.dart';
 import 'package:loan_ranger/src/features/loan_programs/application/providers/loan_programs_provider.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
@@ -38,7 +38,6 @@ import 'package:loan_ranger/src/features/updater/presentation/widgets/update_ban
 import 'package:loan_ranger/src/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -320,12 +319,7 @@ class _AppBarActions extends StatelessWidget {
     }
 
     void showNlp() {
-      final nlpService = context.read<NlpSettingsProvider>().calculatorService;
-      showDialog(
-        context: context,
-        builder: (context) =>
-            NlpDialog(nlpService: nlpService, speechToText: stt.SpeechToText()),
-      );
+      NlpBottomSheet.show(context);
     }
 
     return Row(
