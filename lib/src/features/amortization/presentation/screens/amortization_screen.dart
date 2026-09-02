@@ -29,9 +29,16 @@ class AmortizationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final calculatorProvider = context.read<CalculatorProvider>();
-    final quoteController = calculatorProvider.loanQuoteController;
-    final amortizationController = calculatorProvider.amortizationController;
+    final calculatorProvider = Provider.of<CalculatorProvider?>(
+      context,
+      listen: false,
+    );
+    final quoteController =
+        calculatorProvider?.loanQuoteController ??
+        context.read<LoanQuoteController>();
+    final amortizationController =
+        calculatorProvider?.amortizationController ??
+        context.read<AmortizationController>();
 
     return AnimatedBuilder(
       animation: Listenable.merge([quoteController, amortizationController]),
