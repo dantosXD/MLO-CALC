@@ -4,6 +4,7 @@ import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/core/validators/enhanced_validators.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -1009,7 +1010,8 @@ class _AiDtiAdviceCardState extends State<_AiDtiAdviceCard> {
       _expanded = true;
     });
     try {
-      final nlpService = context.read<NlpSettingsProvider>().calculatorService;
+      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+          NLPCalculatorService();
       final result = await nlpService.generateDtiAdvice(
         frontEndDti: widget.frontEndDti,
         backEndDti: widget.backEndDti,
@@ -1034,8 +1036,8 @@ class _AiDtiAdviceCardState extends State<_AiDtiAdviceCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final settings = context.watch<NlpSettingsProvider>();
-    final hasGemini = settings.hasKey;
+    final settings = Provider.of<NlpSettingsProvider?>(context);
+    final hasGemini = settings?.hasKey ?? false;
 
     return Card(
       elevation: 0,

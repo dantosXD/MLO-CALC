@@ -6,6 +6,8 @@ import 'package:loan_ranger/src/core/utils/advanced_calculations.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing_costs_sheet.dart';
+import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
@@ -360,6 +362,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   ],
                 ),
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Rate Buy-Down & Points Break-Even Card
+            _PointsBreakEvenCard(
+              loanAmount: calculatorProvider.loanAmount,
+              currentRate: calculatorProvider.interestRate,
+              termYears: calculatorProvider.termYears,
+              currentPayment: calculatorProvider.payment,
             ),
           ],
         ),
@@ -787,6 +799,288 @@ class _ToolButton extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PointsBreakEvenCard extends StatefulWidget {
+  const _PointsBreakEvenCard({
+    this.loanAmount,
+    this.currentRate,
+    this.termYears,
+    this.currentPayment,
+  });
+
+  final double? loanAmount;
+  final double? currentRate;
+  final double? termYears;
+  final double? currentPayment;
+
+  @override
+  State<_PointsBreakEvenCard> createState() => _PointsBreakEvenCardState();
+}
+
+class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
+  final _pointsController = TextEditingController(text: '1.0');
+  final _reducedRateController = TextEditingController();
+
+  bool _loadingAdvice = false;
+  String? _advice;
+
+  @override
+  void initState() {
+    super.initState();
+    _initReducedRate();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PointsBreakEvenCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentRate != widget.currentRate && widget.currentRate != null) {
+      _initReducedRate();
+    }
+  }
+
+  void _initReducedRate() {
+    if (widget.currentRate != null && widget.currentRate! > 0.25) {
+      _reducedRateController.text = (widget.currentRate! - 0.25).toStringAsFixed(3);
+    } else {
+      _reducedRateController.text = '6.250';
+    }
+  }
+
+  @override
+  void dispose() {
+    _pointsController.dispose();
+    _reducedRateController.dispose();
+    super.dispose();
+  }
+
+  double _calculateMonthlyPayment(double principal, double annualRatePercent, double years) {
+    if (principal <= 0 || years <= 0) return 0.0;
+    final r = annualRatePercent / 100 / 12;
+    final n = years * 12;
+    if (r == 0) return principal / n;
+    return principal * (r * math.pow(1 + r, n)) / (math.pow(1 + r, n) - 1);
+  }
+
+  Future<void> _fetchAdvice({
+    required double pointsCost,
+    required double monthlySavings,
+    required int breakEvenMonths,
+    required double newRate,
+  }) async {
+    setState(() => _loadingAdvice = true);
+    try {
+      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+          NLPCalculatorService();
+      final result = await nlpService.generatePointsBreakEvenAdvice(
+        loanAmount: widget.loanAmount ?? 0,
+        originalRate: widget.currentRate ?? 0,
+        newRate: newRate,
+        pointsCost: pointsCost,
+        monthlySavings: monthlySavings,
+        breakEvenMonths: breakEvenMonths,
+      );
+      if (!mounted) return;
+      setState(() => _advice = result);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _advice = 'Could not generate advice at this time.');
+    } finally {
+      if (mounted) setState(() => _loadingAdvice = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasData = widget.loanAmount != null &&
+        widget.currentRate != null &&
+        widget.termYears != null;
+
+    final points = double.tryParse(_pointsController.text) ?? 1.0;
+    final newRate = double.tryParse(_reducedRateController.text) ??
+        ((widget.currentRate ?? 6.5) - 0.25);
+
+    final pointsCost = (widget.loanAmount ?? 0) * (points / 100);
+    final currentP = widget.currentPayment ??
+        _calculateMonthlyPayment(
+          widget.loanAmount ?? 0,
+          widget.currentRate ?? 0,
+          widget.termYears ?? 30,
+        );
+    final newP = _calculateMonthlyPayment(
+      widget.loanAmount ?? 0,
+      newRate,
+      widget.termYears ?? 30,
+    );
+    final monthlySavings = currentP - newP;
+    final breakEvenMonths = (monthlySavings > 0 && pointsCost > 0)
+        ? (pointsCost / monthlySavings).ceil()
+        : 0;
+    final breakEvenYears = (breakEvenMonths / 12).toStringAsFixed(1);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.percent, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Rate Buy-Down & Break-Even Copilot',
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Analyze the financial return of paying discount points to lower the mortgage interest rate.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            if (!hasData)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Set loan amount, interest rate, and term on the Calculator to run break-even analysis.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _pointsController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Discount Points',
+                        suffixText: '%',
+                        border: OutlineInputBorder(),
+                        helperText: '1.0% = 1 Point',
+                      ),
+                      onChanged: (_) => setState(() => _advice = null),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _reducedRateController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Bought-Down Rate',
+                        suffixText: '%',
+                        border: OutlineInputBorder(),
+                        helperText: 'New note rate',
+                      ),
+                      onChanged: (_) => setState(() => _advice = null),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _ResultRow(
+                      label: 'Upfront Points Cost',
+                      value: CurrencyFormatter.formatCurrency(pointsCost),
+                      icon: Icons.payments_outlined,
+                    ),
+                    const SizedBox(height: 8),
+                    _ResultRow(
+                      label: 'New Monthly P&I',
+                      value: CurrencyFormatter.formatCurrency(newP),
+                      icon: Icons.calendar_month,
+                    ),
+                    const SizedBox(height: 8),
+                    _ResultRow(
+                      label: 'Monthly Payment Savings',
+                      value: CurrencyFormatter.formatCurrency(monthlySavings),
+                      icon: Icons.trending_down,
+                      valueColor: monthlySavings > 0 ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(height: 8),
+                    _ResultRow(
+                      label: 'Break-Even Period',
+                      value: breakEvenMonths > 0
+                          ? '$breakEvenMonths mos ($breakEvenYears yrs)'
+                          : 'N/A',
+                      icon: Icons.timelapse,
+                      valueColor: (breakEvenMonths > 0 && breakEvenMonths <= 48)
+                          ? Colors.green
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: (monthlySavings > 0 && pointsCost > 0 && !_loadingAdvice)
+                    ? () => _fetchAdvice(
+                          pointsCost: pointsCost,
+                          monthlySavings: monthlySavings,
+                          breakEvenMonths: breakEvenMonths,
+                          newRate: newRate,
+                        )
+                    : null,
+                icon: _loadingAdvice
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.auto_awesome, size: 16, color: Colors.purple),
+                label: const Text('✨ AI Break-Even Insights'),
+              ),
+              if (_advice != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Text(
+                    _advice!,
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                  ),
+                ),
+              ],
+            ],
           ],
         ),
       ),

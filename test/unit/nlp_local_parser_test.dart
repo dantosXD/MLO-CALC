@@ -114,5 +114,68 @@ void main() {
       expect(advice, contains('DTI'));
       expect(advice, contains('Action tip'));
     });
+
+    test('multi-turn follow-up preserves existing context in parseLocally', () {
+      final initial = NLPCalculatorService.parseLocally('400k at 6.5% for 30 years');
+      expect(initial.loanAmount, 400000);
+      expect(initial.interestRate, 6.5);
+      expect(initial.termYears, 30);
+
+      // Follow-up query adjusting only the term
+      final followUp = NLPCalculatorService.parseLocally(
+        'change to 15 years',
+        previousContext: initial,
+      );
+      expect(followUp.loanAmount, 400000); // Retained from initial
+      expect(followUp.interestRate, 6.5); // Retained from initial
+      expect(followUp.termYears, 15); // Updated
+    });
+
+    test('generatePointsBreakEvenAdvice generates clear guidance when uninitialized', () async {
+      final service = NLPCalculatorService();
+      final advice = await service.generatePointsBreakEvenAdvice(
+        loanAmount: 400000,
+        originalRate: 6.875,
+        newRate: 6.375,
+        pointsCost: 4000,
+        monthlySavings: 130,
+        breakEvenMonths: 31,
+      );
+
+      expect(advice, contains('31 months'));
+      expect(advice, contains('6.875%'));
+      expect(advice, contains('6.375%'));
+    });
+
+    test('generatePayoffMilestones generates structured payoff timeline when uninitialized', () async {
+      final service = NLPCalculatorService();
+      final milestones = await service.generatePayoffMilestones(
+        loanAmount: 350000,
+        interestRate: 6.5,
+        termYears: 30,
+        monthlyPayment: 2212.24,
+        extraMonthlyPrincipal: 200,
+        monthsSaved: 68,
+        totalInterestSaved: 54200,
+      );
+
+      expect(milestones, contains('Time Saved'));
+      expect(milestones, contains('\$200/mo'));
+      expect(milestones, contains('\$54200'));
+    });
+
+    test('generateRentVsBuyMemo evaluates net wealth outcome when uninitialized', () async {
+      final service = NLPCalculatorService();
+      final memo = await service.generateRentVsBuyMemo(
+        homePrice: 450000,
+        monthlyRent: 2200,
+        breakEvenYear: 4,
+        netWealthDifference: 65000,
+        analysisYears: 10,
+      );
+
+      expect(memo, contains('year 4'));
+      expect(memo, contains('\$65000'));
+    });
   });
 }

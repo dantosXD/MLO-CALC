@@ -197,7 +197,10 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
         await widget.nlpService.initialize(apiKey);
       }
 
-      final request = await widget.nlpService.processQuery(query);
+      final request = await widget.nlpService.processQuery(
+        query,
+        previousContext: _extractedRequest,
+      );
       if (!mounted) return;
 
       setState(() {
@@ -449,6 +452,38 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
               children: suggestions.take(3).map((s) {
                 return ActionChip(
                   visualDensity: VisualDensity.compact,
+                  label: Text(s, style: const TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    _controller.text = s;
+                    _processQuery(s);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Conversational follow-up chips when an active scenario exists
+          if (_extractedRequest != null) ...[
+            Text(
+              'Refine this scenario:',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                'Change term to 15 years',
+                'What if rate was 6.0%?',
+                'Add 20% down payment',
+              ].map((s) {
+                return ActionChip(
+                  visualDensity: VisualDensity.compact,
+                  avatar: const Icon(Icons.edit_outlined, size: 12),
                   label: Text(s, style: const TextStyle(fontSize: 11)),
                   onPressed: () {
                     _controller.text = s;

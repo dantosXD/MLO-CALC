@@ -1,7 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
+import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
+import 'package:provider/provider.dart';
 
 import '../../domain/models/rent_vs_buy_calculation.dart';
 
@@ -146,6 +150,17 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
           if (_result != null) ...[
             const SizedBox(height: 24),
             _buildResultsSummary(_result!),
+            const SizedBox(height: 16),
+            _AiRentVsBuyMemoCard(
+              homePrice: double.tryParse(_homePriceController.text) ?? 400000,
+              monthlyRent: double.tryParse(_monthlyRentController.text) ?? 2000,
+              breakEvenYear: (_result!.breakEvenMonths / 12).ceil(),
+              netWealthDifference: _result!.projections.isNotEmpty
+                  ? (_result!.projections.last.netWorthBuying -
+                      _result!.projections.last.netWorthRenting)
+                  : (_result!.monthlySavings * _analysisYears * 12),
+              analysisYears: _analysisYears,
+            ),
             const SizedBox(height: 16),
             _buildCostComparison(_result!),
             const SizedBox(height: 16),
@@ -828,6 +843,158 @@ class _MethodologyStep extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AiRentVsBuyMemoCard extends StatefulWidget {
+  const _AiRentVsBuyMemoCard({
+    required this.homePrice,
+    required this.monthlyRent,
+    required this.breakEvenYear,
+    required this.netWealthDifference,
+    required this.analysisYears,
+  });
+
+  final double homePrice;
+  final double monthlyRent;
+  final int breakEvenYear;
+  final double netWealthDifference;
+  final int analysisYears;
+
+  @override
+  State<_AiRentVsBuyMemoCard> createState() => _AiRentVsBuyMemoCardState();
+}
+
+class _AiRentVsBuyMemoCardState extends State<_AiRentVsBuyMemoCard> {
+  bool _loading = false;
+  String? _memo;
+  bool _expanded = false;
+
+  Future<void> _fetchMemo() async {
+    setState(() {
+      _loading = true;
+      _expanded = true;
+    });
+    try {
+      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+          NLPCalculatorService();
+      final result = await nlpService.generateRentVsBuyMemo(
+        homePrice: widget.homePrice,
+        monthlyRent: widget.monthlyRent,
+        breakEvenYear: widget.breakEvenYear,
+        netWealthDifference: widget.netWealthDifference,
+        analysisYears: widget.analysisYears,
+      );
+      if (!mounted) return;
+      setState(() => _memo = result);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _memo = 'Could not load memo at this time.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final settings = Provider.of<NlpSettingsProvider?>(context);
+    final hasGemini = settings?.hasKey ?? false;
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  hasGemini ? Icons.auto_awesome : Icons.article_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    hasGemini
+                        ? 'Client Decision Memo (Gemini AI)'
+                        : 'Client Decision Memo',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                if (!_expanded)
+                  TextButton.icon(
+                    onPressed: _loading ? null : _fetchMemo,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.summarize_outlined, size: 16),
+                    label: const Text('Generate Memo'),
+                  )
+                else
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_memo != null)
+                        IconButton(
+                          icon: const Icon(Icons.copy, size: 16),
+                          tooltip: 'Copy Memo',
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: _memo!));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Memo copied to clipboard')),
+                            );
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 16),
+                        tooltip: 'Refresh Memo',
+                        onPressed: _loading ? null : _fetchMemo,
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            if (_expanded) ...[
+              const Divider(height: 16),
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else if (_memo != null)
+                Text(
+                  _memo!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.4,
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
