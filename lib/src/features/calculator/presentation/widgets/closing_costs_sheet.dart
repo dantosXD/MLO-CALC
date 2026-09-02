@@ -34,10 +34,15 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
   final _prepaidTaxController = TextEditingController();
   final _otherFeesController = TextEditingController();
 
+  bool _initialized = false;
+
   @override
-  void initState() {
-    super.initState();
-    _loadValues();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _loadValues();
+      _initialized = true;
+    }
   }
 
   void _loadValues() {

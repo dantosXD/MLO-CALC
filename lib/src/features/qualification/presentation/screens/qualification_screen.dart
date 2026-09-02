@@ -543,133 +543,9 @@ class _QualificationScreenState extends State<QualificationScreen> {
   }
 
   void _showRatioEditor(BuildContext context, QualifyingRatio? ratio) {
-    final isEditing = ratio != null;
-    final nameController = TextEditingController(text: ratio?.name ?? '');
-    final descController = TextEditingController(
-      text: ratio?.description ?? '',
-    );
-    final housingController = TextEditingController(
-      text: ratio?.housingRatio.toString() ?? '28',
-    );
-    final debtController = TextEditingController(
-      text: ratio?.debtRatio.toString() ?? '36',
-    );
-
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isEditing ? 'Edit Ratio' : 'Add Custom Ratio'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  hintText: 'e.g., My Custom Ratio',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  hintText: 'Brief description',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: housingController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Housing DTI %',
-                        hintText: '28',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: debtController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Total DTI %',
-                        hintText: '36',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-
-              // Get text from controllers and trim whitespace
-              final housingText = housingController.text.trim();
-              final debtText = debtController.text.trim();
-
-              // Parse with validation - only use defaults if text is empty
-              final housing = housingText.isEmpty
-                  ? (ratio?.housingRatio ?? 28.0)
-                  : (double.tryParse(housingText) ??
-                        (ratio?.housingRatio ?? 28.0));
-              final debt = debtText.isEmpty
-                  ? (ratio?.debtRatio ?? 36.0)
-                  : (double.tryParse(debtText) ?? (ratio?.debtRatio ?? 36.0));
-
-              if (name.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a name')),
-                );
-                return;
-              }
-
-              final provider = context.read<QualifyingRatiosProvider>();
-
-              if (isEditing) {
-                await provider.updateRatio(
-                  ratio.copyWith(
-                    name: name,
-                    description: descController.text.trim().isEmpty
-                        ? null
-                        : descController.text.trim(),
-                    housingRatio: housing,
-                    debtRatio: debt,
-                  ),
-                );
-              } else {
-                await provider.addRatio(
-                  name: name,
-                  description: descController.text.trim().isEmpty
-                      ? null
-                      : descController.text.trim(),
-                  housingRatio: housing,
-                  debtRatio: debt,
-                );
-              }
-
-              if (ctx.mounted) Navigator.of(ctx).pop();
-            },
-            child: Text(isEditing ? 'Save' : 'Add'),
-          ),
-        ],
-      ),
+      builder: (ctx) => _RatioEditorDialog(ratio: ratio),
     );
   }
 
@@ -933,6 +809,163 @@ class _RatioListTile extends StatelessWidget {
         ],
       ),
       onTap: onTap,
+    );
+  }
+}
+
+class _RatioEditorDialog extends StatefulWidget {
+  const _RatioEditorDialog({this.ratio});
+
+  final QualifyingRatio? ratio;
+
+  @override
+  State<_RatioEditorDialog> createState() => _RatioEditorDialogState();
+}
+
+class _RatioEditorDialogState extends State<_RatioEditorDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _descController;
+  late final TextEditingController _housingController;
+  late final TextEditingController _debtController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.ratio?.name ?? '');
+    _descController = TextEditingController(
+      text: widget.ratio?.description ?? '',
+    );
+    _housingController = TextEditingController(
+      text: widget.ratio?.housingRatio.toString() ?? '28',
+    );
+    _debtController = TextEditingController(
+      text: widget.ratio?.debtRatio.toString() ?? '36',
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    _housingController.dispose();
+    _debtController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final housingText = _housingController.text.trim();
+    final debtText = _debtController.text.trim();
+
+    final housing = housingText.isEmpty
+        ? (widget.ratio?.housingRatio ?? 28.0)
+        : (double.tryParse(housingText) ?? (widget.ratio?.housingRatio ?? 28.0));
+    final debt = debtText.isEmpty
+        ? (widget.ratio?.debtRatio ?? 36.0)
+        : (double.tryParse(debtText) ?? (widget.ratio?.debtRatio ?? 36.0));
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a name')),
+      );
+      return;
+    }
+
+    final provider = context.read<QualifyingRatiosProvider>();
+    final isEditing = widget.ratio != null;
+
+    if (isEditing) {
+      await provider.updateRatio(
+        widget.ratio!.copyWith(
+          name: name,
+          description: _descController.text.trim().isEmpty
+              ? null
+              : _descController.text.trim(),
+          housingRatio: housing,
+          debtRatio: debt,
+        ),
+      );
+    } else {
+      await provider.addRatio(
+        name: name,
+        description: _descController.text.trim().isEmpty
+            ? null
+            : _descController.text.trim(),
+        housingRatio: housing,
+        debtRatio: debt,
+      );
+    }
+
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEditing = widget.ratio != null;
+    return AlertDialog(
+      title: Text(isEditing ? 'Edit Ratio' : 'Add Custom Ratio'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                hintText: 'e.g., My Custom Ratio',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descController,
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+                hintText: 'Brief description',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _housingController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Housing DTI %',
+                      hintText: '28',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _debtController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Total DTI %',
+                      hintText: '36',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(isEditing ? 'Save' : 'Add'),
+        ),
+      ],
     );
   }
 }

@@ -342,7 +342,13 @@ class ValidationWarningsDisplay extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: warnings
-          .map((warning) => _WarningTile(warning: warning, compact: compact))
+          .map(
+            (warning) => _WarningTile(
+              key: ValueKey(warning.message),
+              warning: warning,
+              compact: compact,
+            ),
+          )
           .toList(),
     );
   }
@@ -352,7 +358,7 @@ class _WarningTile extends StatelessWidget {
   final ValidationWarning warning;
   final bool compact;
 
-  const _WarningTile({required this.warning, required this.compact});
+  const _WarningTile({super.key, required this.warning, required this.compact});
 
   @override
   Widget build(BuildContext context) {

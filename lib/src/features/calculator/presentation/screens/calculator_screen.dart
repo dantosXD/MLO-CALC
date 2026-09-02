@@ -173,7 +173,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         defaultTargetPlatform == TargetPlatform.macOS;
 
     final Widget calculatorUI = Container(
-      color: const Color(0xFF2C3E50),
+      color: AppConstants.baseColor,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final height = constraints.maxHeight < 620
@@ -232,7 +232,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       calculatorProvider.setPrice(value: value);
                                     }
                                   },
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -253,7 +253,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     'Loan Amount',
                                     calculatorProvider.clearLoanAmount,
                                   ),
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -278,7 +278,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     'Term',
                                     calculatorProvider.clearTermYears,
                                   ),
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 Selector<CalculatorProvider, bool>(
@@ -312,7 +312,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       ),
                                       backgroundColor: isInterestOnly
                                           ? const Color(0xFF7B68EE)
-                                          : const Color(0xFF3A5062),
+                                          : AppConstants.functionButtonColor,
                                       foregroundColor: Colors.white,
                                     );
                                   },
@@ -338,7 +338,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       );
                                     }
                                   },
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -364,7 +364,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     'Rate',
                                     calculatorProvider.clearInterestRate,
                                   ),
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -380,7 +380,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       );
                                     }
                                   },
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -396,7 +396,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       );
                                     }
                                   },
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -413,7 +413,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     calculatorProvider.clearAll();
                                     displayProvider.clearAll();
                                   },
-                                  backgroundColor: const Color(0xFF8B3A3A),
+                                  backgroundColor:
+                                      AppConstants.clearButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -433,14 +434,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '%',
                                   onPressed: () =>
                                       displayProvider.calculatePercent(),
-                                  backgroundColor: const Color(0xFF3A5062),
+                                  backgroundColor: AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '÷',
                                   onPressed: () =>
                                       displayProvider.performOperation('/'),
-                                  backgroundColor: const Color(0xFF4A6278),
+                                  backgroundColor: AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -455,28 +456,28 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '7',
                                   onPressed: () =>
                                       displayProvider.inputDigit('7'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '8',
                                   onPressed: () =>
                                       displayProvider.inputDigit('8'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '9',
                                   onPressed: () =>
                                       displayProvider.inputDigit('9'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '×',
                                   onPressed: () =>
                                       displayProvider.performOperation('x'),
-                                  backgroundColor: const Color(0xFF4A6278),
+                                  backgroundColor: AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -491,28 +492,28 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '4',
                                   onPressed: () =>
                                       displayProvider.inputDigit('4'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '5',
                                   onPressed: () =>
                                       displayProvider.inputDigit('5'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '6',
                                   onPressed: () =>
                                       displayProvider.inputDigit('6'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '−',
                                   onPressed: () =>
                                       displayProvider.performOperation('-'),
-                                  backgroundColor: const Color(0xFF4A6278),
+                                  backgroundColor: AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -527,28 +528,28 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '1',
                                   onPressed: () =>
                                       displayProvider.inputDigit('1'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '2',
                                   onPressed: () =>
                                       displayProvider.inputDigit('2'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '3',
                                   onPressed: () =>
                                       displayProvider.inputDigit('3'),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '+',
                                   onPressed: () =>
                                       displayProvider.performOperation('+'),
-                                  backgroundColor: const Color(0xFF4A6278),
+                                  backgroundColor: AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -569,14 +570,15 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '.',
                                   onPressed: () =>
                                       displayProvider.inputDecimal(),
-                                  backgroundColor: const Color(0xFF34495E),
+                                  backgroundColor: AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '=',
                                   onPressed: () =>
                                       displayProvider.calculateResult(),
-                                  backgroundColor: const Color(0xFFE67E22),
+                                  backgroundColor:
+                                      AppConstants.equalsButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -803,7 +805,7 @@ class _MemoryButton extends StatelessWidget {
             child: Material(
               color: hasMemory
                   ? const Color(0xFF2E7D32)
-                  : const Color(0xFF3A5062),
+                  : AppConstants.functionButtonColor,
               borderRadius: BorderRadius.circular(8),
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
@@ -865,13 +867,14 @@ class _MemoryButton extends StatelessWidget {
     bool hasMemory,
     double? memory,
   ) async {
-    final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
-    final Offset position = button.localToGlobal(
+    final renderBox = context.findRenderObject();
+    final overlay = Navigator.of(context).overlay?.context.findRenderObject();
+    if (renderBox is! RenderBox || overlay is! RenderBox) return;
+    final Offset position = renderBox.localToGlobal(
       Offset.zero,
       ancestor: overlay,
     );
+    final button = renderBox;
 
     final value = await showMenu<String>(
       context: context,
@@ -977,7 +980,7 @@ class _ZeroButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(2.0),
         child: Material(
-          color: const Color(0xFF34495E),
+          color: AppConstants.numberButtonColor,
           borderRadius: BorderRadius.circular(8),
           child: InkWell(
             borderRadius: BorderRadius.circular(8),
@@ -1000,13 +1003,14 @@ class _ZeroButton extends StatelessWidget {
   }
 
   Future<void> _showZeroMenu(BuildContext context) async {
-    final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
-    final Offset position = button.localToGlobal(
+    final renderBox = context.findRenderObject();
+    final overlay = Navigator.of(context).overlay?.context.findRenderObject();
+    if (renderBox is! RenderBox || overlay is! RenderBox) return;
+    final Offset position = renderBox.localToGlobal(
       Offset.zero,
       ancestor: overlay,
     );
+    final button = renderBox;
 
     final value = await showMenu<String>(
       context: context,
