@@ -993,6 +993,17 @@ class _UpdateSection extends StatelessWidget {
                         if (notifier.state == UpdateState.updateAvailable) {
                           notifier.resetDialogDismissed();
                           await UpdateDialog.showIfNeeded(context);
+                        } else if (notifier.state == UpdateState.error) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                notifier.errorMessage ??
+                                    'Failed to check for updates. Check connection.',
+                              ),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.error,
+                            ),
+                          );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

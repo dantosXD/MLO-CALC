@@ -1,16 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/features/updater/application/providers/update_notifier.dart';
 import 'package:loan_ranger/src/features/updater/domain/models/release_info.dart';
+import 'package:loan_ranger/src/features/updater/domain/models/update_check_result.dart';
 import 'package:loan_ranger/src/features/updater/domain/services/update_service.dart';
 
 class _FakeService extends UpdateService {
   _FakeService({this.result, this.throwOnInstall = false})
       : super(currentVersion: '1.0.0');
-  final ReleaseInfo? result;
+  final UpdateCheckResult? result;
   final bool throwOnInstall;
 
   @override
-  Future<ReleaseInfo?> checkForUpdate() async => result;
+  Future<UpdateCheckResult> checkForUpdate() async =>
+      result ?? const UpdateCheckResult.upToDate();
 
   @override
   Future<void> downloadAndInstall(
@@ -36,7 +38,9 @@ void main() {
       releaseNotes: '',
       apkDownloadUrl: null,
     );
-    final n = UpdateNotifier(service: _FakeService(result: info));
+    final n = UpdateNotifier(
+      service: _FakeService(result: UpdateCheckResult.available(info)),
+    );
     await n.checkForUpdate();
     expect(n.state, UpdateState.updateAvailable);
     expect(n.releaseInfo, info);
@@ -68,7 +72,9 @@ void main() {
       releaseNotes: '',
       apkDownloadUrl: 'http://x.com/a.apk',
     );
-    final n = UpdateNotifier(service: _FakeService(result: info));
+    final n = UpdateNotifier(
+      service: _FakeService(result: UpdateCheckResult.available(info)),
+    );
     await n.checkForUpdate();
     await n.install();
     expect(n.downloadProgress, 1.0);
@@ -81,7 +87,10 @@ void main() {
       apkDownloadUrl: 'http://x.com/a.apk',
     );
     final n = UpdateNotifier(
-      service: _FakeService(result: info, throwOnInstall: true),
+      service: _FakeService(
+        result: UpdateCheckResult.available(info),
+        throwOnInstall: true,
+      ),
     );
     await n.checkForUpdate();
     await n.install();
@@ -95,7 +104,10 @@ void main() {
       apkDownloadUrl: 'http://x.com/a.apk',
     );
     final n = UpdateNotifier(
-      service: _FakeService(result: info, throwOnInstall: true),
+      service: _FakeService(
+        result: UpdateCheckResult.available(info),
+        throwOnInstall: true,
+      ),
     );
     await n.checkForUpdate();
     await n.install();

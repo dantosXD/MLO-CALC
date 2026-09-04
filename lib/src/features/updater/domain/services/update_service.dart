@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/release_info.dart';
+import '../models/update_check_result.dart';
 
 class UpdateService {
   UpdateService({http.Client? httpClient, String currentVersion = '0.0.0'})
@@ -33,7 +34,9 @@ class UpdateService {
   }
 
   static List<int> _parseSemver(String v) {
-    final parts = v.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+    // Strip build metadata (+...) and pre-release suffix (-...)
+    final clean = v.split('+').first.split('-').first.trim();
+    final parts = clean.split('.').map((p) => int.tryParse(p) ?? 0).toList();
     while (parts.length < 3) {
       parts.add(0);
     }
@@ -42,30 +45,51 @@ class UpdateService {
 
   static const _timeout = Duration(seconds: 10);
 
-  Future<ReleaseInfo?> checkForUpdate() async {
+  Future<UpdateCheckResult> checkForUpdate() async {
     try {
       final response = await _client
-          .get(Uri.parse(_apiUrl), headers: {'Accept': 'application/vnd.github+json'})
+          .get(
+            Uri.parse(_apiUrl),
+            headers: {'Accept': 'application/vnd.github+json'},
+          )
           .timeout(_timeout);
-      if (response.statusCode != 200) return null;
+
+      if (response.statusCode == 404) {
+        return const UpdateCheckResult.error(
+          'No release published on GitHub yet (HTTP 404)',
+        );
+      }
+      if (response.statusCode != 200) {
+        return UpdateCheckResult.error(
+          'GitHub API returned HTTP ${response.statusCode}',
+        );
+      }
+
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final tag = data['tag_name'] as String? ?? '';
       final version = tag.startsWith('v') ? tag.substring(1) : tag;
       final current = _currentVersion;
-      if (!isNewer(tag, current)) return null;
+
+      if (!isNewer(tag, current)) {
+        return const UpdateCheckResult.upToDate();
+      }
+
       final assets = (data['assets'] as List<dynamic>? ?? []);
       final apkAsset = assets
           .cast<Map<String, dynamic>>()
           .where((a) => (a['name'] as String).endsWith('.apk'))
           .firstOrNull;
-      return ReleaseInfo(
-        version: version,
-        releaseNotes: data['body'] as String? ?? '',
-        apkDownloadUrl: apkAsset?['browser_download_url'] as String?,
+
+      return UpdateCheckResult.available(
+        ReleaseInfo(
+          version: version,
+          releaseNotes: data['body'] as String? ?? '',
+          apkDownloadUrl: apkAsset?['browser_download_url'] as String?,
+        ),
       );
     } catch (e) {
       debugPrint('UpdateService: checkForUpdate failed — $e');
-      return null;
+      return UpdateCheckResult.error('Connection failed: $e');
     }
   }
 
@@ -101,6 +125,9 @@ class UpdateService {
       if (total > 0) onProgress(received / total);
     }
     await sink.close();
-    await OpenFile.open(file.path);
+    await OpenFile.open(
+      file.path,
+      type: 'application/vnd.android.package-archive',
+    );
   }
 }

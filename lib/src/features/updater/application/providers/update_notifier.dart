@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/release_info.dart';
+import '../../domain/models/update_check_result.dart';
 import '../../domain/services/update_service.dart';
 
 enum UpdateState { idle, checking, updateAvailable, downloading, error }
@@ -12,23 +13,32 @@ class UpdateNotifier extends ChangeNotifier {
 
   UpdateState _state = UpdateState.idle;
   ReleaseInfo? _releaseInfo;
+  String? _errorMessage;
   double _downloadProgress = 0;
   bool _dialogDismissed = false;
 
   UpdateState get state => _state;
   ReleaseInfo? get releaseInfo => _releaseInfo;
+  String? get errorMessage => _errorMessage;
   double get downloadProgress => _downloadProgress;
   bool get dialogDismissed => _dialogDismissed;
 
   Future<void> checkForUpdate() async {
     _state = UpdateState.checking;
+    _errorMessage = null;
     notifyListeners();
-    final info = await _service.checkForUpdate();
-    if (info != null) {
-      _releaseInfo = info;
-      _state = UpdateState.updateAvailable;
-    } else {
-      _state = UpdateState.idle;
+
+    final result = await _service.checkForUpdate();
+    switch (result) {
+      case UpdateAvailableResult(:final info):
+        _releaseInfo = info;
+        _state = UpdateState.updateAvailable;
+      case UpToDateResult():
+        _releaseInfo = null;
+        _state = UpdateState.idle;
+      case UpdateErrorResult(:final message):
+        _errorMessage = message;
+        _state = UpdateState.error;
     }
     notifyListeners();
   }
@@ -38,13 +48,17 @@ class UpdateNotifier extends ChangeNotifier {
     if (info == null) return;
     _state = UpdateState.downloading;
     _downloadProgress = 0;
+    _errorMessage = null;
     notifyListeners();
     try {
       await _service.downloadAndInstall(info, (progress) {
         _downloadProgress = progress;
         notifyListeners();
       });
-    } catch (_) {
+      _state = UpdateState.updateAvailable;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Download or installation failed: $e';
       _state = UpdateState.error;
       notifyListeners();
     }
@@ -52,7 +66,12 @@ class UpdateNotifier extends ChangeNotifier {
 
   void retryFromError() {
     if (_state != UpdateState.error) return;
-    _state = UpdateState.updateAvailable;
+    if (_releaseInfo != null) {
+      _state = UpdateState.updateAvailable;
+    } else {
+      _state = UpdateState.idle;
+    }
+    _errorMessage = null;
     notifyListeners();
   }
 
