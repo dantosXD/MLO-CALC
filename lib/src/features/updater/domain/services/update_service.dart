@@ -12,15 +12,20 @@ import '../models/release_info.dart';
 import '../models/update_check_result.dart';
 
 class UpdateService {
-  UpdateService({http.Client? httpClient, String currentVersion = '0.0.0'})
-      : _client = httpClient ?? http.Client(),
-        _currentVersion = currentVersion;
+  UpdateService({
+    http.Client? httpClient,
+    String currentVersion = '0.0.0',
+    Future<String> Function()? currentVersionProvider,
+  })  : _client = httpClient ?? http.Client(),
+        _currentVersion = currentVersion,
+        _currentVersionProvider = currentVersionProvider;
 
   static const _apiUrl =
       'https://api.github.com/repos/dantosXD/MLO-CALC/releases/latest';
 
   final http.Client _client;
   final String _currentVersion;
+  final Future<String> Function()? _currentVersionProvider;
 
   static bool isNewer(String remoteTag, String current) {
     final remote =
@@ -69,9 +74,23 @@ class UpdateService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final tag = data['tag_name'] as String? ?? '';
       final version = tag.startsWith('v') ? tag.substring(1) : tag;
-      final current = _currentVersion;
 
-      if (!isNewer(tag, current)) {
+      var current = _currentVersion;
+      if (_currentVersionProvider != null) {
+        try {
+          final live = await _currentVersionProvider();
+          if (live.isNotEmpty) {
+            current = live;
+          }
+        } catch (_) {}
+      }
+
+      final newer = isNewer(tag, current);
+      debugPrint(
+        'UpdateService: tag="$tag", current="$current", isNewer=$newer',
+      );
+
+      if (!newer) {
         return const UpdateCheckResult.upToDate();
       }
 

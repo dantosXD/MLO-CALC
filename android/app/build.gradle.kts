@@ -38,8 +38,8 @@ android {
             isShrinkResources = false
         }
         debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
+            // Debug build shares canonical applicationId so updates replace the same app
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }

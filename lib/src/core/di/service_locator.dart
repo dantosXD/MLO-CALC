@@ -160,7 +160,13 @@ Future<void> configureDependencies() async {
     // === AI/NLP Services ===
     ..registerLazySingleton<NLPCalculatorService>(NLPCalculatorService.new)
     ..registerLazySingleton<UpdateService>(
-      () => UpdateService(currentVersion: appVersion),
+      () => UpdateService(
+        currentVersion: appVersion,
+        currentVersionProvider: () async {
+          final info = await PackageInfo.fromPlatform();
+          return info.version;
+        },
+      ),
     );
 
   // === ADD NEW SERVICES BELOW THIS LINE ===

@@ -8,6 +8,7 @@ class UpdateDialog extends StatelessWidget {
 
   static Future<void> showIfNeeded(BuildContext context) async {
     final notifier = context.read<UpdateNotifier>();
+    if (notifier.dialogDismissed) return;
     if (notifier.state != UpdateState.updateAvailable) return;
     if (!context.mounted) return;
     await showDialog<void>(
