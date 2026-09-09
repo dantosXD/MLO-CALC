@@ -355,12 +355,12 @@ class _DisplayCard extends StatelessWidget {
                   },
                   onLongPress: calc.loanAmount != null
                       ? () {
-                          final prev = calc.loanAmount;
-                          _clearChipField(
+                          _showChipOptions(
                             context,
                             'Loan Amount',
-                            () => calc.clearLoanAmount(),
-                            undoAction: () => calc.setLoanAmount(value: prev),
+                            CurrencyFormatter.formatCurrency(calc.loanAmount),
+                            calc.loanAmount!,
+                            display,
                           );
                         }
                       : null,
@@ -393,12 +393,12 @@ class _DisplayCard extends StatelessWidget {
                   ),
                   onLongPress: calc.interestRate != null
                       ? () {
-                          final prev = calc.interestRate;
-                          _clearChipField(
+                          _showChipOptions(
                             context,
                             'Rate',
-                            () => calc.clearInterestRate(),
-                            undoAction: () => calc.setInterestRate(value: prev),
+                            CurrencyFormatter.formatPercent(calc.interestRate, decimals: 3),
+                            calc.interestRate!,
+                            display,
                           );
                         }
                       : null,
@@ -437,12 +437,12 @@ class _DisplayCard extends StatelessWidget {
                   },
                   onLongPress: calc.termYears != null
                       ? () {
-                          final prev = calc.termYears;
-                          _clearChipField(
+                          _showChipOptions(
                             context,
                             'Term',
-                            () => calc.clearTermYears(),
-                            undoAction: () => calc.setTermYears(value: prev),
+                            '${calc.termYears!.toInt()}y',
+                            calc.termYears!,
+                            display,
                           );
                         }
                       : null,
@@ -473,12 +473,12 @@ class _DisplayCard extends StatelessWidget {
                   ),
                   onLongPress: calc.payment != null
                       ? () {
-                          final prev = calc.payment;
-                          _clearChipField(
+                          _showChipOptions(
                             context,
                             'Payment',
-                            () => calc.clearPayment(),
-                            undoAction: () => calc.setPayment(value: prev),
+                            CurrencyFormatter.formatCurrency(calc.payment),
+                            calc.payment!,
+                            display,
                           );
                         }
                       : () => _showPaymentOptions(context, calc, display),
@@ -630,6 +630,75 @@ void _clearChipField(
   );
 }
 
+void _showChipOptions(
+  BuildContext context,
+  String label,
+  String formattedValue,
+  double rawValue,
+  CalculatorDisplayNotifier display,
+) {
+  HapticFeedback.lightImpact();
+  final box = context.findRenderObject() as RenderBox;
+  final position = box.localToGlobal(Offset.zero);
+  final size = box.size;
+  showMenu<String>(
+    context: context,
+    position: RelativeRect.fromLTRB(
+      position.dx,
+      position.dy + size.height,
+      position.dx + size.width,
+      position.dy + size.height,
+    ),
+    items: [
+      PopupMenuItem<String>(
+        enabled: false,
+        child: Text(
+          '$label: $formattedValue',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      const PopupMenuItem<String>(value: 'copy', child: ListTile(
+        dense: true,
+        leading: Icon(Icons.copy, size: 20),
+        title: Text('Copy'),
+        contentPadding: EdgeInsets.zero,
+      )),
+      const PopupMenuItem<String>(value: 'edit', child: ListTile(
+        dense: true,
+        leading: Icon(Icons.edit, size: 20),
+        title: Text('Edit'),
+        contentPadding: EdgeInsets.zero,
+      )),
+    ],
+  ).then((action) {
+    if (action == 'copy') {
+      Clipboard.setData(ClipboardData(text: rawValue.toString()));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text('$label copied: $formattedValue'),
+            duration: const Duration(milliseconds: 1500),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+          ));
+      }
+    } else if (action == 'edit') {
+      display.setDisplayValue(rawValue.toString());
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text('$label loaded to display — edit & tap chip to save'),
+            duration: const Duration(milliseconds: 2500),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+          ));
+      }
+    }
+  });
+}
+
 class _StatChip extends StatelessWidget {
   const _StatChip({
     required this.label,
@@ -654,7 +723,7 @@ class _StatChip extends StatelessWidget {
     return Expanded(
       child: Tooltip(
         message: isSet
-            ? '$label: Double-tap or long-press to clear'
+            ? '$label: Long-press for options, double-tap to clear'
             : '$label: Tap to set from display',
         waitDuration: const Duration(milliseconds: 500),
         child: Material(
@@ -732,12 +801,12 @@ class _SecondaryFieldsRow extends StatelessWidget {
               _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
           onLongPress: calc.price != null
               ? () {
-                  final prev = calc.price;
-                  _clearChipField(
+                  _showChipOptions(
                     context,
                     'Price',
-                    () => calc.clearPrice(),
-                    undoAction: () => calc.setPrice(value: prev),
+                    CurrencyFormatter.formatCurrency(calc.price),
+                    calc.price!,
+                    display,
                   );
                 }
               : null,
@@ -768,12 +837,12 @@ class _SecondaryFieldsRow extends StatelessWidget {
               ),
               onLongPress: downPayment != null
                   ? () {
-                      final prev = downPayment;
-                      _clearChipField(
+                      _showChipOptions(
                         context,
                         'Down Payment',
-                        () => calc.clearDownPayment(),
-                        undoAction: () => calc.setDownPayment(value: prev),
+                        CurrencyFormatter.formatCurrency(downPayment),
+                        downPayment,
+                        display,
                       );
                     }
                   : null,
@@ -805,12 +874,12 @@ class _SecondaryFieldsRow extends StatelessWidget {
           ),
           onLongPress: calc.propertyTax != null
               ? () {
-                  final prev = calc.propertyTax;
-                  _clearChipField(
+                  _showChipOptions(
                     context,
                     'Tax',
-                    () => calc.clearPropertyTax(),
-                    undoAction: () => calc.setPropertyTax(value: prev),
+                    CurrencyFormatter.formatCurrency(calc.propertyTax),
+                    calc.propertyTax!,
+                    display,
                   );
                 }
               : null,
@@ -837,12 +906,12 @@ class _SecondaryFieldsRow extends StatelessWidget {
           ),
           onLongPress: calc.homeInsurance != null
               ? () {
-                  final prev = calc.homeInsurance;
-                  _clearChipField(
+                  _showChipOptions(
                     context,
                     'Insurance',
-                    () => calc.clearHomeInsurance(),
-                    undoAction: () => calc.setHomeInsurance(value: prev),
+                    CurrencyFormatter.formatCurrency(calc.homeInsurance),
+                    calc.homeInsurance!,
+                    display,
                   );
                 }
               : null,
@@ -869,12 +938,12 @@ class _SecondaryFieldsRow extends StatelessWidget {
           ),
           onLongPress: calc.monthlyExpenses != null
               ? () {
-                  final prev = calc.monthlyExpenses;
-                  _clearChipField(
+                  _showChipOptions(
                     context,
                     'HOA',
-                    () => calc.clearMonthlyExpenses(),
-                    undoAction: () => calc.setMonthlyExpenses(value: prev),
+                    CurrencyFormatter.formatCurrency(calc.monthlyExpenses),
+                    calc.monthlyExpenses!,
+                    display,
                   );
                 }
               : null,
@@ -944,7 +1013,7 @@ class _RowChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 2),
         child: Tooltip(
           message: hasValue
-              ? '$label: Double-tap or long-press to clear'
+              ? '$label: Long-press for options, double-tap to clear'
               : '$label: Tap to set from display',
           waitDuration: const Duration(milliseconds: 500),
           child: Material(
