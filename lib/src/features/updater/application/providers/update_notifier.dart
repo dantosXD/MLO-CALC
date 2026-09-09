@@ -43,9 +43,24 @@ class UpdateNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> canInstallApk() => _service.canInstallApk();
+  Future<void> openInstallPermissionSetting() =>
+      _service.openInstallPermissionSetting();
+
   Future<void> install() async {
     final info = _releaseInfo;
     if (info == null) return;
+
+    final canInstall = await _service.canInstallApk();
+    if (!canInstall) {
+      await _service.openInstallPermissionSetting();
+      _errorMessage =
+          'Please enable "Allow from this source" in Settings to install updates, then try again.';
+      _state = UpdateState.error;
+      notifyListeners();
+      return;
+    }
+
     _state = UpdateState.downloading;
     _downloadProgress = 0;
     _errorMessage = null;
@@ -55,7 +70,8 @@ class UpdateNotifier extends ChangeNotifier {
         _downloadProgress = progress;
         notifyListeners();
       });
-      _state = UpdateState.updateAvailable;
+      _state = UpdateState.idle;
+      _releaseInfo = null;
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Download or installation failed: $e';

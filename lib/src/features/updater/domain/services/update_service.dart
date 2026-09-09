@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -93,6 +94,27 @@ class UpdateService {
     }
   }
 
+  static const MethodChannel _installerChannel =
+      MethodChannel('com.loanranger.calculator/package_installer');
+
+  Future<bool> canInstallApk() async {
+    if (kIsWeb || !Platform.isAndroid) return true;
+    try {
+      final allowed =
+          await _installerChannel.invokeMethod<bool>('canRequestPackageInstalls');
+      return allowed ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> openInstallPermissionSetting() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      await _installerChannel.invokeMethod('openInstallPermissionSetting');
+    } catch (_) {}
+  }
+
   Future<void> downloadAndInstall(
     ReleaseInfo info,
     void Function(double progress) onProgress,
@@ -125,9 +147,30 @@ class UpdateService {
       if (total > 0) onProgress(received / total);
     }
     await sink.close();
-    await OpenFile.open(
+
+    if (Platform.isAndroid) {
+      try {
+        final success = await _installerChannel.invokeMethod<bool>(
+          'installApk',
+          {'filePath': file.path},
+        );
+        if (success == true) return;
+      } catch (e) {
+        debugPrint('UpdateService: Native install failed: $e, falling back to OpenFile');
+      }
+    }
+
+    final openResult = await OpenFile.open(
       file.path,
       type: 'application/vnd.android.package-archive',
     );
+    if (openResult.type != ResultType.done) {
+      throw Exception(
+        openResult.message.isNotEmpty
+            ? openResult.message
+            : 'Could not launch package installer (${openResult.type})',
+      );
+    }
   }
 }
+

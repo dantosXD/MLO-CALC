@@ -34,8 +34,9 @@ class UpdateDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isError)
-            const Text(
-              'The download failed. Please try again or install manually.',
+            Text(
+              notifier.errorMessage ??
+                  'The download failed. Please try again or install manually.',
             )
           else if (info != null) ...[
             Text('Version ${info.version} is ready to install.'),
@@ -67,10 +68,17 @@ class UpdateDialog extends StatelessWidget {
                 child: const Text('Dismiss'),
               ),
               FilledButton(
-                onPressed: () {
+                onPressed: () async {
+                  if (notifier.errorMessage?.contains('Settings') == true) {
+                    await notifier.openInstallPermissionSetting();
+                  }
                   notifier.retryFromError();
                 },
-                child: const Text('Retry'),
+                child: Text(
+                  notifier.errorMessage?.contains('Settings') == true
+                      ? 'Open Settings'
+                      : 'Retry',
+                ),
               ),
             ]
           : [
