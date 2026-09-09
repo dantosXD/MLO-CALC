@@ -280,6 +280,16 @@ class CalculatorProvider
 
   void clearPayment() => _loanQuoteController.clearPayment();
 
+  void clearPrice() => setPrice(value: null);
+
+  void clearDownPayment() => setDownPayment(value: null);
+
+  void clearPropertyTax() => setPropertyTax(value: null);
+
+  void clearHomeInsurance() => setHomeInsurance(value: null);
+
+  void clearMonthlyExpenses() => setMonthlyExpenses(value: null);
+
   void clearAll() {
     _loanQuoteController.clearAll();
     _qualificationController.clearAll();
@@ -412,3 +422,5 @@ class CalculatorProvider
     });
   }
 }
+
+

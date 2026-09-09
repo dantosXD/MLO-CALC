@@ -299,28 +299,32 @@ class _DisplayCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isError
-                        ? Colors.red.withValues(alpha: 0.3)
-                        : calc.isInterestOnly
-                        ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
-                        : AppTheme.accentGold.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    display.inputError ??
-                        calc.inputError ??
-                        _getDisplayLabel(calc),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isError ? Colors.red.shade100 : Colors.white,
-                      letterSpacing: 0.5,
+                GestureDetector(
+                  onTap: () => calc.cycleDisplayMode(),
+                  onLongPress: () => _showPaymentOptions(context, calc, display),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isError
+                          ? Colors.red.withValues(alpha: 0.3)
+                          : calc.isInterestOnly
+                          ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
+                          : AppTheme.accentGold.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      display.inputError ??
+                          calc.inputError ??
+                          _getDisplayLabel(calc),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: isError ? Colors.red.shade100 : Colors.white,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ),
@@ -349,11 +353,28 @@ class _DisplayCard extends StatelessWidget {
                       calc.calculateLoanAmount();
                     }
                   },
-                  onDoubleTap: () => _clearField(
-                    context,
-                    'Loan Amount',
-                    () => calc.clearLoanAmount(),
-                  ),
+                  onLongPress: calc.loanAmount != null
+                      ? () {
+                          final prev = calc.loanAmount;
+                          _clearChipField(
+                            context,
+                            'Loan Amount',
+                            () => calc.clearLoanAmount(),
+                            undoAction: () => calc.setLoanAmount(value: prev),
+                          );
+                        }
+                      : null,
+                  onDoubleTap: calc.loanAmount != null
+                      ? () {
+                          final prev = calc.loanAmount;
+                          _clearChipField(
+                            context,
+                            'Loan Amount',
+                            () => calc.clearLoanAmount(),
+                            undoAction: () => calc.setLoanAmount(value: prev),
+                          );
+                        }
+                      : null,
                 ),
                 const SizedBox(width: 6),
                 _StatChip(
@@ -370,11 +391,28 @@ class _DisplayCard extends StatelessWidget {
                     'Rate',
                     (v) => calc.setInterestRate(value: v),
                   ),
-                  onDoubleTap: () => _clearField(
-                    context,
-                    'Rate',
-                    () => calc.clearInterestRate(),
-                  ),
+                  onLongPress: calc.interestRate != null
+                      ? () {
+                          final prev = calc.interestRate;
+                          _clearChipField(
+                            context,
+                            'Rate',
+                            () => calc.clearInterestRate(),
+                            undoAction: () => calc.setInterestRate(value: prev),
+                          );
+                        }
+                      : null,
+                  onDoubleTap: calc.interestRate != null
+                      ? () {
+                          final prev = calc.interestRate;
+                          _clearChipField(
+                            context,
+                            'Rate',
+                            () => calc.clearInterestRate(),
+                            undoAction: () => calc.setInterestRate(value: prev),
+                          );
+                        }
+                      : null,
                 ),
                 const SizedBox(width: 6),
                 _StatChip(
@@ -397,8 +435,28 @@ class _DisplayCard extends StatelessWidget {
                       calc.calculateTerm();
                     }
                   },
-                  onDoubleTap: () =>
-                      _clearField(context, 'Term', () => calc.clearTermYears()),
+                  onLongPress: calc.termYears != null
+                      ? () {
+                          final prev = calc.termYears;
+                          _clearChipField(
+                            context,
+                            'Term',
+                            () => calc.clearTermYears(),
+                            undoAction: () => calc.setTermYears(value: prev),
+                          );
+                        }
+                      : null,
+                  onDoubleTap: calc.termYears != null
+                      ? () {
+                          final prev = calc.termYears;
+                          _clearChipField(
+                            context,
+                            'Term',
+                            () => calc.clearTermYears(),
+                            undoAction: () => calc.setTermYears(value: prev),
+                          );
+                        }
+                      : null,
                 ),
                 const SizedBox(width: 6),
                 _StatChip(
@@ -413,13 +471,28 @@ class _DisplayCard extends StatelessWidget {
                     'Payment',
                     (v) => calc.setPayment(value: v),
                   ),
-                  onLongPress: () =>
-                      _showPaymentOptions(context, calc, display),
-                  onDoubleTap: () => _clearField(
-                    context,
-                    'Payment',
-                    () => calc.clearPayment(),
-                  ),
+                  onLongPress: calc.payment != null
+                      ? () {
+                          final prev = calc.payment;
+                          _clearChipField(
+                            context,
+                            'Payment',
+                            () => calc.clearPayment(),
+                            undoAction: () => calc.setPayment(value: prev),
+                          );
+                        }
+                      : () => _showPaymentOptions(context, calc, display),
+                  onDoubleTap: calc.payment != null
+                      ? () {
+                          final prev = calc.payment;
+                          _clearChipField(
+                            context,
+                            'Payment',
+                            () => calc.clearPayment(),
+                            undoAction: () => calc.setPayment(value: prev),
+                          );
+                        }
+                      : null,
                 ),
               ],
             ),
@@ -480,22 +553,6 @@ class _DisplayCard extends StatelessWidget {
     }
   }
 
-  void _clearField(
-    BuildContext context,
-    String label,
-    VoidCallback clearAction,
-  ) {
-    clearAction();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$label cleared'),
-        duration: const Duration(milliseconds: 1200),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
-    );
-  }
-
   void _showPaymentOptions(
     BuildContext context,
     CalculatorProvider provider,
@@ -543,6 +600,36 @@ class _DisplayCard extends StatelessWidget {
   }
 }
 
+void _clearChipField(
+  BuildContext context,
+  String label,
+  VoidCallback clearAction, {
+  VoidCallback? undoAction,
+}) {
+  HapticFeedback.mediumImpact();
+  clearAction();
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text('$label cleared'),
+      duration: const Duration(milliseconds: 2500),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+      action: undoAction != null
+          ? SnackBarAction(
+              label: 'UNDO',
+              textColor: AppTheme.accentGold,
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                undoAction();
+              },
+            )
+          : null,
+    ),
+  );
+}
+
 class _StatChip extends StatelessWidget {
   const _StatChip({
     required this.label,
@@ -565,54 +652,60 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: onLongPress,
-          onDoubleTap: onDoubleTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            decoration: BoxDecoration(
-              color: isInterestOnly
-                  ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: isSet ? 0.2 : 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
+      child: Tooltip(
+        message: isSet
+            ? '$label: Double-tap or long-press to clear'
+            : '$label: Tap to set from display',
+        waitDuration: const Duration(milliseconds: 500),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            onDoubleTap: onDoubleTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              decoration: BoxDecoration(
                 color: isInterestOnly
-                    ? const Color(0xFF7B68EE).withValues(alpha: 0.8)
-                    : isSet
-                    ? AppTheme.accentGold.withValues(alpha: 0.6)
-                    : Colors.white.withValues(alpha: 0.2),
-                width: isSet || isInterestOnly ? 1.5 : 1,
+                    ? const Color(0xFF7B68EE).withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: isSet ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isInterestOnly
+                      ? const Color(0xFF7B68EE).withValues(alpha: 0.8)
+                      : isSet
+                      ? AppTheme.accentGold.withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.2),
+                  width: isSet || isInterestOnly ? 1.5 : 1,
+                ),
               ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.7),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: isSet
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isSet
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.5),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -637,6 +730,28 @@ class _SecondaryFieldsRow extends StatelessWidget {
           color: AppTheme.loanButton,
           onTap: () =>
               _setFromDisplay(context, 'Price', (v) => calc.setPrice(value: v)),
+          onLongPress: calc.price != null
+              ? () {
+                  final prev = calc.price;
+                  _clearChipField(
+                    context,
+                    'Price',
+                    () => calc.clearPrice(),
+                    undoAction: () => calc.setPrice(value: prev),
+                  );
+                }
+              : null,
+          onDoubleTap: calc.price != null
+              ? () {
+                  final prev = calc.price;
+                  _clearChipField(
+                    context,
+                    'Price',
+                    () => calc.clearPrice(),
+                    undoAction: () => calc.setPrice(value: prev),
+                  );
+                }
+              : null,
         ),
         Selector<CalculatorProvider, (double?, double?)>(
           selector: (_, calc) => (calc.downPayment, calc.downPaymentPercentage),
@@ -651,6 +766,28 @@ class _SecondaryFieldsRow extends StatelessWidget {
                 'Down Pmt',
                 (v) => calc.setDownPayment(value: v),
               ),
+              onLongPress: downPayment != null
+                  ? () {
+                      final prev = downPayment;
+                      _clearChipField(
+                        context,
+                        'Down Payment',
+                        () => calc.clearDownPayment(),
+                        undoAction: () => calc.setDownPayment(value: prev),
+                      );
+                    }
+                  : null,
+              onDoubleTap: downPayment != null
+                  ? () {
+                      final prev = downPayment;
+                      _clearChipField(
+                        context,
+                        'Down Payment',
+                        () => calc.clearDownPayment(),
+                        undoAction: () => calc.setDownPayment(value: prev),
+                      );
+                    }
+                  : null,
               subtitle: downPaymentPct != null
                   ? CurrencyFormatter.formatPercent(downPaymentPct, decimals: 2)
                   : null,
@@ -666,6 +803,28 @@ class _SecondaryFieldsRow extends StatelessWidget {
             'Tax/yr',
             (v) => calc.setPropertyTax(value: v),
           ),
+          onLongPress: calc.propertyTax != null
+              ? () {
+                  final prev = calc.propertyTax;
+                  _clearChipField(
+                    context,
+                    'Tax',
+                    () => calc.clearPropertyTax(),
+                    undoAction: () => calc.setPropertyTax(value: prev),
+                  );
+                }
+              : null,
+          onDoubleTap: calc.propertyTax != null
+              ? () {
+                  final prev = calc.propertyTax;
+                  _clearChipField(
+                    context,
+                    'Tax',
+                    () => calc.clearPropertyTax(),
+                    undoAction: () => calc.setPropertyTax(value: prev),
+                  );
+                }
+              : null,
         ),
         _RowChip(
           label: 'Ins',
@@ -676,6 +835,28 @@ class _SecondaryFieldsRow extends StatelessWidget {
             'Ins/yr',
             (v) => calc.setHomeInsurance(value: v),
           ),
+          onLongPress: calc.homeInsurance != null
+              ? () {
+                  final prev = calc.homeInsurance;
+                  _clearChipField(
+                    context,
+                    'Insurance',
+                    () => calc.clearHomeInsurance(),
+                    undoAction: () => calc.setHomeInsurance(value: prev),
+                  );
+                }
+              : null,
+          onDoubleTap: calc.homeInsurance != null
+              ? () {
+                  final prev = calc.homeInsurance;
+                  _clearChipField(
+                    context,
+                    'Insurance',
+                    () => calc.clearHomeInsurance(),
+                    undoAction: () => calc.setHomeInsurance(value: prev),
+                  );
+                }
+              : null,
         ),
         _RowChip(
           label: 'HOA',
@@ -686,6 +867,28 @@ class _SecondaryFieldsRow extends StatelessWidget {
             'HOA/mo',
             (v) => calc.setMonthlyExpenses(value: v),
           ),
+          onLongPress: calc.monthlyExpenses != null
+              ? () {
+                  final prev = calc.monthlyExpenses;
+                  _clearChipField(
+                    context,
+                    'HOA',
+                    () => calc.clearMonthlyExpenses(),
+                    undoAction: () => calc.setMonthlyExpenses(value: prev),
+                  );
+                }
+              : null,
+          onDoubleTap: calc.monthlyExpenses != null
+              ? () {
+                  final prev = calc.monthlyExpenses;
+                  _clearChipField(
+                    context,
+                    'HOA',
+                    () => calc.clearMonthlyExpenses(),
+                    undoAction: () => calc.setMonthlyExpenses(value: prev),
+                  );
+                }
+              : null,
         ),
       ],
     );
@@ -718,6 +921,8 @@ class _RowChip extends StatelessWidget {
     required this.value,
     required this.color,
     required this.onTap,
+    this.onLongPress,
+    this.onDoubleTap,
     this.subtitle,
   });
 
@@ -725,6 +930,8 @@ class _RowChip extends StatelessWidget {
   final double? value;
   final Color color;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDoubleTap;
   final String? subtitle;
 
   @override
@@ -735,54 +942,62 @@ class _RowChip extends StatelessWidget {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: hasValue
-                    ? color.withValues(alpha: isDark ? 0.15 : 0.1)
-                    : (isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w500,
-                      color: hasValue ? color : Colors.grey,
-                    ),
-                  ),
-                  Text(
-                    hasValue
-                        ? CurrencyFormatter.formatCompactCurrency(value)
-                        : '--',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: hasValue
-                          ? (isDark ? Colors.white : Colors.black87)
-                          : Colors.grey,
-                    ),
-                  ),
-                  if (subtitle != null)
+        child: Tooltip(
+          message: hasValue
+              ? '$label: Double-tap or long-press to clear'
+              : '$label: Tap to set from display',
+          waitDuration: const Duration(milliseconds: 500),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              onLongPress: onLongPress,
+              onDoubleTap: onDoubleTap,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: hasValue
+                      ? color.withValues(alpha: isDark ? 0.15 : 0.1)
+                      : (isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Text(
-                      subtitle!,
+                      label,
                       style: TextStyle(
-                        fontSize: 8,
+                        fontSize: 9,
                         fontWeight: FontWeight.w500,
-                        color: color.withValues(alpha: 0.8),
+                        color: hasValue ? color : Colors.grey,
                       ),
                     ),
-                ],
+                    Text(
+                      hasValue
+                          ? CurrencyFormatter.formatCompactCurrency(value)
+                          : '--',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: hasValue
+                            ? (isDark ? Colors.white : Colors.black87)
+                            : Colors.grey,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w500,
+                          color: color.withValues(alpha: 0.8),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
