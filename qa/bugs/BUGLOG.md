@@ -215,3 +215,7 @@ Not covered live: Comparison (needs 2 history entries; widget + golden tests onl
   = |Δ total cost| / |Δ payment|, which for same-amount/same-term loans always equals the term (shows "360.0"). With no
   upfront-cost data in history entries it carries no information; consider hiding it until points/fees are recorded.
 - Still not live-verified on the rebuild: B20 (share scroll) and B23 (balloon year) — covered by regression tests only.
+
+### Round 2h
+- B23 verified live on the rebuilt build: 40 yrs on a 30-yr loan now shows "Balloon year must be before the end of the loan term (30 years)" and no result card.
+- B20 (Share dialog scroll) could not be re-verified live: the harness cannot shrink the page viewport (resize_window left innerHeight at 950). Covered by `b20_share_dialog_scroll_test` (fails pre-fix).
