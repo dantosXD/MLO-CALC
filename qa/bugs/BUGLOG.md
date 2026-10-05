@@ -180,3 +180,14 @@ Live-verified OK: B19/B20 share down_payment token ($90,000) and clean message; 
 (month 2 interest $1,948.24 ✓), extra-principal card (+$100/mo → 3.4 yrs, $62.9k saved); min income $97,518.86
 = PITI×12/0.28 ✓.
 Observation (unchanged): Min Income overwrites the user's Annual Income field with the computed value.
+
+### Round 2e (live: Analysis, ARM wizard, History, Loan Programs)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B23 | Balloon calculator accepts a balloon year beyond the loan term (40 yrs on a 30-yr loan → "$0.00 after 40 years") | P3 | ✅ FIXED (`b23_balloon_years_test`) |
+| B24 | Conforming/FHA limits are 2024 values (`ConformingLoanLimits`: $766,550 / $1,149,825; Loan Programs shows "Max Loan $767K") while the app date is 2026 | P2 | ⚠️ NOT CHANGED — regulatory numbers; needs confirmed current FHFA/HUD figures from the owner |
+
+Live-verified OK: balloon balance 7 yrs = $325,499.05 (hand calc ≈ $325.5k ✓); ARM wizard payment $2,484.92 on
+$450k/5.25%/30y ✓ and schedule renders; History lists the calculation with correct summary; Loan Programs list +
+New Program editor shows range errors for 150% / -5%.
+Not covered: Workspace Dashboard, PDF report, Closing Costs sheet, APR estimator, Future Value, Comparison.

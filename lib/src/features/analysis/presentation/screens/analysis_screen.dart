@@ -174,18 +174,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                 final years = double.tryParse(
                                   _balloonYearsController.text,
                                 );
-                                if (years != null && years > 0) {
+                                final balloonError = balloonYearsError(
+                                  years,
+                                  calculatorProvider.termYears!,
+                                );
+                                if (balloonError == null) {
                                   setState(() {
                                     _balloonBalance = calculatorProvider
-                                        .calculateRemainingBalance(years);
+                                        .calculateRemainingBalance(years!);
                                   });
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Please enter a valid number of years',
-                                      ),
-                                    ),
+                                    SnackBar(content: Text(balloonError)),
                                   );
                                 }
                               }
@@ -839,14 +839,16 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
   @override
   void didUpdateWidget(covariant _PointsBreakEvenCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentRate != widget.currentRate && widget.currentRate != null) {
+    if (oldWidget.currentRate != widget.currentRate &&
+        widget.currentRate != null) {
       _initReducedRate();
     }
   }
 
   void _initReducedRate() {
     if (widget.currentRate != null && widget.currentRate! > 0.25) {
-      _reducedRateController.text = (widget.currentRate! - 0.25).toStringAsFixed(3);
+      _reducedRateController.text = (widget.currentRate! - 0.25)
+          .toStringAsFixed(3);
     } else {
       _reducedRateController.text = '6.250';
     }
@@ -859,7 +861,11 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
     super.dispose();
   }
 
-  double _calculateMonthlyPayment(double principal, double annualRatePercent, double years) {
+  double _calculateMonthlyPayment(
+    double principal,
+    double annualRatePercent,
+    double years,
+  ) {
     if (principal <= 0 || years <= 0) return 0.0;
     final r = annualRatePercent / 100 / 12;
     final n = years * 12;
@@ -875,7 +881,11 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
   }) async {
     setState(() => _loadingAdvice = true);
     try {
-      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+      final nlpService =
+          Provider.of<NlpSettingsProvider?>(
+            context,
+            listen: false,
+          )?.calculatorService ??
           NLPCalculatorService();
       final result = await nlpService.generatePointsBreakEvenAdvice(
         loanAmount: widget.loanAmount ?? 0,
@@ -898,16 +908,19 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasData = widget.loanAmount != null &&
+    final hasData =
+        widget.loanAmount != null &&
         widget.currentRate != null &&
         widget.termYears != null;
 
     final points = double.tryParse(_pointsController.text) ?? 1.0;
-    final newRate = double.tryParse(_reducedRateController.text) ??
+    final newRate =
+        double.tryParse(_reducedRateController.text) ??
         ((widget.currentRate ?? 6.5) - 0.25);
 
     final pointsCost = (widget.loanAmount ?? 0) * (points / 100);
-    final currentP = widget.currentPayment ??
+    final currentP =
+        widget.currentPayment ??
         _calculateMonthlyPayment(
           widget.loanAmount ?? 0,
           widget.currentRate ?? 0,
@@ -952,7 +965,9 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -974,7 +989,9 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
                   Expanded(
                     child: TextField(
                       controller: _pointsController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
                         labelText: 'Discount Points',
                         suffixText: '%',
@@ -988,7 +1005,9 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
                   Expanded(
                     child: TextField(
                       controller: _reducedRateController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
                         labelText: 'Bought-Down Rate',
                         suffixText: '%',
@@ -1004,7 +1023,9 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.4,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: theme.colorScheme.primary.withValues(alpha: 0.3),
@@ -1028,7 +1049,9 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
                       label: 'Monthly Payment Savings',
                       value: CurrencyFormatter.formatCurrency(monthlySavings),
                       icon: Icons.trending_down,
-                      valueColor: monthlySavings > 0 ? Colors.green : Colors.red,
+                      valueColor: monthlySavings > 0
+                          ? Colors.green
+                          : Colors.red,
                     ),
                     const SizedBox(height: 8),
                     _ResultRow(
@@ -1046,13 +1069,14 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: (monthlySavings > 0 && pointsCost > 0 && !_loadingAdvice)
+                onPressed:
+                    (monthlySavings > 0 && pointsCost > 0 && !_loadingAdvice)
                     ? () => _fetchAdvice(
-                          pointsCost: pointsCost,
-                          monthlySavings: monthlySavings,
-                          breakEvenMonths: breakEvenMonths,
-                          newRate: newRate,
-                        )
+                        pointsCost: pointsCost,
+                        monthlySavings: monthlySavings,
+                        breakEvenMonths: breakEvenMonths,
+                        newRate: newRate,
+                      )
                     : null,
                 icon: _loadingAdvice
                     ? const SizedBox(
@@ -1060,7 +1084,11 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.auto_awesome, size: 16, color: Colors.purple),
+                    : const Icon(
+                        Icons.auto_awesome,
+                        size: 16,
+                        color: Colors.purple,
+                      ),
                 label: const Text('✨ AI Break-Even Insights'),
               ),
               if (_advice != null) ...[
@@ -1086,4 +1114,18 @@ class _PointsBreakEvenCardState extends State<_PointsBreakEvenCard> {
       ),
     );
   }
+}
+
+/// Validation for the balloon-year input; null when valid. A balloon at or after
+/// the loan term is meaningless (balance is already $0).
+@visibleForTesting
+String? balloonYearsError(double? years, double termYears) {
+  if (years == null || years <= 0) {
+    return 'Please enter a valid number of years';
+  }
+  if (years >= termYears) {
+    return 'Balloon year must be before the end of the loan term '
+        '(${termYears.toStringAsFixed(termYears == termYears.roundToDouble() ? 0 : 1)} years)';
+  }
+  return null;
 }
