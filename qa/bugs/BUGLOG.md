@@ -219,3 +219,9 @@ Not covered live: Comparison (needs 2 history entries; widget + golden tests onl
 ### Round 2h
 - B23 verified live on the rebuilt build: 40 yrs on a 30-yr loan now shows "Balloon year must be before the end of the loan term (30 years)" and no result card.
 - B20 (Share dialog scroll) could not be re-verified live: the harness cannot shrink the page viewport (resize_window left innerHeight at 950). Covered by `b20_share_dialog_scroll_test` (fails pre-fix).
+
+### Round 2i (live via Chrome DevTools MCP: viewport/touch emulation)
+- B20 verified live at 1000×500: Share dialog no longer overlaps its action row; content scrolls to the placeholder chips.
+- Chip long-press verified live (touch pointer, 900 ms): popup "Loan Amount: $360,000.00 / Copy / Edit"; Edit loads 360,000 into the display with the toast "Loan Amount loaded to display — edit & tap chip to save".
+- PDF Report verified live: tapping it triggers a `loan-estimate.pdf` blob download (no console errors). Earlier "no response" was just a browser download not visible to the harness.
+- Remaining un-verified: Android APK install/update flow (no connected device; AVDs exist but there is no newer GitHub release APK to update to).
