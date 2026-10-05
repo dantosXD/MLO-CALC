@@ -205,3 +205,13 @@ Observations (unchanged): PDF Report calls `Printing.sharePdf` with no try/catch
 web; nothing visible in automation); automation can only exercise bottom sheets/dialogs after a throwaway click
 (first click after a dismiss is dropped by the harness, not the app).
 Not covered live: Comparison (needs 2 history entries; widget + golden tests only), long-press popup, Android install.
+
+### Round 2g (live on rebuilt release: Comparison, DTI re-check)
+- Comparison (2 history entries, $360k @ 7.0% vs 6.5%): payment diff +$119.65/mo, total cost $862,232.40 vs
+  $819,158.40, interest range $43,074 — all hand-verified ✓; selection state survives returning from the screen.
+- B22 re-verified on the rebuilt build: Min Income $102,646.71 (= $2,395.09 × 12 / 0.28 ✓) and **no** spurious
+  "Housing DTI exceeds limit" banner (it appeared pre-fix).
+- Observation (product call, unchanged — an existing unit test asserts it is non-null): Comparison "Break-even (mo)"
+  = |Δ total cost| / |Δ payment|, which for same-amount/same-term loans always equals the term (shows "360.0"). With no
+  upfront-cost data in history entries it carries no information; consider hiding it until points/fees are recorded.
+- Still not live-verified on the rebuild: B20 (share scroll) and B23 (balloon year) — covered by regression tests only.
