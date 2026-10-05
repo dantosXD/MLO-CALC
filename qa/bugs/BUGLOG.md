@@ -168,3 +168,15 @@ Observation (product call, unchanged): the Rent-vs-Buy "Net Worth Projection" su
 both sides, so both lines can go negative; it is a relative comparison, not absolute net worth.
 Share dialog layout: action row ("Cancel / Save as template / Share") overlaps the placeholder-chip list at
 1827x950 — not fixed this round.
+
+### Round 2d (live: Share, Amortization, Qualification)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B20 | Share dialog content was a non-scrolling Column: on short windows content ran under the action row / past the card (live: chips overlapped "Cancel / Save as template / Share") | P2 | ✅ FIXED (`b20_share_dialog_scroll_test`, fails pre-fix) |
+| B21 | Amortization chart y-axis repeats labels ("$3k $3k $2k $2k $1k $1k $0k") on small loans | P3 | ✅ FIXED (`b21_amortization_axis_labels_test`) |
+| B22 | After "Min Income", Qualification shows "Housing DTI 28.0% exceeds 28.00% limit" — min income lands exactly on the limit and float noise (28.000000000000004 > 28) trips the warning; 89% of sampled payments reproduce | P2 | ✅ FIXED (`b22_dti_boundary_test`, 63,456 spurious warnings pre-fix → 0) |
+
+Live-verified OK: B19/B20 share down_payment token ($90,000) and clean message; amortization schedule math
+(month 2 interest $1,948.24 ✓), extra-principal card (+$100/mo → 3.4 yrs, $62.9k saved); min income $97,518.86
+= PITI×12/0.28 ✓.
+Observation (unchanged): Min Income overwrites the user's Annual Income field with the computed value.

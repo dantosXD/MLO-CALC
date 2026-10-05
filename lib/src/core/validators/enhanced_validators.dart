@@ -174,6 +174,9 @@ class DtiValidator {
     return null;
   }
 
+  /// Min-income results sit exactly on the limit; ignore float noise (28.000000000000004 > 28).
+  static const double _dtiEpsilon = 1e-6;
+
   /// Get all DTI warnings
   static List<ValidationWarning> getDtiWarnings({
     required double frontEndDti,
@@ -184,7 +187,7 @@ class DtiValidator {
     final warnings = <ValidationWarning>[];
 
     // Check front-end
-    if (frontEndLimit != null && frontEndDti > frontEndLimit) {
+    if (frontEndLimit != null && frontEndDti > frontEndLimit + _dtiEpsilon) {
       warnings.add(
         ValidationWarning(
           message:
@@ -197,7 +200,7 @@ class DtiValidator {
     }
 
     // Check back-end
-    if (backEndLimit != null && backEndDti > backEndLimit) {
+    if (backEndLimit != null && backEndDti > backEndLimit + _dtiEpsilon) {
       warnings.add(
         ValidationWarning(
           message:
