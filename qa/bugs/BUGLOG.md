@@ -191,3 +191,17 @@ Live-verified OK: balloon balance 7 yrs = $325,499.05 (hand calc ≈ $325.5k ✓
 $450k/5.25%/30y ✓ and schedule renders; History lists the calculation with correct summary; Loan Programs list +
 New Program editor shows range errors for 150% / -5%.
 Not covered: Workspace Dashboard, PDF report, Closing Costs sheet, APR estimator, Future Value, Comparison.
+
+### Round 2f (live: Closing Costs, APR, Future Value, PDF, Workspace Dashboard)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B25 | History entry for a solved interest rate (and term) dropped its payment input → Workspace "Recent Activity" showed "$360,000 loan at $0.00/mo → 6.500%" | P2 | ✅ FIXED (`b25_rate_history_payment_test`, fails pre-fix) |
+
+Live-verified OK: Closing Costs "Estimate" (total $5,870, cash to close $95,870 = $90,000 + fees, reflected in the
+Analysis summary); APR estimate 6.621% for $4,500 fees on $360k @ 6.5% (plausible); Future Value $521,673.33 =
+$450,000 × 1.03^5 ✓; Workspace Dashboard renders pinned tools/templates/recent activity; session (loan inputs)
+restores after a full page reload.
+Observations (unchanged): PDF Report calls `Printing.sharePdf` with no try/catch or feedback (browser download on
+web; nothing visible in automation); automation can only exercise bottom sheets/dialogs after a throwaway click
+(first click after a dismiss is dropped by the harness, not the app).
+Not covered live: Comparison (needs 2 history entries; widget + golden tests only), long-press popup, Android install.
