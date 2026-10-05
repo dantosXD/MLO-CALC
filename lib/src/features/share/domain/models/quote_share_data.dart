@@ -128,9 +128,17 @@ class QuoteShareData {
     tokens['price'] = price != null
         ? CurrencyFormatter.formatCurrency(price, showDecimals: false)
         : '';
-    tokens['down_payment'] = downPayment != null
+    // Stored down payment is a percent when < 100 (see LoanQuoteState).
+    tokens['down_payment'] = downPayment == null
+        ? ''
+        : downPayment! >= 100
         ? CurrencyFormatter.formatCurrency(downPayment, showDecimals: false)
-        : '';
+        : price != null
+        ? CurrencyFormatter.formatCurrency(
+            price! * downPayment! / 100,
+            showDecimals: false,
+          )
+        : '${CurrencyFormatter.formatNumber(downPayment, decimals: 2)}%';
 
     // MLO identity tokens (populated from MloProfileProvider if provided)
     tokens['mlo_name'] = mloTokens?['mlo_name'] ?? '';

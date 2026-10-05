@@ -533,7 +533,7 @@ class _DisplayCard extends StatelessWidget {
       setter(parsed);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$label = ${CurrencyFormatter.formatCurrency(parsed)}'),
+          content: Text('$label = ${formatAssignedValue(label, parsed)}'),
           duration: const Duration(milliseconds: 800),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
@@ -829,6 +829,14 @@ class _SecondaryFieldsRow extends StatelessWidget {
             return _RowChip(
               label: 'DnPmt',
               value: downPayment,
+              // Stored value is a percent when < 100; show the dollar amount.
+              valueText: downPayment != null && downPayment < 100
+                  ? (calc.price != null
+                        ? CurrencyFormatter.formatCompactCurrency(
+                            calc.price! * downPayment / 100,
+                          )
+                        : CurrencyFormatter.formatPercent(downPayment, decimals: 2))
+                  : null,
               color: AppTheme.successGreen,
               onTap: () => _setFromDisplay(
                 context,
@@ -974,7 +982,7 @@ class _SecondaryFieldsRow extends StatelessWidget {
       setter(parsed);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$label = ${CurrencyFormatter.formatCurrency(parsed)}'),
+          content: Text('$label = ${formatAssignedValue(label, parsed)}'),
           duration: const Duration(milliseconds: 800),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
@@ -982,6 +990,21 @@ class _SecondaryFieldsRow extends StatelessWidget {
       );
     }
   }
+}
+
+/// Confirmation text for a value assigned from the display: rate and term are
+/// not dollars, and a down payment under 100 is a percent (see LoanQuoteState).
+@visibleForTesting
+String formatAssignedValue(String label, double v) {
+  switch (label) {
+    case 'Rate':
+      return CurrencyFormatter.formatPercent(v, decimals: 3);
+    case 'Term':
+      return '${CurrencyFormatter.formatNumber(v, decimals: v == v.roundToDouble() ? 0 : 1)} yrs';
+    case 'Down Pmt':
+      if (v < 100) return CurrencyFormatter.formatPercent(v, decimals: 2);
+  }
+  return CurrencyFormatter.formatCurrency(v);
 }
 
 class _RowChip extends StatelessWidget {
@@ -993,10 +1016,12 @@ class _RowChip extends StatelessWidget {
     this.onLongPress,
     this.onDoubleTap,
     this.subtitle,
+    this.valueText,
   });
 
   final String label;
   final double? value;
+  final String? valueText;
   final Color color;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -1046,7 +1071,8 @@ class _RowChip extends StatelessWidget {
                     ),
                     Text(
                       hasValue
-                          ? CurrencyFormatter.formatCompactCurrency(value)
+                          ? (valueText ??
+                                CurrencyFormatter.formatCompactCurrency(value))
                           : '--',
                       style: TextStyle(
                         fontSize: 10,

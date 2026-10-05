@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:provider/provider.dart';
@@ -99,6 +98,19 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
       _result = _calculator.calculate(inputs);
     });
     _updateSpotCache(_result!);
+  }
+
+  /// One label per year, thinned to at most ~10 labels on long horizons.
+  static double _yearTickInterval(int years) =>
+      years <= 10 ? 1 : (years / 10).ceilToDouble();
+
+  /// "$74K" / "-$1.2M" so axis labels never wrap inside the reserved width.
+  static String _compactAxis(double v) {
+    final a = v.abs();
+    final sign = v < 0 ? '-' : '';
+    if (a >= 1e6) return '$sign\$${(a / 1e6).toStringAsFixed(1)}M';
+    if (a >= 1e3) return '$sign\$${(a / 1e3).toStringAsFixed(0)}K';
+    return '$sign\$${a.toStringAsFixed(0)}';
   }
 
   void _updateSpotCache(RentVsBuyCalculation result) {
@@ -562,10 +574,10 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                         reservedSize: 60,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            CurrencyFormatter.formatCompactCurrency(
-                              value,
-                              maxDigits: 7,
-                            ),
+                            _compactAxis(value),
+                            maxLines: 1,
+                            softWrap: false,
+                            style: const TextStyle(fontSize: 10),
                           );
                         },
                       ),
@@ -573,6 +585,9 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        // Whole-year ticks only; auto interval put several
+                        // fractional ticks on each year ("Yr 1" repeated).
+                        interval: _yearTickInterval(_buyingSpots.length),
                         getTitlesWidget: (value, meta) {
                           return Text('Yr ${value.toInt()}');
                         },

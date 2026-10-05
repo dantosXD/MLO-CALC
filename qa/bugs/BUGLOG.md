@@ -153,3 +153,18 @@ Live-verified OK: B14 display contrast fixed; Settings profile save; Voice/Text 
 Rent vs Buy defaults + Calculate renders verdict; Qualification/Analysis/History render, no console errors.
 Not verifiable here: scrolling below the fold (automation wheel/keys did not scroll Flutter lists; the
 embedded browser viewport is short), Share dialog, modern-layout toggle, Android install flow.
+
+### Round 2c (live: Rent vs Buy, Settings, modern layout, Share)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B17 | Modern layout: DnPmt chip shows "$20.00" for a 20% entry; assignment toast says "Rate = $6.50", "Term = $30.00" | P3 | ✅ FIXED (`b17_modern_chip_units_test`) |
+| B18 | Rent-vs-Buy net-worth chart: y-labels wrapped/garbled ("$74,350.\n71"), x-axis repeated "Yr 1" ×5 (fractional ticks) | P3 | ✅ FIXED + verified live (widget test fails pre-fix) |
+| B19 | Share quote: empty profile fields leave dangling " |" ("Jane \| NMLS# 12ab \|"); `{{down_payment}}` renders "$20" for a 20% down entry | P3 | ✅ FIXED (`b19_share_render_cleanup_test`; down_payment token converted to dollars) |
+
+Live-verified: modern layout + dark mode render, chip assign/double-tap clear/undo, Settings sections incl.
+Check for Updates ("latest version"), Voice/Text sheet, Rent-vs-Buy chart fix.
+Not verifiable via automation: long-press popup (covered by widget test only).
+Observation (product call, unchanged): the Rent-vs-Buy "Net Worth Projection" subtracts cumulative spending from
+both sides, so both lines can go negative; it is a relative comparison, not absolute net worth.
+Share dialog layout: action row ("Cancel / Save as template / Share") overlaps the placeholder-chip list at
+1827x950 — not fixed this round.
