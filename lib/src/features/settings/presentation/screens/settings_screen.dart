@@ -42,6 +42,21 @@ class SettingsScreen extends StatelessWidget {
 
 // ─── Section header ────────────────────────────────────────────────────────
 
+/// Returns an error message for a malformed NMLS# / email, or null if both are
+/// blank or well-formed. Profile values are printed on shared quotes.
+@visibleForTesting
+String? validateMloProfile({required String nmls, required String email}) {
+  final n = nmls.trim();
+  final e = email.trim();
+  if (n.isNotEmpty && !RegExp(r'^\d{1,10}$').hasMatch(n)) {
+    return 'NMLS # must be digits only';
+  }
+  if (e.isNotEmpty && !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e)) {
+    return 'Enter a valid email address';
+  }
+  return null;
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.title, {this.subtitle});
 
@@ -118,6 +133,20 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
   }
 
   Future<void> _save() async {
+    final error = validateMloProfile(
+      nmls: _nmlsCtrl.text,
+      email: _emailCtrl.text,
+    );
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
     await context.read<MloProfileProvider>().saveProfile(
       name: _nameCtrl.text.trim(),
       nmls: _nmlsCtrl.text.trim(),

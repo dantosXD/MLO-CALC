@@ -142,3 +142,14 @@ Baseline: analyze clean, 354/354 tests. After fixes: analyze clean, **362/362**.
 Not changed (judgment): `isNewer` ignores pre-release suffix (1.2.0-rc1 == 1.2.0); asset with null name
 surfaces as generic "Connection failed". Live pass covered release web build smoke only (calculator
 inputs, chips); modern layout, NLP sheet, Qualification/Analysis redesign not driven live this round.
+
+### Round 2b (live pass on fixed build, real Chrome)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B15 | Settings profile accepts non-numeric NMLS ("12ab") and malformed email, printed on shared quotes | P3 | ✅ FIXED (`b15_mlo_profile_validation_test`) |
+| B16 | Voice/Text sheet: Enter inserts a newline (multiline field) instead of submitting; send button/suggestion hiding never update while typing | P2 | ✅ FIXED (`b16_nlp_sheet_typing_test`, verified fails pre-fix) |
+
+Live-verified OK: B14 display contrast fixed; Settings profile save; Voice/Text sheet opens + dismisses;
+Rent vs Buy defaults + Calculate renders verdict; Qualification/Analysis/History render, no console errors.
+Not verifiable here: scrolling below the fold (automation wheel/keys did not scroll Flutter lists; the
+embedded browser viewport is short), Share dialog, modern-layout toggle, Android install flow.

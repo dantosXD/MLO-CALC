@@ -398,6 +398,11 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
             ),
             maxLines: 2,
             minLines: 1,
+            // Multiline keyboard would make Enter insert a newline instead of submitting.
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.send,
+            // Rebuild so the send button appears and suggestions hide while typing.
+            onChanged: (_) => setState(() {}),
             onSubmitted: (val) {
               if (val.trim().isNotEmpty && !_isProcessing) {
                 _processQuery(val);
