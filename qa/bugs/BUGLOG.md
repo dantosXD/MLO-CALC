@@ -225,3 +225,9 @@ Not covered live: Comparison (needs 2 history entries; widget + golden tests onl
 - Chip long-press verified live (touch pointer, 900 ms): popup "Loan Amount: $360,000.00 / Copy / Edit"; Edit loads 360,000 into the display with the toast "Loan Amount loaded to display — edit & tap chip to save".
 - PDF Report verified live: tapping it triggers a `loan-estimate.pdf` blob download (no console errors). Earlier "no response" was just a browser download not visible to the harness.
 - Remaining un-verified: Android APK install/update flow (no connected device; AVDs exist but there is no newer GitHub release APK to update to).
+
+### Round 2j (Android emulator, Medium_Phone_API_36.1, local debug build versioned 1.0.0 — not committed)
+- Launch → "Update Available — Version 1.0.1 is ready to install" with release notes, Later / Update Now ✓.
+- Update Now with "Install unknown apps" not granted → app opens the system "Allow from this source" screen for MLO-Calc ✓; pressing Back returns to the app with a clear dialog (Dismiss / Open Settings) ✓.
+- Copy nit (P3, unchanged): that dialog is titled "Download Failed" although nothing was downloaded; the cause is the missing install permission. Consider "Permission needed".
+- NOT done on purpose: granting the install permission and installing the 70 MB release APK — that changes a system security setting; left for the owner on a real device.
