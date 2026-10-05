@@ -12,7 +12,9 @@ import 'package:provider/provider.dart';
 void main() {
   setUpAll(() async => configureDependencies());
 
-  testWidgets('Share dialog on a short window scrolls instead of overflowing', (t) async {
+  testWidgets('Share dialog on a short window scrolls instead of overflowing', (
+    t,
+  ) async {
     t.view.physicalSize = const Size(1000, 500);
     t.view.devicePixelRatio = 1.0;
     addTearDown(t.view.resetPhysicalSize);

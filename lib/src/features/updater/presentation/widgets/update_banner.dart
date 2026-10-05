@@ -13,7 +13,8 @@ class UpdateBanner extends StatelessWidget {
     return Consumer<UpdateNotifier>(
       builder: (context, notifier, _) {
         final isDownloading = notifier.state == UpdateState.downloading;
-        final showBanner = (notifier.state == UpdateState.updateAvailable &&
+        final showBanner =
+            (notifier.state == UpdateState.updateAvailable &&
                 notifier.dialogDismissed) ||
             isDownloading;
 

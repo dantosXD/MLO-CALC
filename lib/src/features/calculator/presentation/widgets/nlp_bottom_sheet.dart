@@ -94,7 +94,9 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
               _soundLevel = 0.0;
             });
             // If we have words and haven't processed yet, analyze them
-            if (_controller.text.trim().isNotEmpty && _extractedRequest == null && !_isProcessing) {
+            if (_controller.text.trim().isNotEmpty &&
+                _extractedRequest == null &&
+                !_isProcessing) {
               _processQuery();
             }
           }
@@ -271,9 +273,9 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
             children: [
               Text(
                 'Voice & Smart Assistant',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               Container(
@@ -335,11 +337,13 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
                     backgroundColor: _isListening
                         ? AppConstants.micListeningColor
                         : (_isProcessing
-                            ? AppConstants.micProcessingColor
-                            : Theme.of(context).colorScheme.primary),
+                              ? AppConstants.micProcessingColor
+                              : Theme.of(context).colorScheme.primary),
                     foregroundColor: Colors.white,
                     onPressed: _isProcessing ? null : _toggleListening,
-                    tooltip: _isListening ? 'Stop listening' : 'Start voice input',
+                    tooltip: _isListening
+                        ? 'Stop listening'
+                        : 'Start voice input',
                     child: _isProcessing
                         ? const SizedBox(
                             width: 24,
@@ -420,7 +424,8 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
-                  color: _status!.contains('Error') || _status!.contains('offline')
+                  color:
+                      _status!.contains('Error') || _status!.contains('offline')
                       ? Colors.orange.shade800
                       : Theme.of(context).colorScheme.primary,
                 ),
@@ -481,21 +486,22 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: [
-                'Change term to 15 years',
-                'What if rate was 6.0%?',
-                'Add 20% down payment',
-              ].map((s) {
-                return ActionChip(
-                  visualDensity: VisualDensity.compact,
-                  avatar: const Icon(Icons.edit_outlined, size: 12),
-                  label: Text(s, style: const TextStyle(fontSize: 11)),
-                  onPressed: () {
-                    _controller.text = s;
-                    _processQuery(s);
-                  },
-                );
-              }).toList(),
+              children:
+                  [
+                    'Change term to 15 years',
+                    'What if rate was 6.0%?',
+                    'Add 20% down payment',
+                  ].map((s) {
+                    return ActionChip(
+                      visualDensity: VisualDensity.compact,
+                      avatar: const Icon(Icons.edit_outlined, size: 12),
+                      label: Text(s, style: const TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        _controller.text = s;
+                        _processQuery(s);
+                      },
+                    );
+                  }).toList(),
             ),
             const SizedBox(height: 8),
           ],
@@ -506,12 +512,18 @@ class _NlpBottomSheetState extends State<NlpBottomSheet> {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 16, color: Colors.blueGrey),
+                  const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.blueGrey,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -626,7 +638,11 @@ class _ExtractedPreviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.check_circle_outline, size: 18, color: theme.colorScheme.primary),
+              Icon(
+                Icons.check_circle_outline,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 6),
               Text(
                 _formatAction(request.action),

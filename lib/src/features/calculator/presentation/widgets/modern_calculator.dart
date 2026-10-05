@@ -301,7 +301,8 @@ class _DisplayCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () => calc.cycleDisplayMode(),
-                  onLongPress: () => _showPaymentOptions(context, calc, display),
+                  onLongPress: () =>
+                      _showPaymentOptions(context, calc, display),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -396,7 +397,10 @@ class _DisplayCard extends StatelessWidget {
                           _showChipOptions(
                             context,
                             'Rate',
-                            CurrencyFormatter.formatPercent(calc.interestRate, decimals: 3),
+                            CurrencyFormatter.formatPercent(
+                              calc.interestRate,
+                              decimals: 3,
+                            ),
                             calc.interestRate!,
                             display,
                           );
@@ -657,18 +661,24 @@ void _showChipOptions(
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      const PopupMenuItem<String>(value: 'copy', child: ListTile(
-        dense: true,
-        leading: Icon(Icons.copy, size: 20),
-        title: Text('Copy'),
-        contentPadding: EdgeInsets.zero,
-      )),
-      const PopupMenuItem<String>(value: 'edit', child: ListTile(
-        dense: true,
-        leading: Icon(Icons.edit, size: 20),
-        title: Text('Edit'),
-        contentPadding: EdgeInsets.zero,
-      )),
+      const PopupMenuItem<String>(
+        value: 'copy',
+        child: ListTile(
+          dense: true,
+          leading: Icon(Icons.copy, size: 20),
+          title: Text('Copy'),
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+      const PopupMenuItem<String>(
+        value: 'edit',
+        child: ListTile(
+          dense: true,
+          leading: Icon(Icons.edit, size: 20),
+          title: Text('Edit'),
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
     ],
   ).then((action) {
     if (action == 'copy') {
@@ -676,24 +686,30 @@ void _showChipOptions(
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content: Text('$label copied: $formattedValue'),
-            duration: const Duration(milliseconds: 1500),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          ));
+          ..showSnackBar(
+            SnackBar(
+              content: Text('$label copied: $formattedValue'),
+              duration: const Duration(milliseconds: 1500),
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+            ),
+          );
       }
     } else if (action == 'edit') {
       display.setDisplayValue(rawValue.toString());
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content: Text('$label loaded to display — edit & tap chip to save'),
-            duration: const Duration(milliseconds: 2500),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          ));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                '$label loaded to display — edit & tap chip to save',
+              ),
+              duration: const Duration(milliseconds: 2500),
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+            ),
+          );
       }
     }
   });
@@ -835,7 +851,10 @@ class _SecondaryFieldsRow extends StatelessWidget {
                         ? CurrencyFormatter.formatCompactCurrency(
                             calc.price! * downPayment / 100,
                           )
-                        : CurrencyFormatter.formatPercent(downPayment, decimals: 2))
+                        : CurrencyFormatter.formatPercent(
+                            downPayment,
+                            decimals: 2,
+                          ))
                   : null,
               color: AppTheme.successGreen,
               onTap: () => _setFromDisplay(

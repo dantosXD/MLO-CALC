@@ -136,7 +136,9 @@ class AnimatedDisplay extends StatelessWidget {
                               ],
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0),
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.3 : 0,
+                                  ),
                                   offset: const Offset(0, 2),
                                   blurRadius: 4,
                                 ),

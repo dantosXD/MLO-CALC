@@ -21,18 +21,21 @@ void main() {
     expect(formatAssignedValue('Price', 450000), r'$450,000.00');
   });
 
-  testWidgets('percent down payment chip shows dollars, not a bare 20.00', (t) async {
+  testWidgets('percent down payment chip shows dollars, not a bare 20.00', (
+    t,
+  ) async {
     t.view.physicalSize = const Size(1080, 2400);
     t.view.devicePixelRatio = 1.0;
     addTearDown(t.view.resetPhysicalSize);
-    final calc = CalculatorProvider(
-      coreCalculationService: serviceLocator<CoreCalculationService>(),
-      amortizationService: serviceLocator<AmortizationService>(),
-      qualificationService: serviceLocator<QualificationService>(),
-      persistenceService: serviceLocator<CalculatorPersistenceService>(),
-    )
-      ..setPrice(value: 450000)
-      ..setDownPayment(value: 20);
+    final calc =
+        CalculatorProvider(
+            coreCalculationService: serviceLocator<CoreCalculationService>(),
+            amortizationService: serviceLocator<AmortizationService>(),
+            qualificationService: serviceLocator<QualificationService>(),
+            persistenceService: serviceLocator<CalculatorPersistenceService>(),
+          )
+          ..setPrice(value: 450000)
+          ..setDownPayment(value: 20);
     await t.pumpWidget(
       MultiProvider(
         providers: [

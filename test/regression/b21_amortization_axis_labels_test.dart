@@ -3,9 +3,15 @@ import 'package:loan_ranger/src/features/amortization/presentation/widgets/amort
 
 void main() {
   test('sub-\$1k tick spacing keeps labels distinct', () {
-    final labels = [3000.0, 2500.0, 2000.0, 1500.0, 1000.0, 500.0, 0.0]
-        .map((v) => formatAxisThousands(v, 500))
-        .toList();
+    final labels = [
+      3000.0,
+      2500.0,
+      2000.0,
+      1500.0,
+      1000.0,
+      500.0,
+      0.0,
+    ].map((v) => formatAxisThousands(v, 500)).toList();
     expect(labels.toSet().length, labels.length);
   });
   test('large spacing stays whole-k', () {

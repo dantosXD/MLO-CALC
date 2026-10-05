@@ -169,7 +169,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen> {
               breakEvenYear: (_result!.breakEvenMonths / 12).ceil(),
               netWealthDifference: _result!.projections.isNotEmpty
                   ? (_result!.projections.last.netWorthBuying -
-                      _result!.projections.last.netWorthRenting)
+                        _result!.projections.last.netWorthRenting)
                   : (_result!.monthlySavings * _analysisYears * 12),
               analysisYears: _analysisYears,
             ),
@@ -892,7 +892,11 @@ class _AiRentVsBuyMemoCardState extends State<_AiRentVsBuyMemoCard> {
       _expanded = true;
     });
     try {
-      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+      final nlpService =
+          Provider.of<NlpSettingsProvider?>(
+            context,
+            listen: false,
+          )?.calculatorService ??
           NLPCalculatorService();
       final result = await nlpService.generateRentVsBuyMemo(
         homePrice: widget.homePrice,
@@ -973,7 +977,9 @@ class _AiRentVsBuyMemoCardState extends State<_AiRentVsBuyMemoCard> {
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: _memo!));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Memo copied to clipboard')),
+                              const SnackBar(
+                                content: Text('Memo copied to clipboard'),
+                              ),
                             );
                           },
                         ),
@@ -1002,9 +1008,7 @@ class _AiRentVsBuyMemoCardState extends State<_AiRentVsBuyMemoCard> {
               else if (_memo != null)
                 Text(
                   _memo!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
             ],
           ],

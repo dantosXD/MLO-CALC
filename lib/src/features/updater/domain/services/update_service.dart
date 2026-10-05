@@ -16,9 +16,9 @@ class UpdateService {
     http.Client? httpClient,
     String currentVersion = '0.0.0',
     Future<String> Function()? currentVersionProvider,
-  })  : _client = httpClient ?? http.Client(),
-        _currentVersion = currentVersion,
-        _currentVersionProvider = currentVersionProvider;
+  }) : _client = httpClient ?? http.Client(),
+       _currentVersion = currentVersion,
+       _currentVersionProvider = currentVersionProvider;
 
   static const _apiUrl =
       'https://api.github.com/repos/dantosXD/MLO-CALC/releases/latest';
@@ -28,8 +28,9 @@ class UpdateService {
   final Future<String> Function()? _currentVersionProvider;
 
   static bool isNewer(String remoteTag, String current) {
-    final remote =
-        remoteTag.startsWith('v') ? remoteTag.substring(1) : remoteTag;
+    final remote = remoteTag.startsWith('v')
+        ? remoteTag.substring(1)
+        : remoteTag;
     final r = _parseSemver(remote);
     final c = _parseSemver(current);
     for (var i = 0; i < 3; i++) {
@@ -113,14 +114,16 @@ class UpdateService {
     }
   }
 
-  static const MethodChannel _installerChannel =
-      MethodChannel('com.loanranger.calculator/package_installer');
+  static const MethodChannel _installerChannel = MethodChannel(
+    'com.loanranger.calculator/package_installer',
+  );
 
   Future<bool> canInstallApk() async {
     if (kIsWeb || !Platform.isAndroid) return true;
     try {
-      final allowed =
-          await _installerChannel.invokeMethod<bool>('canRequestPackageInstalls');
+      final allowed = await _installerChannel.invokeMethod<bool>(
+        'canRequestPackageInstalls',
+      );
       return allowed ?? true;
     } catch (_) {
       return true;
@@ -180,7 +183,9 @@ class UpdateService {
         );
         if (success == true) return;
       } catch (e) {
-        debugPrint('UpdateService: Native install failed: $e, falling back to OpenFile');
+        debugPrint(
+          'UpdateService: Native install failed: $e, falling back to OpenFile',
+        );
       }
     }
 
@@ -197,4 +202,3 @@ class UpdateService {
     }
   }
 }
-

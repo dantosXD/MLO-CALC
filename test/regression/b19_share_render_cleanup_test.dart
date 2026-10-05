@@ -11,14 +11,18 @@ void main() {
   });
 
   test('empty middle token collapses separators', () {
-    final out = ShareTemplateRenderer.render(
-      '{{a}} | {{b}} | {{c}}',
-      {'a': 'x', 'b': '', 'c': 'z'},
-    );
+    final out = ShareTemplateRenderer.render('{{a}} | {{b}} | {{c}}', {
+      'a': 'x',
+      'b': '',
+      'c': 'z',
+    });
     expect(out, 'x | z');
   });
 
   test('real pipes inside values are kept', () {
-    expect(ShareTemplateRenderer.render('{{a}} | {{b}}', {'a': 'x', 'b': 'y'}), 'x | y');
+    expect(
+      ShareTemplateRenderer.render('{{a}} | {{b}}', {'a': 'x', 'b': 'y'}),
+      'x | y',
+    );
   });
 }

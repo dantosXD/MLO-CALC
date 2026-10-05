@@ -55,8 +55,10 @@ void main() {
           200,
         );
       });
-      final service =
-          UpdateService(httpClient: client, currentVersion: '1.0.0');
+      final service = UpdateService(
+        httpClient: client,
+        currentVersion: '1.0.0',
+      );
       final result = await service.checkForUpdate();
       expect(result, isA<UpdateAvailableResult>());
       final available = result as UpdateAvailableResult;
@@ -72,30 +74,38 @@ void main() {
           200,
         );
       });
-      final service =
-          UpdateService(httpClient: client, currentVersion: '1.0.0');
+      final service = UpdateService(
+        httpClient: client,
+        currentVersion: '1.0.0',
+      );
       final result = await service.checkForUpdate();
       expect(result, isA<UpToDateResult>());
     });
 
-    test('returns UpdateErrorResult on network error without throwing',
-        () async {
-      final client = MockClient(
-        (request) async => throw Exception('no network'),
-      );
-      final service =
-          UpdateService(httpClient: client, currentVersion: '1.0.0');
-      final result = await service.checkForUpdate();
-      expect(result, isA<UpdateErrorResult>());
-      expect((result as UpdateErrorResult).message, contains('no network'));
-    });
+    test(
+      'returns UpdateErrorResult on network error without throwing',
+      () async {
+        final client = MockClient(
+          (request) async => throw Exception('no network'),
+        );
+        final service = UpdateService(
+          httpClient: client,
+          currentVersion: '1.0.0',
+        );
+        final result = await service.checkForUpdate();
+        expect(result, isA<UpdateErrorResult>());
+        expect((result as UpdateErrorResult).message, contains('no network'));
+      },
+    );
 
     test('returns UpdateErrorResult on 404 response', () async {
       final client = MockClient(
         (request) async => http.Response('Not found', 404),
       );
-      final service =
-          UpdateService(httpClient: client, currentVersion: '1.0.0');
+      final service = UpdateService(
+        httpClient: client,
+        currentVersion: '1.0.0',
+      );
       final result = await service.checkForUpdate();
       expect(result, isA<UpdateErrorResult>());
       expect((result as UpdateErrorResult).message, contains('404'));
@@ -117,8 +127,10 @@ void main() {
           200,
         );
       });
-      final service =
-          UpdateService(httpClient: client, currentVersion: '1.0.0');
+      final service = UpdateService(
+        httpClient: client,
+        currentVersion: '1.0.0',
+      );
       final result = await service.checkForUpdate();
       expect(result, isA<UpdateAvailableResult>());
       expect((result as UpdateAvailableResult).info.apkDownloadUrl, isNull);

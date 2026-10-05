@@ -459,14 +459,18 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
     super.dispose();
   }
 
-  ({int monthsSaved, double interestSaved, double totalYears}) _computePrepaymentImpact(double extra) {
-    if (widget.loanAmount <= 0 || widget.termYears <= 0 || widget.monthlyPayment <= 0) {
+  ({int monthsSaved, double interestSaved, double totalYears})
+  _computePrepaymentImpact(double extra) {
+    if (widget.loanAmount <= 0 ||
+        widget.termYears <= 0 ||
+        widget.monthlyPayment <= 0) {
       return (monthsSaved: 0, interestSaved: 0.0, totalYears: widget.termYears);
     }
 
     final r = widget.interestRate / 100 / 12;
     final stdTotalMonths = (widget.termYears * 12).round();
-    final stdTotalInterest = (widget.monthlyPayment * stdTotalMonths) - widget.loanAmount;
+    final stdTotalInterest =
+        (widget.monthlyPayment * stdTotalMonths) - widget.loanAmount;
 
     double balance = widget.loanAmount;
     double extraTotalInterest = 0;
@@ -486,8 +490,14 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
       }
     }
 
-    final monthsSaved = (stdTotalMonths - monthsWithExtra).clamp(0, stdTotalMonths);
-    final interestSaved = (stdTotalInterest - extraTotalInterest).clamp(0.0, double.infinity);
+    final monthsSaved = (stdTotalMonths - monthsWithExtra).clamp(
+      0,
+      stdTotalMonths,
+    );
+    final interestSaved = (stdTotalInterest - extraTotalInterest).clamp(
+      0.0,
+      double.infinity,
+    );
     final newYears = monthsWithExtra / 12;
 
     return (
@@ -504,7 +514,11 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
   }) async {
     setState(() => _loadingAdvice = true);
     try {
-      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+      final nlpService =
+          Provider.of<NlpSettingsProvider?>(
+            context,
+            listen: false,
+          )?.calculatorService ??
           NLPCalculatorService();
       final result = await nlpService.generatePayoffMilestones(
         loanAmount: widget.loanAmount,
@@ -519,7 +533,9 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
       setState(() => _advice = result);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _advice = 'Could not generate milestone advice at this time.');
+      setState(
+        () => _advice = 'Could not generate milestone advice at this time.',
+      );
     } finally {
       if (mounted) setState(() => _loadingAdvice = false);
     }
@@ -549,7 +565,10 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
           children: [
             Row(
               children: [
-                Icon(Icons.rocket_launch_outlined, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.rocket_launch_outlined,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -601,7 +620,9 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.35,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -609,10 +630,7 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
                 children: [
                   Column(
                     children: [
-                      Text(
-                        'Time Saved',
-                        style: theme.textTheme.bodySmall,
-                      ),
+                      Text('Time Saved', style: theme.textTheme.bodySmall),
                       const SizedBox(height: 4),
                       Text(
                         extra > 0 ? '$yearsSaved yrs' : '0 yrs',
@@ -623,7 +641,10 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
                       ),
                       Text(
                         '(${impact.monthsSaved} months)',
-                        style: const TextStyle(fontSize: 10, color: Colors.black54),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.black54,
+                        ),
                       ),
                     ],
                   ),
@@ -634,10 +655,7 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
                   ),
                   Column(
                     children: [
-                      Text(
-                        'Interest Saved',
-                        style: theme.textTheme.bodySmall,
-                      ),
+                      Text('Interest Saved', style: theme.textTheme.bodySmall),
                       const SizedBox(height: 4),
                       Text(
                         CurrencyFormatter.formatCurrency(impact.interestSaved),
@@ -659,10 +677,10 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
             OutlinedButton.icon(
               onPressed: (extra > 0 && !_loadingAdvice)
                   ? () => _fetchMilestoneAdvice(
-                        extra: extra,
-                        monthsSaved: impact.monthsSaved.toDouble(),
-                        interestSaved: impact.interestSaved,
-                      )
+                      extra: extra,
+                      monthsSaved: impact.monthsSaved.toDouble(),
+                      interestSaved: impact.interestSaved,
+                    )
                   : null,
               icon: _loadingAdvice
                   ? const SizedBox(
@@ -670,7 +688,11 @@ class _PayoffMilestonesCardState extends State<_PayoffMilestonesCard> {
                       height: 14,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.auto_awesome, size: 16, color: Colors.purple),
+                  : const Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: Colors.purple,
+                    ),
               label: const Text('✨ AI Prepayment Strategy'),
             ),
             if (_advice != null) ...[
