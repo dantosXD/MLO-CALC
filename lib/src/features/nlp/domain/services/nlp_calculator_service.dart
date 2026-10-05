@@ -208,8 +208,12 @@ Notes:
     final lower = rawQuery.toLowerCase().replaceAll(',', '');
 
     // 1. Identify rate: e.g. "at 6.5%", "6.5 percent", "rate 6.25", "5.5%"
+    // "20% down" is a down-payment percent, never the interest rate.
+    final downPctRe = RegExp(r'(\d+(?:\.\d+)?)\s*(?:%|percent)\s*down(?:\s*payment)?');
+    final downPctMatch = downPctRe.firstMatch(lower);
+    final rateText = lower.replaceAll(downPctRe, ' ');
     double? interestRate;
-    final rateMatch = RegExp(r'(?:at|rate|interest(?:\s*rate)?)\s*(\d+(?:\.\d+)?)\s*%?|(\d+(?:\.\d+)?)\s*(?:%|percent)').firstMatch(lower);
+    final rateMatch = RegExp(r'(?:at|rate|interest(?:\s*rate)?)\s*(\d+(?:\.\d+)?)\s*%?|(\d+(?:\.\d+)?)\s*(?:%|percent)').firstMatch(rateText);
     if (rateMatch != null) {
       final valStr = rateMatch.group(1) ?? rateMatch.group(2);
       final r = double.tryParse(valStr ?? '');
@@ -226,9 +230,9 @@ Notes:
     }
 
     // Helper to extract numbers with k, grand, m, million
-    double? extractAmount(List<Pattern> patterns) {
+    double? extractAmount(List<Pattern> patterns, [String? source]) {
       for (final pat in patterns) {
-        final m = RegExp(pat is String ? pat : (pat as RegExp).pattern, caseSensitive: false).firstMatch(lower);
+        final m = RegExp(pat is String ? pat : (pat as RegExp).pattern, caseSensitive: false).firstMatch(source ?? lower);
         if (m != null) {
           final val = double.tryParse(m.group(1) ?? '');
           if (val == null) continue;
@@ -245,7 +249,7 @@ Notes:
     final payment = extractAmount([
       r'(?:payment|pay)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\b',
       r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:a\s*month|per\s*month|/mo|monthly\s*payment)',
-    ]);
+    ], lower.replaceAll(RegExp(r'down\s*payment'), 'down')); // "down payment 20000" is not the monthly payment
 
     final annualIncome = extractAmount([
       r'(?:income|earning|salary|make)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand|m|million)?\b',
@@ -257,7 +261,7 @@ Notes:
       r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:debt|debts|monthly\s*debt)',
     ]);
 
-    final downPayment = extractAmount([
+    final downPayment = double.tryParse(downPctMatch?.group(1) ?? '') ?? extractAmount([
       r'(?:down\s*payment|down)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\b',
       r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:down\s*payment|down)',
     ]);

@@ -618,7 +618,7 @@ class CalculationHistory {
     }
     _entries
       ..clear()
-      ..addAll(parsed);
+      ..addAll(parsed.take(maxEntries));
   }
 
   /// Search entries by notes or summary

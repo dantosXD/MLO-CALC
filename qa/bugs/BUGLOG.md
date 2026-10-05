@@ -126,3 +126,19 @@ FormatException + TypeError specifically (correct). Only the history list needed
 
 ## Previously logged, not changed this pass (rationale)
 - **B7 Share brace hint:** Cosmetic/authoring nuisance; low blast radius. Candidate for a follow-up.
+
+---
+## Round 2 (post-PR #9 code: NLP overhaul, updater, chip clear, classic display)
+Baseline: analyze clean, 354/354 tests. After fixes: analyze clean, **362/362**.
+
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B10 | NLP local parser: "20% down at 6.5%" returned rate=20; "N% down" never captured | P1 | ✅ FIXED (`nlp_down_payment_parsing_test`) |
+| B11 | NLP local parser: "down payment 20000" also parsed as monthly payment | P2 | ✅ FIXED (same test) |
+| B12 | Updater: release without APK silently "succeeds"; non-200 APK download written as .apk; double-tap Install starts 2 downloads | P2 | ✅ FIXED (`updater_install_guards_test`) |
+| B13 | History load ignores 100-entry cap (5,000 persisted entries all loaded) | P3 | ✅ FIXED (`history_scale_cap_test`) |
+| B14 | Classic display: value/badge/chip text uses `onSecondary` (white with custom accent) on pale light card → unreadable; seen live in Chrome | P2 | ✅ FIXED (`classic_display_contrast_test`, verified fails pre-fix) |
+
+Not changed (judgment): `isNewer` ignores pre-release suffix (1.2.0-rc1 == 1.2.0); asset with null name
+surfaces as generic "Connection failed". Live pass covered release web build smoke only (calculator
+inputs, chips); modern layout, NLP sheet, Qualification/Analysis redesign not driven live this round.

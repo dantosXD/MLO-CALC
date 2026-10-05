@@ -147,10 +147,15 @@ class UpdateService {
     }
 
     final apkUrl = info.apkDownloadUrl;
-    if (apkUrl == null) return;
+    if (apkUrl == null) {
+      throw Exception('This release has no APK attached');
+    }
 
     final request = http.Request('GET', Uri.parse(apkUrl));
     final response = await _client.send(request);
+    if (response.statusCode != 200) {
+      throw Exception('APK download failed (HTTP ${response.statusCode})');
+    }
     final total = response.contentLength ?? 0;
     var received = 0;
 

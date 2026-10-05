@@ -49,7 +49,7 @@ class UpdateNotifier extends ChangeNotifier {
 
   Future<void> install() async {
     final info = _releaseInfo;
-    if (info == null) return;
+    if (info == null || _state == UpdateState.downloading) return;
 
     final canInstall = await _service.canInstallApk();
     if (!canInstall) {
