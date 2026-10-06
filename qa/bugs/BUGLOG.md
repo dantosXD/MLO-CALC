@@ -126,3 +126,108 @@ FormatException + TypeError specifically (correct). Only the history list needed
 
 ## Previously logged, not changed this pass (rationale)
 - **B7 Share brace hint:** Cosmetic/authoring nuisance; low blast radius. Candidate for a follow-up.
+
+---
+## Round 2 (post-PR #9 code: NLP overhaul, updater, chip clear, classic display)
+Baseline: analyze clean, 354/354 tests. After fixes: analyze clean, **362/362**.
+
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B10 | NLP local parser: "20% down at 6.5%" returned rate=20; "N% down" never captured | P1 | ✅ FIXED (`nlp_down_payment_parsing_test`) |
+| B11 | NLP local parser: "down payment 20000" also parsed as monthly payment | P2 | ✅ FIXED (same test) |
+| B12 | Updater: release without APK silently "succeeds"; non-200 APK download written as .apk; double-tap Install starts 2 downloads | P2 | ✅ FIXED (`updater_install_guards_test`) |
+| B13 | History load ignores 100-entry cap (5,000 persisted entries all loaded) | P3 | ✅ FIXED (`history_scale_cap_test`) |
+| B14 | Classic display: value/badge/chip text uses `onSecondary` (white with custom accent) on pale light card → unreadable; seen live in Chrome | P2 | ✅ FIXED (`classic_display_contrast_test`, verified fails pre-fix) |
+
+Not changed (judgment): `isNewer` ignores pre-release suffix (1.2.0-rc1 == 1.2.0); asset with null name
+surfaces as generic "Connection failed". Live pass covered release web build smoke only (calculator
+inputs, chips); modern layout, NLP sheet, Qualification/Analysis redesign not driven live this round.
+
+### Round 2b (live pass on fixed build, real Chrome)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B15 | Settings profile accepts non-numeric NMLS ("12ab") and malformed email, printed on shared quotes | P3 | ✅ FIXED (`b15_mlo_profile_validation_test`) |
+| B16 | Voice/Text sheet: Enter inserts a newline (multiline field) instead of submitting; send button/suggestion hiding never update while typing | P2 | ✅ FIXED (`b16_nlp_sheet_typing_test`, verified fails pre-fix) |
+
+Live-verified OK: B14 display contrast fixed; Settings profile save; Voice/Text sheet opens + dismisses;
+Rent vs Buy defaults + Calculate renders verdict; Qualification/Analysis/History render, no console errors.
+Not verifiable here: scrolling below the fold (automation wheel/keys did not scroll Flutter lists; the
+embedded browser viewport is short), Share dialog, modern-layout toggle, Android install flow.
+
+### Round 2c (live: Rent vs Buy, Settings, modern layout, Share)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B17 | Modern layout: DnPmt chip shows "$20.00" for a 20% entry; assignment toast says "Rate = $6.50", "Term = $30.00" | P3 | ✅ FIXED (`b17_modern_chip_units_test`) |
+| B18 | Rent-vs-Buy net-worth chart: y-labels wrapped/garbled ("$74,350.\n71"), x-axis repeated "Yr 1" ×5 (fractional ticks) | P3 | ✅ FIXED + verified live (widget test fails pre-fix) |
+| B19 | Share quote: empty profile fields leave dangling " |" ("Jane \| NMLS# 12ab \|"); `{{down_payment}}` renders "$20" for a 20% down entry | P3 | ✅ FIXED (`b19_share_render_cleanup_test`; down_payment token converted to dollars) |
+
+Live-verified: modern layout + dark mode render, chip assign/double-tap clear/undo, Settings sections incl.
+Check for Updates ("latest version"), Voice/Text sheet, Rent-vs-Buy chart fix.
+Not verifiable via automation: long-press popup (covered by widget test only).
+Observation (product call, unchanged): the Rent-vs-Buy "Net Worth Projection" subtracts cumulative spending from
+both sides, so both lines can go negative; it is a relative comparison, not absolute net worth.
+Share dialog layout: action row ("Cancel / Save as template / Share") overlaps the placeholder-chip list at
+1827x950 — not fixed this round.
+
+### Round 2d (live: Share, Amortization, Qualification)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B20 | Share dialog content was a non-scrolling Column: on short windows content ran under the action row / past the card (live: chips overlapped "Cancel / Save as template / Share") | P2 | ✅ FIXED (`b20_share_dialog_scroll_test`, fails pre-fix) |
+| B21 | Amortization chart y-axis repeats labels ("$3k $3k $2k $2k $1k $1k $0k") on small loans | P3 | ✅ FIXED (`b21_amortization_axis_labels_test`) |
+| B22 | After "Min Income", Qualification shows "Housing DTI 28.0% exceeds 28.00% limit" — min income lands exactly on the limit and float noise (28.000000000000004 > 28) trips the warning; 89% of sampled payments reproduce | P2 | ✅ FIXED (`b22_dti_boundary_test`, 63,456 spurious warnings pre-fix → 0) |
+
+Live-verified OK: B19/B20 share down_payment token ($90,000) and clean message; amortization schedule math
+(month 2 interest $1,948.24 ✓), extra-principal card (+$100/mo → 3.4 yrs, $62.9k saved); min income $97,518.86
+= PITI×12/0.28 ✓.
+Observation (unchanged): Min Income overwrites the user's Annual Income field with the computed value.
+
+### Round 2e (live: Analysis, ARM wizard, History, Loan Programs)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B23 | Balloon calculator accepts a balloon year beyond the loan term (40 yrs on a 30-yr loan → "$0.00 after 40 years") | P3 | ✅ FIXED (`b23_balloon_years_test`) |
+| B24 | Conforming/FHA limits are 2024 values (`ConformingLoanLimits`: $766,550 / $1,149,825; Loan Programs shows "Max Loan $767K") while the app date is 2026 | P2 | ⚠️ NOT CHANGED — regulatory numbers; needs confirmed current FHFA/HUD figures from the owner |
+
+Live-verified OK: balloon balance 7 yrs = $325,499.05 (hand calc ≈ $325.5k ✓); ARM wizard payment $2,484.92 on
+$450k/5.25%/30y ✓ and schedule renders; History lists the calculation with correct summary; Loan Programs list +
+New Program editor shows range errors for 150% / -5%.
+Not covered: Workspace Dashboard, PDF report, Closing Costs sheet, APR estimator, Future Value, Comparison.
+
+### Round 2f (live: Closing Costs, APR, Future Value, PDF, Workspace Dashboard)
+| ID | Title | Sev | Status |
+|----|-------|-----|--------|
+| B25 | History entry for a solved interest rate (and term) dropped its payment input → Workspace "Recent Activity" showed "$360,000 loan at $0.00/mo → 6.500%" | P2 | ✅ FIXED (`b25_rate_history_payment_test`, fails pre-fix) |
+
+Live-verified OK: Closing Costs "Estimate" (total $5,870, cash to close $95,870 = $90,000 + fees, reflected in the
+Analysis summary); APR estimate 6.621% for $4,500 fees on $360k @ 6.5% (plausible); Future Value $521,673.33 =
+$450,000 × 1.03^5 ✓; Workspace Dashboard renders pinned tools/templates/recent activity; session (loan inputs)
+restores after a full page reload.
+Observations (unchanged): PDF Report calls `Printing.sharePdf` with no try/catch or feedback (browser download on
+web; nothing visible in automation); automation can only exercise bottom sheets/dialogs after a throwaway click
+(first click after a dismiss is dropped by the harness, not the app).
+Not covered live: Comparison (needs 2 history entries; widget + golden tests only), long-press popup, Android install.
+
+### Round 2g (live on rebuilt release: Comparison, DTI re-check)
+- Comparison (2 history entries, $360k @ 7.0% vs 6.5%): payment diff +$119.65/mo, total cost $862,232.40 vs
+  $819,158.40, interest range $43,074 — all hand-verified ✓; selection state survives returning from the screen.
+- B22 re-verified on the rebuilt build: Min Income $102,646.71 (= $2,395.09 × 12 / 0.28 ✓) and **no** spurious
+  "Housing DTI exceeds limit" banner (it appeared pre-fix).
+- Observation (product call, unchanged — an existing unit test asserts it is non-null): Comparison "Break-even (mo)"
+  = |Δ total cost| / |Δ payment|, which for same-amount/same-term loans always equals the term (shows "360.0"). With no
+  upfront-cost data in history entries it carries no information; consider hiding it until points/fees are recorded.
+- Still not live-verified on the rebuild: B20 (share scroll) and B23 (balloon year) — covered by regression tests only.
+
+### Round 2h
+- B23 verified live on the rebuilt build: 40 yrs on a 30-yr loan now shows "Balloon year must be before the end of the loan term (30 years)" and no result card.
+- B20 (Share dialog scroll) could not be re-verified live: the harness cannot shrink the page viewport (resize_window left innerHeight at 950). Covered by `b20_share_dialog_scroll_test` (fails pre-fix).
+
+### Round 2i (live via Chrome DevTools MCP: viewport/touch emulation)
+- B20 verified live at 1000×500: Share dialog no longer overlaps its action row; content scrolls to the placeholder chips.
+- Chip long-press verified live (touch pointer, 900 ms): popup "Loan Amount: $360,000.00 / Copy / Edit"; Edit loads 360,000 into the display with the toast "Loan Amount loaded to display — edit & tap chip to save".
+- PDF Report verified live: tapping it triggers a `loan-estimate.pdf` blob download (no console errors). Earlier "no response" was just a browser download not visible to the harness.
+- Remaining un-verified: Android APK install/update flow (no connected device; AVDs exist but there is no newer GitHub release APK to update to).
+
+### Round 2j (Android emulator, Medium_Phone_API_36.1, local debug build versioned 1.0.0 — not committed)
+- Launch → "Update Available — Version 1.0.1 is ready to install" with release notes, Later / Update Now ✓.
+- Update Now with "Install unknown apps" not granted → app opens the system "Allow from this source" screen for MLO-Calc ✓; pressing Back returns to the app with a clear dialog (Dismiss / Open Settings) ✓.
+- Copy nit (P3, unchanged): that dialog is titled "Download Failed" although nothing was downloaded; the cause is the missing install permission. Consider "Permission needed".
+- NOT done on purpose: granting the install permission and installing the 70 MB release APK — that changes a system security setting; left for the owner on a real device.

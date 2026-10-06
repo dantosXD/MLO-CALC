@@ -42,6 +42,21 @@ class SettingsScreen extends StatelessWidget {
 
 // ─── Section header ────────────────────────────────────────────────────────
 
+/// Returns an error message for a malformed NMLS# / email, or null if both are
+/// blank or well-formed. Profile values are printed on shared quotes.
+@visibleForTesting
+String? validateMloProfile({required String nmls, required String email}) {
+  final n = nmls.trim();
+  final e = email.trim();
+  if (n.isNotEmpty && !RegExp(r'^\d{1,10}$').hasMatch(n)) {
+    return 'NMLS # must be digits only';
+  }
+  if (e.isNotEmpty && !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e)) {
+    return 'Enter a valid email address';
+  }
+  return null;
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.title, {this.subtitle});
 
@@ -118,6 +133,20 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
   }
 
   Future<void> _save() async {
+    final error = validateMloProfile(
+      nmls: _nmlsCtrl.text,
+      email: _emailCtrl.text,
+    );
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
     await context.read<MloProfileProvider>().saveProfile(
       name: _nameCtrl.text.trim(),
       nmls: _nmlsCtrl.text.trim(),
@@ -640,7 +669,10 @@ class _AiVoiceSection extends StatelessWidget {
           ),
           title: const Text('Gemini API Key'),
           subtitle: hasKey
-              ? const Text('Configured & Active', style: TextStyle(color: Colors.green))
+              ? const Text(
+                  'Configured & Active',
+                  style: TextStyle(color: Colors.green),
+                )
               : const Text('Not set (using offline calculation engine)'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => _showApiKeySheet(context),
@@ -744,16 +776,18 @@ class _ApiKeySheetState extends State<_ApiKeySheet> {
               const SizedBox(width: 8),
               Text(
                 'Gemini API Key',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             'An API key enables advanced conversational queries, client pitches, and underwriting insights. Free keys are available from Google AI Studio.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black87),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.black87),
           ),
           const SizedBox(height: 14),
           TextField(
@@ -787,7 +821,9 @@ class _ApiKeySheetState extends State<_ApiKeySheet> {
                     _testResult!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: _testSuccess ? Colors.green.shade800 : Colors.red.shade800,
+                      color: _testSuccess
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -822,7 +858,11 @@ class _ApiKeySheetState extends State<_ApiKeySheet> {
                       await settings.setApiKey(null);
                       navigator.pop();
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('API key removed. Running in offline mode.')),
+                        const SnackBar(
+                          content: Text(
+                            'API key removed. Running in offline mode.',
+                          ),
+                        ),
                       );
                     },
                     child: const Text('Clear'),
@@ -971,9 +1011,7 @@ class _UpdateSection extends StatelessWidget {
             ListTile(
               title: const Text('Check for Updates'),
               subtitle: hasUpdate
-                  ? Text(
-                      'Version ${notifier.releaseInfo!.version} available',
-                    )
+                  ? Text('Version ${notifier.releaseInfo!.version} available')
                   : const Text("You're on the latest version"),
               trailing: isChecking
                   ? const SizedBox(
@@ -1000,8 +1038,9 @@ class _UpdateSection extends StatelessWidget {
                                 notifier.errorMessage ??
                                     'Failed to check for updates. Check connection.',
                               ),
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.error,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
                             ),
                           );
                         } else {

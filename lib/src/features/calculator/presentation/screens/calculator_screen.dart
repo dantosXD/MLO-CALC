@@ -232,7 +232,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       calculatorProvider.setPrice(value: value);
                                     }
                                   },
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -253,7 +254,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     'Loan Amount',
                                     calculatorProvider.clearLoanAmount,
                                   ),
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -278,7 +280,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     'Term',
                                     calculatorProvider.clearTermYears,
                                   ),
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 Selector<CalculatorProvider, bool>(
@@ -338,7 +341,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       );
                                     }
                                   },
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -364,7 +368,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                     'Rate',
                                     calculatorProvider.clearInterestRate,
                                   ),
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -380,7 +385,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       );
                                     }
                                   },
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
@@ -396,7 +402,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       );
                                     }
                                   },
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -434,14 +441,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '%',
                                   onPressed: () =>
                                       displayProvider.calculatePercent(),
-                                  backgroundColor: AppConstants.functionButtonColor,
+                                  backgroundColor:
+                                      AppConstants.functionButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '÷',
                                   onPressed: () =>
                                       displayProvider.performOperation('/'),
-                                  backgroundColor: AppConstants.operatorButtonColor,
+                                  backgroundColor:
+                                      AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -456,28 +465,32 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '7',
                                   onPressed: () =>
                                       displayProvider.inputDigit('7'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '8',
                                   onPressed: () =>
                                       displayProvider.inputDigit('8'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '9',
                                   onPressed: () =>
                                       displayProvider.inputDigit('9'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '×',
                                   onPressed: () =>
                                       displayProvider.performOperation('x'),
-                                  backgroundColor: AppConstants.operatorButtonColor,
+                                  backgroundColor:
+                                      AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -492,28 +505,32 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '4',
                                   onPressed: () =>
                                       displayProvider.inputDigit('4'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '5',
                                   onPressed: () =>
                                       displayProvider.inputDigit('5'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '6',
                                   onPressed: () =>
                                       displayProvider.inputDigit('6'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '−',
                                   onPressed: () =>
                                       displayProvider.performOperation('-'),
-                                  backgroundColor: AppConstants.operatorButtonColor,
+                                  backgroundColor:
+                                      AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -528,28 +545,32 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '1',
                                   onPressed: () =>
                                       displayProvider.inputDigit('1'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '2',
                                   onPressed: () =>
                                       displayProvider.inputDigit('2'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '3',
                                   onPressed: () =>
                                       displayProvider.inputDigit('3'),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(
                                   text: '+',
                                   onPressed: () =>
                                       displayProvider.performOperation('+'),
-                                  backgroundColor: AppConstants.operatorButtonColor,
+                                  backgroundColor:
+                                      AppConstants.operatorButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                               ],
@@ -570,7 +591,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   text: '.',
                                   onPressed: () =>
                                       displayProvider.inputDecimal(),
-                                  backgroundColor: AppConstants.numberButtonColor,
+                                  backgroundColor:
+                                      AppConstants.numberButtonColor,
                                   foregroundColor: Colors.white,
                                 ),
                                 CalculatorButton(

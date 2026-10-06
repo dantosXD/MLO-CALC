@@ -126,7 +126,8 @@ Note: The user query is an adjustment or follow-up to the existing scenario abov
 '''
         : '';
 
-    final prompt = '''
+    final prompt =
+        '''
 You are a mortgage calculator assistant. Your task is to parse natural language queries related to mortgage calculations and extract specific loan parameters into a structured JSON format.
 
 $contextPrompt
@@ -208,8 +209,16 @@ Notes:
     final lower = rawQuery.toLowerCase().replaceAll(',', '');
 
     // 1. Identify rate: e.g. "at 6.5%", "6.5 percent", "rate 6.25", "5.5%"
+    // "20% down" is a down-payment percent, never the interest rate.
+    final downPctRe = RegExp(
+      r'(\d+(?:\.\d+)?)\s*(?:%|percent)\s*down(?:\s*payment)?',
+    );
+    final downPctMatch = downPctRe.firstMatch(lower);
+    final rateText = lower.replaceAll(downPctRe, ' ');
     double? interestRate;
-    final rateMatch = RegExp(r'(?:at|rate|interest(?:\s*rate)?)\s*(\d+(?:\.\d+)?)\s*%?|(\d+(?:\.\d+)?)\s*(?:%|percent)').firstMatch(lower);
+    final rateMatch = RegExp(
+      r'(?:at|rate|interest(?:\s*rate)?)\s*(\d+(?:\.\d+)?)\s*%?|(\d+(?:\.\d+)?)\s*(?:%|percent)',
+    ).firstMatch(rateText);
     if (rateMatch != null) {
       final valStr = rateMatch.group(1) ?? rateMatch.group(2);
       final r = double.tryParse(valStr ?? '');
@@ -220,21 +229,28 @@ Notes:
 
     // 2. Identify term: e.g. "30 years", "15 yr", "30 yrs", "15-year"
     double? termYears;
-    final termMatch = RegExp(r'\b(10|15|20|25|30|40)\s*(?:years?|yrs?|yr|-year)\b').firstMatch(lower);
+    final termMatch = RegExp(
+      r'\b(10|15|20|25|30|40)\s*(?:years?|yrs?|yr|-year)\b',
+    ).firstMatch(lower);
     if (termMatch != null) {
       termYears = double.tryParse(termMatch.group(1)!);
     }
 
     // Helper to extract numbers with k, grand, m, million
-    double? extractAmount(List<Pattern> patterns) {
+    double? extractAmount(List<Pattern> patterns, [String? source]) {
       for (final pat in patterns) {
-        final m = RegExp(pat is String ? pat : (pat as RegExp).pattern, caseSensitive: false).firstMatch(lower);
+        final m = RegExp(
+          pat is String ? pat : (pat as RegExp).pattern,
+          caseSensitive: false,
+        ).firstMatch(source ?? lower);
         if (m != null) {
           final val = double.tryParse(m.group(1) ?? '');
           if (val == null) continue;
           final unit = (m.groupCount >= 2) ? m.group(2)?.toLowerCase() : null;
           if (unit == 'k' || unit == 'grand') return val * 1000;
-          if (unit == 'm' || unit == 'mil' || unit == 'million') return val * 1000000;
+          if (unit == 'm' || unit == 'mil' || unit == 'million') {
+            return val * 1000000;
+          }
           return val;
         }
       }
@@ -242,10 +258,13 @@ Notes:
     }
 
     // 3. Specific amounts
-    final payment = extractAmount([
-      r'(?:payment|pay)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\b',
-      r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:a\s*month|per\s*month|/mo|monthly\s*payment)',
-    ]);
+    final payment = extractAmount(
+      [
+        r'(?:payment|pay)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\b',
+        r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:a\s*month|per\s*month|/mo|monthly\s*payment)',
+      ],
+      lower.replaceAll(RegExp(r'down\s*payment'), 'down'),
+    ); // "down payment 20000" is not the monthly payment
 
     final annualIncome = extractAmount([
       r'(?:income|earning|salary|make)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand|m|million)?\b',
@@ -257,10 +276,12 @@ Notes:
       r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:debt|debts|monthly\s*debt)',
     ]);
 
-    final downPayment = extractAmount([
-      r'(?:down\s*payment|down)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\b',
-      r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:down\s*payment|down)',
-    ]);
+    final downPayment =
+        double.tryParse(downPctMatch?.group(1) ?? '') ??
+        extractAmount([
+          r'(?:down\s*payment|down)\s*(?:of\s*)?\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\b',
+          r'\$?\s*(\d+(?:\.\d+)?)\s*(k|grand)?\s*(?:down\s*payment|down)',
+        ]);
 
     final price = extractAmount([
       r'(?:price|purchase\s*price|home\s*price|house\s*for)\s*\$?\s*(\d+(?:\.\d+)?)\s*(k|grand|m|million)?\b',
@@ -279,7 +300,9 @@ Notes:
         r'\$?\s*(\d{2,}(?:\.\d+)?)\s*(k|grand|m|million)\b',
         r'\$\s*(\d{4,}(?:\.\d+)?)\b',
       ]);
-      if (generalAmount != null && generalAmount != payment && generalAmount != annualIncome) {
+      if (generalAmount != null &&
+          generalAmount != payment &&
+          generalAmount != annualIncome) {
         loanAmount = generalAmount;
       }
     }
@@ -296,7 +319,8 @@ Notes:
       explanation = 'Calculating bi-weekly payment comparison.';
     } else if (lower.contains('max loan') ||
         lower.contains('qualify') ||
-        (annualIncome != null && (lower.contains('afford') || lower.contains('how much')))) {
+        (annualIncome != null &&
+            (lower.contains('afford') || lower.contains('how much')))) {
       action = 'calculate_max_qualifying_loan';
       explanation = 'Calculating maximum qualifying loan amount.';
     } else if (lower.contains('min income') ||
@@ -305,7 +329,8 @@ Notes:
         lower.contains('income required')) {
       action = 'calculate_min_income';
       explanation = 'Calculating minimum income required.';
-    } else if (payment != null && (lower.contains('how much') || lower.contains('loan amount'))) {
+    } else if (payment != null &&
+        (lower.contains('how much') || lower.contains('loan amount'))) {
       action = 'calculate_loan_amount';
       explanation = 'Calculating affordable loan amount for target payment.';
     } else if (lower.contains('what rate') || lower.contains('interest rate')) {
@@ -353,7 +378,8 @@ Notes:
   }) async {
     if (_isInitialized && _model != null) {
       try {
-        final prompt = '''
+        final prompt =
+            '''
 You are an expert mortgage loan officer assistant.
 Write a clear, encouraging, professional 2-3 sentence summary tailored for a homebuyer reviewing this quote:
 - Loan Amount: \$${loanAmount.toStringAsFixed(0)}
@@ -373,13 +399,20 @@ Keep it friendly, concise, and focused on what this means for their monthly budg
           return text;
         }
       } catch (e) {
-        developer.log('Error generating AI pitch: $e', name: 'NLPCalculatorService');
+        developer.log(
+          'Error generating AI pitch: $e',
+          name: 'NLPCalculatorService',
+        );
       }
     }
 
     // High quality local template fallback
-    final priceText = homePrice != null ? 'on a \$${homePrice.toStringAsFixed(0)} home ' : '';
-    final downText = downPayment != null ? 'with \$${downPayment.toStringAsFixed(0)} down, ' : '';
+    final priceText = homePrice != null
+        ? 'on a \$${homePrice.toStringAsFixed(0)} home '
+        : '';
+    final downText = downPayment != null
+        ? 'with \$${downPayment.toStringAsFixed(0)} down, '
+        : '';
     return 'Based $priceText${downText}your loan amount of \$${loanAmount.toStringAsFixed(0)} at ${interestRate.toStringAsFixed(2)}% over ${termYears.toStringAsFixed(0)} years gives you an estimated monthly P&I payment of \$${monthlyPayment.toStringAsFixed(2)}. This structure locks in predictable housing costs and builds steady equity over time.';
   }
 
@@ -394,7 +427,8 @@ Keep it friendly, concise, and focused on what this means for their monthly budg
   }) async {
     if (_isInitialized && _model != null) {
       try {
-        final prompt = '''
+        final prompt =
+            '''
 You are an expert mortgage underwriting copilot.
 Evaluate these debt-to-income (DTI) metrics for a mortgage applicant:
 - Front-End (Housing) DTI: ${frontEndDti.toStringAsFixed(1)}%
@@ -411,26 +445,41 @@ Provide 2-3 concise, actionable bullet points for the loan officer on whether th
           return text;
         }
       } catch (e) {
-        developer.log('Error generating DTI advice: $e', name: 'NLPCalculatorService');
+        developer.log(
+          'Error generating DTI advice: $e',
+          name: 'NLPCalculatorService',
+        );
       }
     }
 
     // Local underwriting guidelines fallback
     final StringBuffer buffer = StringBuffer();
     if (backEndDti <= 36.0) {
-      buffer.write('• Excellent DTI: Well within conventional conforming guidelines (≤ 36%). Prime candidate for automated underwriting approval.\n');
+      buffer.write(
+        '• Excellent DTI: Well within conventional conforming guidelines (≤ 36%). Prime candidate for automated underwriting approval.\n',
+      );
     } else if (backEndDti <= 43.0) {
-      buffer.write('• Strong DTI: Meets standard Qualified Mortgage (QM) 43% cap. Conventional financing is readily available.\n');
+      buffer.write(
+        '• Strong DTI: Meets standard Qualified Mortgage (QM) 43% cap. Conventional financing is readily available.\n',
+      );
     } else if (backEndDti <= 50.0) {
       final monthlyIncome = annualIncome > 0 ? annualIncome / 12 : 1.0;
       final monthlyExcess = (backEndDti - 43.0) * monthlyIncome / 100;
-      buffer.write('• Elevated DTI: Exceeds standard 43% benchmark. May require FHA financing or AUS compensating factors.\n');
+      buffer.write(
+        '• Elevated DTI: Exceeds standard 43% benchmark. May require FHA financing or AUS compensating factors.\n',
+      );
       if (monthlyDebt > 0 && monthlyExcess > 0) {
-        final paydownTarget = monthlyExcess < monthlyDebt ? monthlyExcess : monthlyDebt;
-        buffer.write('• Action tip: Paying off \$${paydownTarget.toStringAsFixed(0)}/mo in revolving/installment debt would lower back-end DTI to 43.0%.\n');
+        final paydownTarget = monthlyExcess < monthlyDebt
+            ? monthlyExcess
+            : monthlyDebt;
+        buffer.write(
+          '• Action tip: Paying off \$${paydownTarget.toStringAsFixed(0)}/mo in revolving/installment debt would lower back-end DTI to 43.0%.\n',
+        );
       }
     } else {
-      buffer.write('• High DTI (> 50%): Non-QM, significant debt paydown, or adding a qualified co-borrower recommended to meet underwriting limits.\n');
+      buffer.write(
+        '• High DTI (> 50%): Non-QM, significant debt paydown, or adding a qualified co-borrower recommended to meet underwriting limits.\n',
+      );
     }
     return buffer.toString().trim();
   }
@@ -447,7 +496,8 @@ Provide 2-3 concise, actionable bullet points for the loan officer on whether th
   }) async {
     if (_isInitialized && _model != null) {
       try {
-        final prompt = '''
+        final prompt =
+            '''
 You are an expert mortgage loan officer assistant.
 Analyze this discount points buy-down scenario for a borrower:
 - Loan Amount: \$${loanAmount.toStringAsFixed(0)}
@@ -492,7 +542,8 @@ Provide 2-3 concise, practical sentences for the loan officer to explain whether
     final yearsSaved = (monthsSaved / 12).toStringAsFixed(1);
     if (_isInitialized && _model != null) {
       try {
-        final prompt = '''
+        final prompt =
+            '''
 You are a mortgage loan advisor.
 Summarize the impact of paying extra principal for a borrower:
 - Loan: \$${loanAmount.toStringAsFixed(0)} at ${interestRate.toStringAsFixed(3)}% over ${termYears.toStringAsFixed(0)} years
@@ -507,7 +558,10 @@ Provide 2-3 encouraging, client-friendly bullet points summarizing the financial
         final text = response.text?.trim();
         if (text != null && text.isNotEmpty) return text;
       } catch (e) {
-        developer.log('Milestone advice error: $e', name: 'NLPCalculatorService');
+        developer.log(
+          'Milestone advice error: $e',
+          name: 'NLPCalculatorService',
+        );
       }
     }
 
@@ -527,7 +581,8 @@ Provide 2-3 encouraging, client-friendly bullet points summarizing the financial
     final buyFavored = netWealthDifference >= 0;
     if (_isInitialized && _model != null) {
       try {
-        final prompt = '''
+        final prompt =
+            '''
 You are a real estate financial analyst.
 Write a 2-3 sentence client memo evaluating buying a \$${homePrice.toStringAsFixed(0)} home vs renting at \$${monthlyRent.toStringAsFixed(0)}/month:
 - Break-Even Year: $breakEvenYear years
@@ -539,7 +594,10 @@ Explain what this means clearly for a prospective homebuyer. Return plain text o
         final text = response.text?.trim();
         if (text != null && text.isNotEmpty) return text;
       } catch (e) {
-        developer.log('Rent vs Buy memo error: $e', name: 'NLPCalculatorService');
+        developer.log(
+          'Rent vs Buy memo error: $e',
+          name: 'NLPCalculatorService',
+        );
       }
     }
 

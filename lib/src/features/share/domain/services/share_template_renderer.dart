@@ -11,6 +11,10 @@ class ShareTemplateRenderer {
     }
 
     out = out.replaceAll(RegExp(r'\{\{[^}]+\}\}'), '');
+    // Empty tokens leave dangling separators ("a | b |", "| |"); tidy per line.
+    out = out.replaceAll(RegExp(r'(?:[ \t]*\|[ \t]*){2,}'), ' | ');
+    out = out.replaceAll(RegExp(r'^[ \t]*\|[ \t]*', multiLine: true), '');
+    out = out.replaceAll(RegExp(r'[ \t]*\|[ \t]*$', multiLine: true), '');
     out = out.replaceAll(RegExp(r'[ \t]+\n'), '\n');
     out = out.replaceAll(RegExp(r'\n{3,}'), '\n\n');
 

@@ -319,7 +319,14 @@ class CalculationEntry {
       loanAmount: loanAmount,
       interestRate: interestRate,
       termYears: termYears,
-      payment: entryType == CalculationEntryType.loanAmount ? payment : null,
+      // Payment is an *input* whenever we solve for something else
+      // (loan amount, term, rate); only a payment entry has it as a result.
+      payment:
+          entryType == CalculationEntryType.loanAmount ||
+              entryType == CalculationEntryType.term ||
+              entryType == CalculationEntryType.interestRate
+          ? payment
+          : null,
       propertyTax: propertyTax,
       homeInsurance: homeInsurance,
       mortgageInsurance: mortgageInsurance,
@@ -618,7 +625,7 @@ class CalculationHistory {
     }
     _entries
       ..clear()
-      ..addAll(parsed);
+      ..addAll(parsed.take(maxEntries));
   }
 
   /// Search entries by notes or summary

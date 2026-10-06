@@ -110,7 +110,10 @@ void main() {
       );
 
       expect(result, isA<CalcFailure<double>>());
-      expect(result.error, contains('Unable to calculate interest-only payment'));
+      expect(
+        result.error,
+        contains('Unable to calculate interest-only payment'),
+      );
     });
 
     test('calculateLoanAmount succeeds and rounds to cents', () {

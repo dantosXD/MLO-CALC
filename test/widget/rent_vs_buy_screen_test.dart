@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
 
 void main() {
+  chartAxisRegression();
   testWidgets('renders the rent vs buy screen shell', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: RentVsBuyScreen()));
     await tester.pumpAndSettle();
@@ -35,5 +36,27 @@ void main() {
 
     expect(find.textContaining('Renting May Be Better'), findsOneWidget);
     expect(find.textContaining('Break-even:'), findsOneWidget);
+  });
+}
+
+// Regression (live QA): chart axis repeated "Yr 1" at fractional ticks and
+// wrapped currency labels.
+void chartAxisRegression() {
+  testWidgets('net worth chart shows one tick label per year', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(const MaterialApp(home: RentVsBuyScreen()));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Calculate'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -1500));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Yr 1'), findsOneWidget);
+    expect(find.text('Yr 5'), findsOneWidget);
   });
 }

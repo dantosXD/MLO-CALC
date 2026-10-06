@@ -869,15 +869,16 @@ class _RatioEditorDialogState extends State<_RatioEditorDialog> {
 
     final housing = housingText.isEmpty
         ? (widget.ratio?.housingRatio ?? 28.0)
-        : (double.tryParse(housingText) ?? (widget.ratio?.housingRatio ?? 28.0));
+        : (double.tryParse(housingText) ??
+              (widget.ratio?.housingRatio ?? 28.0));
     final debt = debtText.isEmpty
         ? (widget.ratio?.debtRatio ?? 36.0)
         : (double.tryParse(debtText) ?? (widget.ratio?.debtRatio ?? 36.0));
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a name')));
       return;
     }
 
@@ -1010,7 +1011,11 @@ class _AiDtiAdviceCardState extends State<_AiDtiAdviceCard> {
       _expanded = true;
     });
     try {
-      final nlpService = Provider.of<NlpSettingsProvider?>(context, listen: false)?.calculatorService ??
+      final nlpService =
+          Provider.of<NlpSettingsProvider?>(
+            context,
+            listen: false,
+          )?.calculatorService ??
           NLPCalculatorService();
       final result = await nlpService.generateDtiAdvice(
         frontEndDti: widget.frontEndDti,
@@ -1108,9 +1113,7 @@ class _AiDtiAdviceCardState extends State<_AiDtiAdviceCard> {
               else if (_advice != null)
                 Text(
                   _advice!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
-                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
             ],
           ],

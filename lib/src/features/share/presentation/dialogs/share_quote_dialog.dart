@@ -270,8 +270,12 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
         monthlyPayment: widget.data.piPayment ?? 0,
         downPayment: widget.data.downPayment,
         homePrice: widget.data.price,
-        propertyTax: widget.data.monthlyTax != null ? widget.data.monthlyTax! * 12 : null,
-        homeInsurance: widget.data.monthlyInsurance != null ? widget.data.monthlyInsurance! * 12 : null,
+        propertyTax: widget.data.monthlyTax != null
+            ? widget.data.monthlyTax! * 12
+            : null,
+        homeInsurance: widget.data.monthlyInsurance != null
+            ? widget.data.monthlyInsurance! * 12
+            : null,
       );
 
       if (!mounted) return;
@@ -302,9 +306,9 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not generate pitch: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not generate pitch: $e')));
     } finally {
       if (mounted) setState(() => _isGeneratingPitch = false);
     }
@@ -530,41 +534,15 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
           : const EdgeInsets.fromLTRB(24, 20, 24, 0),
       content: SizedBox(
         width: isCompact ? double.maxFinite : 560,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (isCompact)
-              Column(
-                children: [
-                  TextField(
-                    controller: _borrowerController,
-                    enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Borrower (optional)',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    onChanged: (_) => _reapplyIfSafe(),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _scenarioController,
-                    enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Scenario (optional)',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    onChanged: (_) => _reapplyIfSafe(),
-                  ),
-                ],
-              )
-            else
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isCompact)
+                Column(
+                  children: [
+                    TextField(
                       controller: _borrowerController,
                       enabled: !_busy,
                       decoration: const InputDecoration(
@@ -574,10 +552,8 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
                       ),
                       onChanged: (_) => _reapplyIfSafe(),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
+                    const SizedBox(height: 8),
+                    TextField(
                       controller: _scenarioController,
                       enabled: !_busy,
                       decoration: const InputDecoration(
@@ -587,125 +563,159 @@ class _ShareQuoteDialogState extends State<ShareQuoteDialog> {
                       ),
                       onChanged: (_) => _reapplyIfSafe(),
                     ),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _borrowerController,
+                        enabled: !_busy,
+                        decoration: const InputDecoration(
+                          labelText: 'Borrower (optional)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: (_) => _reapplyIfSafe(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _scenarioController,
+                        enabled: !_busy,
+                        decoration: const InputDecoration(
+                          labelText: 'Scenario (optional)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: (_) => _reapplyIfSafe(),
+                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 12),
+              _ChannelPicker(
+                value: _channel,
+                onChanged: _busy ? null : (c) => _setChannel(c),
+                isCompact: isCompact,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedTemplate?.id,
+                decoration: const InputDecoration(
+                  labelText: 'Template',
+                  border: OutlineInputBorder(),
+                ),
+                items: templates
+                    .map(
+                      (t) => DropdownMenuItem<String>(
+                        value: t.id,
+                        child: Text(
+                          t.isDefault ? '${t.name} (default)' : t.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: _busy
+                    ? null
+                    : (id) async {
+                        if (id == null) return;
+                        final t = templates.firstWhere((t) => t.id == id);
+                        await templatesProvider.setTemplateForChannel(
+                          _channel,
+                          t,
+                        );
+                        _applyTemplate(t);
+                      },
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  TextButton.icon(
+                    onPressed: _busy ? null : _editTemplateSource,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit template'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _busy ? null : _reapplyIfSafe,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reapply template'),
+                  ),
+                  TextButton.icon(
+                    onPressed: (_busy || _isGeneratingPitch)
+                        ? null
+                        : _generateAiPitch,
+                    icon: _isGeneratingPitch
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome, size: 16),
+                    label: Text(
+                      _isGeneratingPitch
+                          ? 'Drafting pitch...'
+                          : '✨ AI Client Pitch',
+                    ),
                   ),
                 ],
               ),
-            const SizedBox(height: 12),
-            _ChannelPicker(
-              value: _channel,
-              onChanged: _busy ? null : (c) => _setChannel(c),
-              isCompact: isCompact,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedTemplate?.id,
-              decoration: const InputDecoration(
-                labelText: 'Template',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 4),
+              if (_channel == ShareChannel.email ||
+                  _channel == ShareChannel.shareSheet ||
+                  _channel == ShareChannel.screenshot)
+                TextField(
+                  controller: _subjectController,
+                  decoration: const InputDecoration(
+                    labelText: 'Subject (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  enabled: !_busy,
+                ),
+              if (_channel == ShareChannel.email ||
+                  _channel == ShareChannel.shareSheet ||
+                  _channel == ShareChannel.screenshot)
+                const SizedBox(height: 12),
+              TextField(
+                controller: _bodyController,
+                enabled: !_busy,
+                maxLines: isCompact ? 5 : 8,
+                decoration: const InputDecoration(
+                  labelText: 'Message',
+                  border: OutlineInputBorder(),
+                ),
               ),
-              items: templates
-                  .map(
-                    (t) => DropdownMenuItem<String>(
-                      value: t.id,
-                      child: Text(
-                        t.isDefault ? '${t.name} (default)' : t.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: _busy
-                  ? null
-                  : (id) async {
-                      if (id == null) return;
-                      final t = templates.firstWhere((t) => t.id == id);
-                      await templatesProvider.setTemplateForChannel(
-                        _channel,
-                        t,
-                      );
-                      _applyTemplate(t);
-                    },
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                TextButton.icon(
-                  onPressed: _busy ? null : _editTemplateSource,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Edit template'),
+              const SizedBox(height: 12),
+              _PlaceholdersHelp(tokens: _tokens, isCompact: isCompact),
+              const SizedBox(height: 12),
+              if (_error != null)
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
-                TextButton.icon(
-                  onPressed: _busy ? null : _reapplyIfSafe,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Reapply template'),
+              if (_channel == ShareChannel.screenshot) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Screenshot preview',
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-                TextButton.icon(
-                  onPressed: (_busy || _isGeneratingPitch) ? null : _generateAiPitch,
-                  icon: _isGeneratingPitch
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.auto_awesome, size: 16),
-                  label: Text(
-                    _isGeneratingPitch ? 'Drafting pitch...' : '✨ AI Client Pitch',
+                const SizedBox(height: 8),
+                RepaintBoundary(
+                  key: _screenshotKey,
+                  child: _QuoteCardPreview(
+                    data: widget.data,
+                    scenarioName: _scenarioController.text,
+                    mloTokens: context.read<MloProfileProvider>().toTokenMap(),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 4),
-            if (_channel == ShareChannel.email ||
-                _channel == ShareChannel.shareSheet ||
-                _channel == ShareChannel.screenshot)
-              TextField(
-                controller: _subjectController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject (optional)',
-                  border: OutlineInputBorder(),
-                ),
-                enabled: !_busy,
-              ),
-            if (_channel == ShareChannel.email ||
-                _channel == ShareChannel.shareSheet ||
-                _channel == ShareChannel.screenshot)
-              const SizedBox(height: 12),
-            TextField(
-              controller: _bodyController,
-              enabled: !_busy,
-              maxLines: isCompact ? 5 : 8,
-              decoration: const InputDecoration(
-                labelText: 'Message',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _PlaceholdersHelp(tokens: _tokens, isCompact: isCompact),
-            const SizedBox(height: 12),
-            if (_error != null)
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            if (_channel == ShareChannel.screenshot) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Screenshot preview',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              RepaintBoundary(
-                key: _screenshotKey,
-                child: _QuoteCardPreview(
-                  data: widget.data,
-                  scenarioName: _scenarioController.text,
-                  mloTokens: context.read<MloProfileProvider>().toTokenMap(),
-                ),
-              ),
             ],
-          ],
+          ),
         ),
       ),
       actions: [

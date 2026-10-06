@@ -62,7 +62,8 @@ class AnimatedDisplay extends StatelessWidget {
           end: Alignment.bottomRight,
         );
     final accent = colorScheme.secondary;
-    final accentOn = colorScheme.onSecondary;
+    // onSecondary is white in light mode, invisible on the pale display card.
+    final accentOn = palette?.displayForeground ?? colorScheme.onSurface;
 
     return GestureDetector(
       onVerticalDragEnd: (details) {
@@ -135,7 +136,9 @@ class AnimatedDisplay extends StatelessWidget {
                               ],
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.3 : 0,
+                                  ),
                                   offset: const Offset(0, 2),
                                   blurRadius: 4,
                                 ),
@@ -344,7 +347,7 @@ class AnimatedDisplay extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   color: isSet
-                      ? scheme.onSecondary
+                      ? (palette?.displayForeground ?? scheme.onSurface)
                       : scheme.onSurface.withValues(alpha: 0.6),
                   fontWeight: FontWeight.bold,
                 ),

@@ -132,16 +132,19 @@ void main() {
       expect(term, closeTo(30.0, 0.01));
     });
 
-    test('calculateTerm returns 0 when payment is less than monthly interest', () {
-      // Monthly interest = 400,000 * 0.07 / 12 = 2333.33
-      // A payment of 2000 can never pay down principal
-      final term = math.calculateTerm(
-        loanAmount: 400000,
-        payment: 2000,
-        interestRate: 7.0,
-      );
-      expect(term, equals(0.0));
-    });
+    test(
+      'calculateTerm returns 0 when payment is less than monthly interest',
+      () {
+        // Monthly interest = 400,000 * 0.07 / 12 = 2333.33
+        // A payment of 2000 can never pay down principal
+        final term = math.calculateTerm(
+          loanAmount: 400000,
+          payment: 2000,
+          interestRate: 7.0,
+        );
+        expect(term, equals(0.0));
+      },
+    );
 
     test('calculateLoanAmount round-trips correctly with calculatePayment', () {
       final payment = math.calculatePayment(
@@ -157,19 +160,34 @@ void main() {
       expect(principal, closeTo(400000.0, 0.01));
     });
 
-    test('calculateLoanAmount guard clauses return 0 on non-positive inputs', () {
-      expect(
-        math.calculateLoanAmount(payment: 0, interestRate: 7.0, termYears: 30),
-        equals(0.0),
-      );
-      expect(
-        math.calculateLoanAmount(payment: 2500, interestRate: 0, termYears: 30),
-        equals(0.0),
-      );
-      expect(
-        math.calculateLoanAmount(payment: 2500, interestRate: 7.0, termYears: 0),
-        equals(0.0),
-      );
-    });
+    test(
+      'calculateLoanAmount guard clauses return 0 on non-positive inputs',
+      () {
+        expect(
+          math.calculateLoanAmount(
+            payment: 0,
+            interestRate: 7.0,
+            termYears: 30,
+          ),
+          equals(0.0),
+        );
+        expect(
+          math.calculateLoanAmount(
+            payment: 2500,
+            interestRate: 0,
+            termYears: 30,
+          ),
+          equals(0.0),
+        );
+        expect(
+          math.calculateLoanAmount(
+            payment: 2500,
+            interestRate: 7.0,
+            termYears: 0,
+          ),
+          equals(0.0),
+        );
+      },
+    );
   });
 }

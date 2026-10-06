@@ -6,7 +6,7 @@ import 'package:loan_ranger/src/features/updater/domain/services/update_service.
 
 class _FakeService extends UpdateService {
   _FakeService({this.result, this.throwOnInstall = false})
-      : super(currentVersion: '1.0.0');
+    : super(currentVersion: '1.0.0');
   final UpdateCheckResult? result;
   final bool throwOnInstall;
 

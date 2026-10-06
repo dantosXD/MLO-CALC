@@ -118,8 +118,7 @@ List<SingleChildWidget> buildAppProviders() => [
     ),
   ),
   ChangeNotifierProvider(
-    create: (_) =>
-        UpdateNotifier(service: serviceLocator<UpdateService>()),
+    create: (_) => UpdateNotifier(service: serviceLocator<UpdateService>()),
   ),
 ];
 
@@ -210,38 +209,40 @@ class _MainNavigatorState extends State<MainNavigator> {
             child: SafeArea(
               child: Row(
                 children: [
-                if (useRail)
-                  NavigationRail(
-                    selectedIndex: _selectedIndex,
-                    extended: extendRail,
-                    labelType: extendRail
-                        ? NavigationRailLabelType.none
-                        : NavigationRailLabelType.selected,
-                    onDestinationSelected: (index) {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                      _trackScreenView(index);
-                    },
-                    leading: const SizedBox(height: 12),
-                    destinations: railDestinations,
-                  ),
-                if (useRail) const VerticalDivider(width: 1),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    switchInCurve: Curves.easeInOut,
-                    switchOutCurve: Curves.easeInOut,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    child: KeyedSubtree(
-                      key: ValueKey<int>(_selectedIndex),
-                      child: _primaryFeatures[_selectedIndex].builder(context),
+                  if (useRail)
+                    NavigationRail(
+                      selectedIndex: _selectedIndex,
+                      extended: extendRail,
+                      labelType: extendRail
+                          ? NavigationRailLabelType.none
+                          : NavigationRailLabelType.selected,
+                      onDestinationSelected: (index) {
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                        _trackScreenView(index);
+                      },
+                      leading: const SizedBox(height: 12),
+                      destinations: railDestinations,
+                    ),
+                  if (useRail) const VerticalDivider(width: 1),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<int>(_selectedIndex),
+                        child: _primaryFeatures[_selectedIndex].builder(
+                          context,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
               ),
             ),
           ),

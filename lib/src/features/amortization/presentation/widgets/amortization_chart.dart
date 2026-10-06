@@ -131,7 +131,7 @@ class _AmortizationChartState extends State<AmortizationChart> {
                         reservedSize: 60,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            '\$${(value / 1000).toStringAsFixed(0)}k',
+                            formatAxisThousands(value, meta.appliedInterval),
                             style: TextStyle(
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.70,
@@ -242,3 +242,9 @@ class _LegendItem extends StatelessWidget {
     );
   }
 }
+
+/// "$2.5k" when ticks are closer than $1k apart, else "$3k"; whole-k labels
+/// repeated ("$3k, $3k, $2k, $2k") on small loans.
+@visibleForTesting
+String formatAxisThousands(double value, double interval) =>
+    '\$${(value / 1000).toStringAsFixed(interval >= 1000 ? 0 : 1)}k';
