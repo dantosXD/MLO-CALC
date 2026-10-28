@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/features/amortization/presentation/screens/amortization_screen.dart';
 import 'package:loan_ranger/src/features/analysis/presentation/screens/analysis_screen.dart';
+import 'package:loan_ranger/src/features/buydown/presentation/screens/buydown_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_screen.dart';
 import 'package:loan_ranger/src/features/history/presentation/screens/history_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan_programs_screen.dart';
@@ -55,6 +56,7 @@ class FeatureCatalog {
   static const String historyId = 'history';
   static const String loanProgramsId = 'loan_programs';
   static const String rentVsBuyId = 'rent_vs_buy';
+  static const String buydownId = 'buydown';
 
   static final List<FeatureCatalogEntry>
   primaryFeatures = <FeatureCatalogEntry>[
@@ -137,6 +139,16 @@ class FeatureCatalog {
           icon: const Icon(Icons.home_work_outlined),
           selectedIcon: const Icon(Icons.home_work),
           builder: (_) => const RentVsBuyScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: buydownId,
+          title: 'Buydown',
+          analyticsName: 'Buydown',
+          category: 'Quote',
+          description: 'Compare 2-1, 1-0, 3-2-1 and 1-1 temporary buydowns.',
+          icon: const Icon(Icons.trending_down_outlined),
+          selectedIcon: const Icon(Icons.trending_down),
+          builder: (_) => const BuydownScreen(),
         ),
       ];
 
