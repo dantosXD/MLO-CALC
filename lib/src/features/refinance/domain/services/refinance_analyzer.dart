@@ -31,14 +31,14 @@ class RefinanceAnalyzer {
       case RefiProgram.conventional:
         break;
       case RefiProgram.vaIrrrl:
-        met = breakEven != null && breakEven <= 36;
+        met = breakEven != null && breakEven <= 36 + 1e-9;
         reason = met
             ? 'Costs recouped within 36 months'
             : 'Costs not recouped within 36 months';
       case RefiProgram.fhaStreamline:
         // New MIP rate assumed equal to the current one (controller ruling R1).
         final cut = i.currentRate - i.newRate;
-        met = cut >= 0.5;
+        met = cut >= 0.5 - 1e-9;
         reason = met
             ? 'Combined rate + MIP drops ${cut.toStringAsFixed(2)} pts (needs 0.50)'
             : 'Combined rate + MIP drops only ${cut.toStringAsFixed(2)} pts (needs 0.50)';

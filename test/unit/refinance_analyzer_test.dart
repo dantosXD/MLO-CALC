@@ -76,4 +76,31 @@ void main() {
     final b = analyzer.analyze(inputs(cashOut: 50000));
     expect(b.newPayment, greaterThan(a.newPayment));
   });
+
+  test('FHA streamline exact 0.50 drop is met despite float error', () {
+    final r = analyzer.analyze(
+      inputs(
+        currentRate: 4.10,
+        newRate: 3.60,
+        program: RefiProgram.fhaStreamline,
+      ),
+    );
+    expect(r.ntbMet, true);
+    expect(r.ntbReason, isNot(contains('only')));
+  });
+
+  test('VA IRRRL met well inside 36 months and exactly at 36', () {
+    final base = analyzer.analyze(inputs(closingCosts: 0));
+    final early = analyzer.analyze(
+      inputs(closingCosts: 1000, program: RefiProgram.vaIrrrl),
+    );
+    expect(early.ntbMet, true);
+    final edge = analyzer.analyze(
+      inputs(
+        closingCosts: base.monthlySavings * 36,
+        program: RefiProgram.vaIrrrl,
+      ),
+    );
+    expect(edge.ntbMet, true);
+  });
 }

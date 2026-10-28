@@ -72,12 +72,13 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
     ),
   );
 
-  void _save(RefinanceInputs i, RefinanceResult r) {
+  void _save(
+    CalculatorProvider provider,
+    RefinanceInputs i,
+    RefinanceResult r,
+  ) {
     final be = r.breakEvenMonths;
-    Provider.of<CalculatorProvider?>(
-      context,
-      listen: false,
-    )?.historyController.addQuoteEntry(
+    provider.historyController.addQuoteEntry(
       type: CalculationEntryType.payment,
       loanAmount: i.currentBalance + i.cashOut,
       interestRate: i.newRate,
@@ -109,7 +110,9 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
         rate > 0 &&
         years > 0 &&
         newRate > 0 &&
-        newTerm > 0;
+        newTerm > 0 &&
+        (_v('costs') ?? 0) >= 0 &&
+        (_v('cash_out') ?? 0) >= 0;
 
     RefinanceInputs? inputs;
     RefinanceResult? r;
@@ -129,6 +132,7 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
     }
     final be = r?.breakEvenMonths;
     final ntbMet = r?.ntbMet;
+    final provider = Provider.of<CalculatorProvider?>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Refinance')),
@@ -184,7 +188,9 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
             ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: inputs == null ? null : () => _save(inputs!, r!),
+            onPressed: (inputs == null || provider == null)
+                ? null
+                : () => _save(provider, inputs!, r!),
             child: const Text('Save to History'),
           ),
         ],
