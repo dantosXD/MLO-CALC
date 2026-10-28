@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/math/government_fees.dart';
 import 'package:provider/provider.dart';
 import '../../application/providers/loan_programs_provider.dart';
 import '../../domain/models/loan_program.dart';
@@ -253,7 +254,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
                     controller: _maxLoanAmountController,
                     decoration: const InputDecoration(
                       labelText: 'Max Loan Amount',
-                      hintText: 'e.g., 766550',
+                      hintText: 'e.g., 832750',
                       border: OutlineInputBorder(),
                       prefixText: '\$ ',
                     ),
@@ -358,7 +359,8 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
         _housingRatioController.text = '28';
         _debtRatioController.text = '36';
         _minDownPaymentController.text = '3';
-        _maxLoanAmountController.text = '766550';
+        _maxLoanAmountController.text = LoanLimits2026.conformingBaseline
+            .toStringAsFixed(0);
         _hasMiConfig = true;
         _annualMiController.text = '0.5';
         _miCancelLtvController.text = '80';
@@ -367,7 +369,9 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
         _housingRatioController.text = '31';
         _debtRatioController.text = '43';
         _minDownPaymentController.text = '3.5';
-        _maxLoanAmountController.text = '472030';
+        _maxLoanAmountController.text = LoanLimits2026.fhaFloor.toStringAsFixed(
+          0,
+        );
         _hasMiConfig = true;
         _upfrontMiController.text = '1.75';
         _annualMiController.text = '0.85';
