@@ -199,6 +199,25 @@ class CalculatorProvider
     if (insuranceRate != null) {
       _defaultInsuranceRate = insuranceRate;
     }
+    // Sessions saved before commit 4d11959 hold the default as monthly dollars
+    // (price * rate / 1200). Only that exact match is promoted to annual.
+    final p = price;
+    final tax = propertyTax;
+    if (p != null &&
+        tax != null &&
+        propertyTaxRate != null &&
+        propertyTaxRate > 0 &&
+        (tax - p * propertyTaxRate / 1200).abs() <= 0.01) {
+      setPropertyTax(value: tax * 12);
+    }
+    final ins = homeInsurance;
+    if (p != null &&
+        ins != null &&
+        insuranceRate != null &&
+        insuranceRate > 0 &&
+        (ins - p * insuranceRate / 1200).abs() <= 0.01) {
+      setHomeInsurance(value: ins * 12);
+    }
   }
 
   @override

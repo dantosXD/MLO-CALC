@@ -56,6 +56,24 @@ void main() {
       },
     );
 
+    test('stale monthly tax/insurance from old sessions are corrected', () {
+      provider.setPrice(value: 300000);
+      provider.setPropertyTax(value: 300000 * 1.2 / 1200); // 300 monthly
+      provider.setHomeInsurance(value: 300000 * 0.5 / 1200); // 125 monthly
+      provider.applyDefaultsIfEmpty(propertyTaxRate: 1.2, insuranceRate: 0.5);
+      expect(provider.propertyTax, closeTo(3600, 0.01));
+      expect(provider.homeInsurance, closeTo(1500, 0.01));
+    });
+
+    test('user-typed tax/insurance not matching the stale value are kept', () {
+      provider.setPrice(value: 300000);
+      provider.setPropertyTax(value: 3600);
+      provider.setHomeInsurance(value: 200);
+      provider.applyDefaultsIfEmpty(propertyTaxRate: 1.2, insuranceRate: 0.5);
+      expect(provider.propertyTax, 3600);
+      expect(provider.homeInsurance, 200);
+    });
+
     test('propertyTaxRate default does not override already-set tax', () {
       provider.setPropertyTax(value: 400);
       provider.applyDefaultsIfEmpty(propertyTaxRate: 1.2);
