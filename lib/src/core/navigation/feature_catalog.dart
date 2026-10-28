@@ -6,6 +6,7 @@ import 'package:loan_ranger/src/features/calculator/presentation/screens/calcula
 import 'package:loan_ranger/src/features/history/presentation/screens/history_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan_programs_screen.dart';
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
+import 'package:loan_ranger/src/features/refinance/presentation/screens/refinance_screen.dart';
 import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
 
 class FeatureCatalogEntry {
@@ -57,6 +58,7 @@ class FeatureCatalog {
   static const String loanProgramsId = 'loan_programs';
   static const String rentVsBuyId = 'rent_vs_buy';
   static const String buydownId = 'buydown';
+  static const String refinanceId = 'refinance';
 
   static final List<FeatureCatalogEntry>
   primaryFeatures = <FeatureCatalogEntry>[
@@ -149,6 +151,16 @@ class FeatureCatalog {
           icon: const Icon(Icons.trending_down_outlined),
           selectedIcon: const Icon(Icons.trending_down),
           builder: (_) => const BuydownScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: refinanceId,
+          title: 'Refinance',
+          analyticsName: 'Refinance',
+          category: 'Analyze',
+          description: 'Break-even and net tangible benefit for a refinance.',
+          icon: const Icon(Icons.autorenew_outlined),
+          selectedIcon: const Icon(Icons.autorenew),
+          builder: (_) => const RefinanceScreen(),
         ),
       ];
 
