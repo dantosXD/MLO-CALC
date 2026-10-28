@@ -6,6 +6,7 @@ import 'package:loan_ranger/src/features/calculator/application/providers/calcul
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/features/qualification/application/providers/qualifying_ratios_provider.dart';
+import 'package:loan_ranger/src/features/qualification/presentation/widgets/max_price_card.dart';
 import 'package:provider/provider.dart';
 
 class QualificationScreen extends StatefulWidget {
@@ -295,6 +296,8 @@ class _QualificationScreenState extends State<QualificationScreen> {
             ),
           ),
 
+          const SizedBox(height: 16),
+          const MaxPriceCard(),
           const SizedBox(height: 16),
 
           // Dynamic sections — only rebuild when calculator controllers fire
