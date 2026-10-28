@@ -18,6 +18,29 @@ LoanOption _id(List<LoanOption> o, String id) =>
     o.firstWhere((e) => e.id == id);
 
 void main() {
+  test("all option titles are ASCII", () {
+    final opts = const OptionsBuilder().build(
+      const MemberProfile(
+        price: 400000,
+        cashAvailable: 200000,
+        annualIncome: 150000,
+        isVeteran: true,
+        ruralEligible: true,
+      ),
+      const RateSheet({
+        "conventional_30": 6.5,
+        "conventional_15": 5.75,
+        "fha_30": 6.25,
+        "va_30": 6.0,
+        "usda_30": 6.1,
+      }),
+    );
+    expect(opts.length, greaterThanOrEqualTo(5));
+    for (final o in opts) {
+      expect(o.title.codeUnits.every((c) => c < 128), isTrue, reason: o.title);
+    }
+  });
+
   const base = MemberProfile(price: 400000, cashAvailable: 100000);
 
   test('va/usda only when eligible', () {

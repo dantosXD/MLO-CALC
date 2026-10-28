@@ -117,7 +117,7 @@ class OptionsBuilder {
       ..add(
         program(
           'conventional_30',
-          'Conventional 30 – min down',
+          'Conventional 30 - min down',
           'conventional_30_min',
           conv30Min,
           30,
@@ -127,7 +127,7 @@ class OptionsBuilder {
         canAfford20
             ? program(
                 'conventional_30',
-                'Conventional 30 – 20% down',
+                'Conventional 30 - 20% down',
                 'conventional_30_20',
                 20,
                 30,
