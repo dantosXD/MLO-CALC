@@ -18,6 +18,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.38.7
       - run: flutter pub get
       - run: dart format --set-exit-if-changed lib test
       - run: flutter analyze
@@ -31,6 +32,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.38.7
       - run: flutter pub get
       - run: flutter test --tags=golden
 
@@ -42,6 +44,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.38.7
       - run: flutter pub get
       - run: dart run tool/benchmarks/amortization_benchmark.dart
 
@@ -65,6 +68,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.38.7
           cache: true
 
       - name: Install dependencies
