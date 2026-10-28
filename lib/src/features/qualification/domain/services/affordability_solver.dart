@@ -29,6 +29,7 @@ class AffordabilitySolver {
     required double miAnnualPercent,
   }) {
     if (targetPiti <= hoaMonthly || rate <= 0 || termYears <= 0) return null;
+    if (downPaymentPercent < 0 || downPaymentPercent >= 100) return null;
     final k = LoanMath().calculatePayment(
       loanAmount: 1,
       interestRate: rate,

@@ -100,6 +100,8 @@ class CalculatorProvider
 
   double? _defaultPropertyTaxRate;
   double? _defaultInsuranceRate;
+  double? get defaultPropertyTaxRate => _defaultPropertyTaxRate;
+  double? get defaultInsuranceRate => _defaultInsuranceRate;
 
   LoanQuoteController get loanQuoteController => _loanQuoteController;
   QualificationController get qualificationController =>

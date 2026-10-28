@@ -34,6 +34,12 @@ class _MaxPriceCardState extends State<MaxPriceCard> {
     _prefilled = true;
     final p = Provider.of<CalculatorProvider?>(context, listen: false);
     if (p?.interestRate != null) _c['Rate']!.text = '${p!.interestRate}';
+    if (p?.defaultPropertyTaxRate != null) {
+      _c['Tax']!.text = '${p!.defaultPropertyTaxRate}';
+    }
+    if (p?.defaultInsuranceRate != null) {
+      _c['Ins']!.text = '${p!.defaultInsuranceRate}';
+    }
     if (p?.termYears != null) {
       _c['Term']!.text = p!.termYears!.toStringAsFixed(0);
     }
@@ -118,8 +124,18 @@ class _MaxPriceCardState extends State<MaxPriceCard> {
               onPressed: r == null || provider == null
                   ? null
                   : () {
+                      final tax = _v('Tax'), ins = _v('Ins');
+                      provider.setInterestRate(value: _v('Rate'));
+                      provider.setTermYears(value: _v('Term'));
                       provider.setPrice(value: r.price);
                       provider.setDownPayment(value: _v('Down'));
+                      // Annual dollars, so calculator PITI matches the target.
+                      provider.setPropertyTax(value: r.price * tax / 100);
+                      provider.setHomeInsurance(value: r.price * ins / 100);
+                      provider.setMortgageInsurance(
+                        value: r.loanAmount * _v('Mi') / 100,
+                      );
+                      provider.setMonthlyExpenses(value: _v('Hoa'));
                     },
               child: const Text('Use this price'),
             ),
