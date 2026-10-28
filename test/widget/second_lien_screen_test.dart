@@ -50,4 +50,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Draw exceeds available line'), findsOneWidget);
   });
+
+  testWidgets('tab inputs persist across tab switches', (tester) async {
+    await pump(tester);
+    await tester.enterText(find.byKey(const Key('sl_price')), '500000');
+    await tester.tap(find.text('HELOC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Piggyback'));
+    await tester.pumpAndSettle();
+    expect(find.text('500000'), findsOneWidget);
+  });
 }

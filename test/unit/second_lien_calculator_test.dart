@@ -19,6 +19,8 @@ void main() {
     );
     expect(r.firstLoan, 400000);
     expect(r.secondLoan, 50000);
+    expect(r.firstPayment, closeTo(2528.27, 0.01));
+    expect(r.secondPayment, closeTo(507.13, 0.01));
     expect(r.combinedPayment, closeTo(r.firstPayment + r.secondPayment, 0.001));
     final single =
         math.calculatePayment(

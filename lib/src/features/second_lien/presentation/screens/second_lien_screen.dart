@@ -74,7 +74,11 @@ class _PiggybackTab extends StatefulWidget {
   State<_PiggybackTab> createState() => _PiggybackTabState();
 }
 
-class _PiggybackTabState extends State<_PiggybackTab> with _Fields {
+class _PiggybackTabState extends State<_PiggybackTab>
+    with _Fields, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +99,7 @@ class _PiggybackTabState extends State<_PiggybackTab> with _Fields {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final price = v('sl_price');
     final f = v('sl_first_ltv');
     final s = v('sl_second_ltv');
@@ -161,7 +166,11 @@ class _HelocTab extends StatefulWidget {
   State<_HelocTab> createState() => _HelocTabState();
 }
 
-class _HelocTabState extends State<_HelocTab> with _Fields {
+class _HelocTabState extends State<_HelocTab>
+    with _Fields, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -173,6 +182,7 @@ class _HelocTabState extends State<_HelocTab> with _Fields {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final value = v('hl_value');
     final first = v('hl_first');
     final cltv = v('hl_cltv');
