@@ -6,6 +6,7 @@ import 'package:loan_ranger/src/features/calculator/presentation/screens/calcula
 import 'package:loan_ranger/src/features/history/presentation/screens/history_screen.dart';
 import 'package:loan_ranger/src/features/income/presentation/screens/income_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan_programs_screen.dart';
+import 'package:loan_ranger/src/features/options/presentation/screens/options_screen.dart';
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
 import 'package:loan_ranger/src/features/refinance/presentation/screens/refinance_screen.dart';
 import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
@@ -63,6 +64,7 @@ class FeatureCatalog {
   static const String refinanceId = 'refinance';
   static const String secondLienId = 'second_lien';
   static const String incomeId = 'income';
+  static const String optionsId = 'options';
 
   static final List<FeatureCatalogEntry>
   primaryFeatures = <FeatureCatalogEntry>[
@@ -186,6 +188,18 @@ class FeatureCatalog {
           icon: const Icon(Icons.payments_outlined),
           selectedIcon: const Icon(Icons.payments),
           builder: (_) => const IncomeScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: optionsId,
+          title: 'Options',
+          analyticsName: 'Options',
+          category: 'Quote',
+          description:
+              'Side-by-side loan options for a member, with a branded sheet.',
+          icon: const Icon(Icons.view_column_outlined),
+          selectedIcon: const Icon(Icons.view_column),
+          builder: (_) => const OptionsScreen(),
+          pinned: true,
         ),
       ];
 
