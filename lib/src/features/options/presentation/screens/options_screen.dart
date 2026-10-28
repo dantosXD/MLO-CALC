@@ -22,6 +22,7 @@ const _rateIds = {
   'fha_30': 'FHA 30',
   'va_30': 'VA 30',
   'usda_30': 'USDA 30',
+  'piggyback_second': 'Piggyback 2nd lien',
 };
 
 const _memberKeys = [
@@ -143,6 +144,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
       member: _member,
       brand: brand,
       memberName: _c['name']!.text,
+      secondLienRate: const OptionsBuilder().secondLienRate(_rates),
     );
     if (!mounted) return;
     await Printing.sharePdf(bytes: bytes, filename: 'loan-options.pdf');

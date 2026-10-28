@@ -120,7 +120,29 @@ void main() {
     final o = _build(
       const MemberProfile(price: 1200000, cashAvailable: 500000),
     );
-    expect(_id(o, 'piggyback_80_10_10').flags, contains('Exceeds loan limit'));
+    expect(_id(o, 'piggyback_80_10_10').flags, contains('Exceeds baseline limit (check county)'));
+  });
+
+  test('piggyback uses explicit second-lien rate else conv30 + 2', () {
+    const conv = {'conventional_30': 6.5};
+    final dflt = _id(_build(base, const RateSheet(conv)), 'piggyback_80_10_10');
+    final same = _id(
+      _build(base, const RateSheet({...conv, 'piggyback_second': 8.5})),
+      'piggyback_80_10_10',
+    );
+    final higher = _id(
+      _build(base, const RateSheet({...conv, 'piggyback_second': 10})),
+      'piggyback_80_10_10',
+    );
+    expect(same.principalAndInterest, closeTo(dflt.principalAndInterest, 0.001));
+    expect(higher.principalAndInterest, greaterThan(dflt.principalAndInterest));
+    expect(const OptionsBuilder().secondLienRate(const RateSheet(conv)), 8.5);
+    expect(
+      const OptionsBuilder().secondLienRate(
+        const RateSheet({...conv, 'piggyback_second': 10}),
+      ),
+      10,
+    );
   });
 
   test('non-positive rates are skipped', () {

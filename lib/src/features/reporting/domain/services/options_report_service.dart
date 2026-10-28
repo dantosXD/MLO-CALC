@@ -8,6 +8,23 @@ import 'package:loan_ranger/src/features/reporting/domain/services/report_theme.
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+/// ASCII-only assumption lines printed under the options table.
+List<String> optionsAssumptions(
+  List<LoanOption> options,
+  double closingPct,
+  double? secondRate,
+) {
+  String n(double v) =>
+      v.toStringAsFixed(3).replaceFirst(RegExp(r'\.?0+$'), '');
+  return [
+    'Cash to close includes estimated closing costs of ${n(closingPct)}% of price.',
+    for (final o in options.where((o) => o.buydown != null))
+      '${o.title}: requires ${OptionsReportService.pdfMoney(o.buydown!.totalSubsidy)} seller/builder credit.',
+    if (secondRate != null && options.any((o) => o.id.startsWith('piggyback')))
+      'Piggyback second lien at ${n(secondRate)}% / 15 yr.',
+  ];
+}
+
 class OptionsReportService {
   static final _currency = NumberFormat.simpleCurrency();
 
@@ -25,6 +42,8 @@ class OptionsReportService {
     required MemberProfile member,
     required BrandInfo brand,
     String? memberName,
+    double closingCostsPercent = 3,
+    double? secondLienRate,
   }) async {
     final name = memberName?.trim() ?? '';
     final rows = <String, String Function(LoanOption)>{
@@ -32,7 +51,7 @@ class OptionsReportService {
       'Down payment': (o) => _money(o.downPayment),
       'Rate': (o) => pdfPercent(o.rate, 3),
       'P&I': (o) => _money(o.principalAndInterest),
-      'MI': (o) => _money(o.monthlyMi),
+      'MI /mo': (o) => _money(o.monthlyMi),
       'PITI': (o) => _money(o.piti),
       'Cash to close': (o) => _money(o.cashToClose),
       'DTI': (o) => pdfPercent(o.backEndDti, 1),
@@ -70,6 +89,13 @@ class OptionsReportService {
             ),
             cellAlignment: pw.Alignment.centerLeft,
           ),
+          pw.SizedBox(height: 10),
+          for (final line in optionsAssumptions(
+            options,
+            closingCostsPercent,
+            secondLienRate,
+          ))
+            pw.Text(line, style: const pw.TextStyle(fontSize: 9)),
           for (final o in options.where((o) => o.buydown != null)) ...[
             pw.SizedBox(height: 10),
             pw.Text(

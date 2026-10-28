@@ -52,6 +52,21 @@ void main() {
 }
 
 void pdfPlaceholderTests() {
+  test('assumptions lines are ASCII and cover buydown and piggyback', () {
+    final opts = const OptionsBuilder().build(
+      const MemberProfile(price: 400000, cashAvailable: 100000),
+      const RateSheet({'conventional_30': 6.5}),
+    );
+    final lines = optionsAssumptions(opts, 3, 8.5);
+    expect(lines.first, contains('closing costs of 3% of price'));
+    expect(lines.any((l) => l.contains('requires \$')), isTrue);
+    expect(lines.any((l) => l.contains('Piggyback second lien at 8.5% / 15 yr')), isTrue);
+    for (final l in lines) {
+      expect(l.codeUnits.every((c) => c < 128), isTrue, reason: l);
+    }
+    expect(optionsAssumptions([], 3, null).length, 1);
+  });
+
   test('pdf placeholders are ASCII n/a', () {
     for (final v in [null, double.nan, double.infinity]) {
       expect(OptionsReportService.pdfMoney(v), 'n/a');

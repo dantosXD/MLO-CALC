@@ -11,6 +11,14 @@ import '../models/member_profile.dart';
 class OptionsBuilder {
   const OptionsBuilder();
 
+  /// Second-lien rate for the piggyback: the entered rate, else conv30 + 2.
+  double? secondLienRate(RateSheet r) {
+    final entered = r.ratesByProgramId['piggyback_second'];
+    if (entered != null && entered > 0) return entered;
+    final conv = r.ratesByProgramId['conventional_30'];
+    return conv != null && conv > 0 ? conv + 2 : null;
+  }
+
   List<LoanOption> build(
     MemberProfile m,
     RateSheet r, {
@@ -57,7 +65,7 @@ class OptionsBuilder {
         backEndDti: dti,
         buydown: buydown,
         flags: [
-          if (exceedsLimit) 'Exceeds loan limit',
+          if (exceedsLimit) 'Exceeds baseline limit (check county)',
           if (maxDti > 0 && dti != null && dti > maxDti) 'DTI over program max',
           if (cash > m.cashAvailable) 'Short on cash',
         ],
@@ -168,7 +176,7 @@ class OptionsBuilder {
         firstLtv: 80,
         secondLtv: 10,
         firstRate: convRate,
-        secondRate: convRate + 2,
+        secondRate: secondLienRate(r)!,
         termYears: 30,
         secondTermYears: 15,
         singleLoanMiAnnualPercent:
