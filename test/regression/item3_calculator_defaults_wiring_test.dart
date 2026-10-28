@@ -37,22 +37,22 @@ void main() {
     );
 
     test(
-      'propertyTaxRate default auto-applied as monthly dollars when price set',
+      'propertyTaxRate default auto-applied as annual dollars when price set',
       () {
-        // 1.2% annual of $300k = $3,600/yr = $300/mo
+        // 1.2% annual of $300k = $3,600/yr
         provider.applyDefaultsIfEmpty(propertyTaxRate: 1.2);
         provider.setPrice(value: 300000);
-        expect(provider.propertyTax, closeTo(300, 0.01));
+        expect(provider.propertyTax, closeTo(3600, 0.01));
       },
     );
 
     test(
-      'insuranceRate default auto-applied as monthly dollars when price set',
+      'insuranceRate default auto-applied as annual dollars when price set',
       () {
-        // 0.5% annual of $300k = $1,500/yr = $125/mo
+        // 0.5% annual of $300k = $1,500/yr
         provider.applyDefaultsIfEmpty(insuranceRate: 0.5);
         provider.setPrice(value: 300000);
-        expect(provider.homeInsurance, closeTo(125, 0.01));
+        expect(provider.homeInsurance, closeTo(1500, 0.01));
       },
     );
 
@@ -83,8 +83,8 @@ void main() {
       expect(provider.interestRate, 6.5);
       expect(provider.termYears, 30);
       expect(provider.downPayment, 20.0);
-      expect(provider.propertyTax, closeTo(300, 0.01));
-      expect(provider.homeInsurance, closeTo(125, 0.01));
+      expect(provider.propertyTax, closeTo(3600, 0.01));
+      expect(provider.homeInsurance, closeTo(1500, 0.01));
     });
   });
 }

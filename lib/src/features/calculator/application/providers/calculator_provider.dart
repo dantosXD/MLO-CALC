@@ -171,8 +171,8 @@ class CalculatorProvider
 
   /// Pre-fills fields that have no persisted value with MLO-defined defaults.
   /// Rate/term/downPayment are applied immediately. Tax and insurance rates are
-  /// stored and auto-converted to monthly dollars the first time setPrice is
-  /// called (conversion: price × rate% / 12).
+  /// stored and auto-converted to annual dollars the first time setPrice is
+  /// called (conversion: price × rate%).
   void applyDefaultsIfEmpty({
     double? interestRate,
     double? termYears,
@@ -227,10 +227,10 @@ class CalculatorProvider
     _loanQuoteController.setPrice(value: value);
     if (value != null) {
       if (propertyTax == null && _defaultPropertyTaxRate != null) {
-        setPropertyTax(value: value * _defaultPropertyTaxRate! / 100 / 12);
+        setPropertyTax(value: value * _defaultPropertyTaxRate! / 100);
       }
       if (homeInsurance == null && _defaultInsuranceRate != null) {
-        setHomeInsurance(value: value * _defaultInsuranceRate! / 100 / 12);
+        setHomeInsurance(value: value * _defaultInsuranceRate! / 100);
       }
     }
   }
