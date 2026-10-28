@@ -3,9 +3,10 @@ import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/features/reporting/domain/services/brand_header.dart';
+import 'package:loan_ranger/src/features/reporting/domain/services/report_theme.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 class ReportService {
   static final _currency = NumberFormat.simpleCurrency();
@@ -13,16 +14,20 @@ class ReportService {
   static Future<Uint8List> generateLoanReport({
     required LoanParametersReadModel provider,
     String? clientName,
+    BrandInfo? brand,
   }) async {
     final doc = pw.Document();
-    final font = await PdfGoogleFonts.nunitoExtraLight();
-
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        theme: pw.ThemeData.withFont(base: font),
+        theme: await loadReportTheme(),
+        footer: brand == null ? null : (_) => buildBrandFooter(brand),
         build: (context) => [
-          _buildHeader(clientName),
+          brand == null
+              ? _buildHeader(clientName)
+              : buildBrandHeader(brand, title: 'Loan Estimate Report'),
+          if (brand != null && clientName != null)
+            pw.Text('Prepared for: $clientName'),
           pw.SizedBox(height: 20),
           _buildLoanSummary(provider),
           pw.SizedBox(height: 20),

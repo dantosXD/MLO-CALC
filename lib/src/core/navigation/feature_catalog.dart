@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:loan_ranger/src/features/amortization/presentation/screens/amortization_screen.dart';
 import 'package:loan_ranger/src/features/analysis/presentation/screens/analysis_screen.dart';
+import 'package:loan_ranger/src/features/buydown/presentation/screens/buydown_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_screen.dart';
 import 'package:loan_ranger/src/features/history/presentation/screens/history_screen.dart';
+import 'package:loan_ranger/src/features/income/presentation/screens/income_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan_programs_screen.dart';
+import 'package:loan_ranger/src/features/options/presentation/screens/options_screen.dart';
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
+import 'package:loan_ranger/src/features/refinance/presentation/screens/refinance_screen.dart';
 import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
+import 'package:loan_ranger/src/features/second_lien/presentation/screens/second_lien_screen.dart';
 
 class FeatureCatalogEntry {
   const FeatureCatalogEntry({
@@ -55,6 +60,11 @@ class FeatureCatalog {
   static const String historyId = 'history';
   static const String loanProgramsId = 'loan_programs';
   static const String rentVsBuyId = 'rent_vs_buy';
+  static const String buydownId = 'buydown';
+  static const String refinanceId = 'refinance';
+  static const String secondLienId = 'second_lien';
+  static const String incomeId = 'income';
+  static const String optionsId = 'options';
 
   static final List<FeatureCatalogEntry>
   primaryFeatures = <FeatureCatalogEntry>[
@@ -138,7 +148,63 @@ class FeatureCatalog {
           selectedIcon: const Icon(Icons.home_work),
           builder: (_) => const RentVsBuyScreen(),
         ),
+        FeatureCatalogEntry(
+          id: buydownId,
+          title: 'Buydown',
+          analyticsName: 'Buydown',
+          category: 'Quote',
+          description: 'Compare 2-1, 1-0, 3-2-1 and 1-1 temporary buydowns.',
+          icon: const Icon(Icons.trending_down_outlined),
+          selectedIcon: const Icon(Icons.trending_down),
+          builder: (_) => const BuydownScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: refinanceId,
+          title: 'Refinance',
+          analyticsName: 'Refinance',
+          category: 'Analyze',
+          description: 'Break-even and net tangible benefit for a refinance.',
+          icon: const Icon(Icons.autorenew_outlined),
+          selectedIcon: const Icon(Icons.autorenew),
+          builder: (_) => const RefinanceScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: secondLienId,
+          title: 'Second Lien',
+          analyticsName: 'Second Lien',
+          category: 'Quote',
+          description: 'Piggyback 80-10-10 comparison and HELOC capacity.',
+          icon: const Icon(Icons.layers_outlined),
+          selectedIcon: const Icon(Icons.layers),
+          builder: (_) => const SecondLienScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: incomeId,
+          title: 'Income',
+          analyticsName: 'Income',
+          category: 'Qualify',
+          description:
+              'Self-employed, variable, rental income and student loans.',
+          icon: const Icon(Icons.payments_outlined),
+          selectedIcon: const Icon(Icons.payments),
+          builder: (_) => const IncomeScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: optionsId,
+          title: 'Options',
+          analyticsName: 'Options',
+          category: 'Quote',
+          description:
+              'Side-by-side loan options for a member, with a branded sheet.',
+          icon: const Icon(Icons.view_column_outlined),
+          selectedIcon: const Icon(Icons.view_column),
+          builder: (_) => const OptionsScreen(),
+          pinned: true,
+        ),
       ];
+
+  static List<FeatureCatalogEntry> get pinnedFeatures =>
+      workspaceFeatures.where((entry) => entry.pinned).toList();
 
   const FeatureCatalog();
 

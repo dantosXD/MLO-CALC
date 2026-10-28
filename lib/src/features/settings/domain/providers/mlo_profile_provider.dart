@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/core/persistence/secure_store.dart';
+import 'package:loan_ranger/src/features/reporting/domain/services/brand_header.dart';
 
 class MloProfileProvider with ChangeNotifier {
   MloProfileProvider({
@@ -33,6 +37,14 @@ class MloProfileProvider with ChangeNotifier {
   // Branding — stored as raw ARGB int (Color.value)
   int accentColorValue = 0xFF0891B2; // default = primaryTeal
 
+  // Branding links + cached logo (non-PII)
+  String applyUrl = '';
+  String logoUrl = '';
+  String logoBytesBase64 = '';
+
+  static const String _keyApplyUrl = 'mlo_apply_url';
+  static const String _keyLogoUrl = 'mlo_logo_url';
+  static const String _keyLogoB64 = 'mlo_logo_b64';
   static const String _keyName = 'mlo_name';
   static const String _keyNmls = 'mlo_nmls';
   static const String _keyCompany = 'mlo_company';
@@ -59,6 +71,9 @@ class MloProfileProvider with ChangeNotifier {
       disclaimerText =
           _prefs.getString(_keyDisclaimer) ??
           'Estimates only. Not a loan offer. Taxes/insurance/MI may vary.';
+      applyUrl = _prefs.getString(_keyApplyUrl) ?? '';
+      logoUrl = _prefs.getString(_keyLogoUrl) ?? '';
+      logoBytesBase64 = _prefs.getString(_keyLogoB64) ?? '';
       defaultInterestRate = _prefs.getDouble(_keyDefaultRate);
       defaultTermYears = _prefs.getDouble(_keyDefaultTerm);
       defaultDownPaymentPct = _prefs.getDouble(_keyDefaultDownPct);
@@ -105,6 +120,66 @@ class MloProfileProvider with ChangeNotifier {
     await _prefs.setString(_keyDisclaimer, text);
   }
 
+  Future<void> saveBranding({
+    required String applyUrl,
+    required String logoUrl,
+  }) async {
+    this.applyUrl = applyUrl;
+    this.logoUrl = logoUrl;
+    notifyListeners();
+    await _prefs.setString(_keyApplyUrl, applyUrl);
+    await _prefs.setString(_keyLogoUrl, logoUrl);
+  }
+
+  // ponytail: logo comes from a URL because no image-picker dependency is
+  // installed; add file_selector if MLOs ask to pick a file.
+  Future<bool> refreshLogo({http.Client? client}) async {
+    if (logoUrl.isEmpty) return false;
+    final c = client ?? http.Client();
+    try {
+      final res = await c
+          .get(Uri.parse(logoUrl))
+          .timeout(const Duration(seconds: 10));
+      final n = res.bodyBytes.length;
+      if (res.statusCode != 200 || n == 0 || n > 500 * 1024) return false;
+      final b = res.bodyBytes;
+      final isPng =
+          n >= 4 &&
+          b[0] == 0x89 &&
+          b[1] == 0x50 &&
+          b[2] == 0x4E &&
+          b[3] == 0x47;
+      final isJpeg = n >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF;
+      if (!isPng && !isJpeg) return false;
+      logoBytesBase64 = base64Encode(b);
+      notifyListeners();
+      await _prefs.setString(_keyLogoB64, logoBytesBase64);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      if (client == null) c.close();
+    }
+  }
+
+  BrandInfo toBrandInfo() {
+    Uint8List? logo;
+    try {
+      if (logoBytesBase64.isNotEmpty) logo = base64Decode(logoBytesBase64);
+    } catch (_) {}
+    return BrandInfo(
+      name: mloName,
+      nmls: mloNmls,
+      company: mloCompany,
+      phone: mloPhone,
+      email: mloEmail,
+      applyUrl: applyUrl,
+      disclaimer: disclaimerText,
+      logo: logo,
+      accentColor: accentColorValue,
+    );
+  }
+
   Future<void> saveCalculatorDefaults({
     double? interestRate,
     double? termYears,
@@ -148,6 +223,9 @@ class MloProfileProvider with ChangeNotifier {
       'mlo_phone': mloPhone,
       'mlo_email': mloEmail,
       'disclaimer': disclaimerText,
+      'applyUrl': applyUrl,
+      // Label included so an empty URL leaves no dangling "Apply:".
+      'apply_line': applyUrl.isNotEmpty ? 'Apply: $applyUrl' : '',
     };
   }
 }

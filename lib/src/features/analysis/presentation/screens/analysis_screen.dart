@@ -9,6 +9,7 @@ import 'package:loan_ranger/src/features/calculator/presentation/widgets/closing
 import 'package:loan_ranger/src/features/nlp/application/providers/nlp_settings_provider.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 import 'package:loan_ranger/src/features/reporting/domain/services/report_service.dart';
+import 'package:loan_ranger/src/features/settings/domain/providers/mlo_profile_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
@@ -392,7 +393,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return;
     }
 
-    final pdfData = await ReportService.generateLoanReport(provider: provider);
+    final pdfData = await ReportService.generateLoanReport(
+      provider: provider,
+      brand: context.read<MloProfileProvider?>()?.toBrandInfo(),
+    );
     if (!context.mounted) return;
     await Printing.sharePdf(bytes: pdfData, filename: 'loan-estimate.pdf');
   }

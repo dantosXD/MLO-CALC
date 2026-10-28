@@ -70,6 +70,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Release builds sign with the debug keystore (android/app/build.gradle.kts).
+      # Restore the same keystore installed copies were signed with; a fresh
+      # runner key would make every in-app update fail to install.
+      - name: Restore signing keystore
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$DEBUG_KEYSTORE_B64" ]; then
+            echo "::error::DEBUG_KEYSTORE_B64 secret is not set; refusing to publish an APK that cannot update existing installs"
+            exit 1
+          fi
+          mkdir -p ~/.android
+          echo "$DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+
       - name: Determine Version
         id: version
         run: |

@@ -17,6 +17,8 @@ import 'package:loan_ranger/src/features/calculator/domain/services/amortization
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
+import 'package:loan_ranger/src/features/loan_programs/domain/models/loan_program.dart';
+import 'package:loan_ranger/src/features/loan_programs/domain/services/program_cost_service.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 
 export 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart'
@@ -98,6 +100,8 @@ class CalculatorProvider
 
   double? _defaultPropertyTaxRate;
   double? _defaultInsuranceRate;
+  double? get defaultPropertyTaxRate => _defaultPropertyTaxRate;
+  double? get defaultInsuranceRate => _defaultInsuranceRate;
 
   LoanQuoteController get loanQuoteController => _loanQuoteController;
   QualificationController get qualificationController =>
@@ -171,8 +175,8 @@ class CalculatorProvider
 
   /// Pre-fills fields that have no persisted value with MLO-defined defaults.
   /// Rate/term/downPayment are applied immediately. Tax and insurance rates are
-  /// stored and auto-converted to monthly dollars the first time setPrice is
-  /// called (conversion: price × rate% / 12).
+  /// stored and auto-converted to annual dollars the first time setPrice is
+  /// called (conversion: price × rate%).
   void applyDefaultsIfEmpty({
     double? interestRate,
     double? termYears,
@@ -194,6 +198,25 @@ class CalculatorProvider
     }
     if (insuranceRate != null) {
       _defaultInsuranceRate = insuranceRate;
+    }
+    // Sessions saved before commit 4d11959 hold the default as monthly dollars
+    // (price * rate / 1200). Only that exact match is promoted to annual.
+    final p = price;
+    final tax = propertyTax;
+    if (p != null &&
+        tax != null &&
+        propertyTaxRate != null &&
+        propertyTaxRate > 0 &&
+        (tax - p * propertyTaxRate / 1200).abs() <= 0.01) {
+      setPropertyTax(value: tax * 12);
+    }
+    final ins = homeInsurance;
+    if (p != null &&
+        ins != null &&
+        insuranceRate != null &&
+        insuranceRate > 0 &&
+        (ins - p * insuranceRate / 1200).abs() <= 0.01) {
+      setHomeInsurance(value: ins * 12);
     }
   }
 
@@ -227,10 +250,10 @@ class CalculatorProvider
     _loanQuoteController.setPrice(value: value);
     if (value != null) {
       if (propertyTax == null && _defaultPropertyTaxRate != null) {
-        setPropertyTax(value: value * _defaultPropertyTaxRate! / 100 / 12);
+        setPropertyTax(value: value * _defaultPropertyTaxRate! / 100);
       }
       if (homeInsurance == null && _defaultInsuranceRate != null) {
-        setHomeInsurance(value: value * _defaultInsuranceRate! / 100 / 12);
+        setHomeInsurance(value: value * _defaultInsuranceRate! / 100);
       }
     }
   }
@@ -333,6 +356,26 @@ class CalculatorProvider
 
   void seedDevData() {
     _historyController.replaceFromJson(DevSeederService.generateJsonString());
+  }
+
+  /// Sets loan amount (incl. financed upfront fee) and annual MI from [program].
+  void applyLoanProgram(
+    LoanProgram program, {
+    BorrowerEligibility eligibility = const BorrowerEligibility(),
+  }) {
+    final p = price;
+    if (p == null) return;
+    final dp = downPayment ?? 0;
+    final costs = const ProgramCostService().compute(
+      program: program,
+      price: p,
+      downPayment: dp < 100 ? p * dp / 100 : dp, // <100 means percent
+      termYears: termYears ?? 30,
+      eligibility: eligibility,
+    );
+    setLoanAmount(value: costs.totalLoan);
+    setMortgageInsurance(value: costs.annualMi);
+    _loanQuoteController.calculate();
   }
 
   Future<String> applyNlpRequest(CalculationRequest request) async {

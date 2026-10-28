@@ -1,3 +1,8 @@
+import 'package:loan_ranger/src/core/utils/advanced_calculations.dart';
+
+/// Loan Estimate page-2 sections.
+enum LeSection { a, b, c, e, f, g, h }
+
 class ClosingCosts {
   // Loan Charges
   final double originationFee;
@@ -22,6 +27,8 @@ class ClosingCosts {
   final double prepaidHomeInsurance; // 12 months usually
   final double prepaidPropertyTaxes;
 
+  final double initialEscrow; // LE section G; not part of [total]
+
   // Other
   final double otherFees;
 
@@ -41,6 +48,7 @@ class ClosingCosts {
     this.prepaidInterest = 0,
     this.prepaidHomeInsurance = 0,
     this.prepaidPropertyTaxes = 0,
+    this.initialEscrow = 0,
     this.otherFees = 0,
   });
 
@@ -83,6 +91,7 @@ class ClosingCosts {
     double? prepaidInterest,
     double? prepaidHomeInsurance,
     double? prepaidPropertyTaxes,
+    double? initialEscrow,
     double? otherFees,
   }) {
     return ClosingCosts(
@@ -102,7 +111,80 @@ class ClosingCosts {
       prepaidInterest: prepaidInterest ?? this.prepaidInterest,
       prepaidHomeInsurance: prepaidHomeInsurance ?? this.prepaidHomeInsurance,
       prepaidPropertyTaxes: prepaidPropertyTaxes ?? this.prepaidPropertyTaxes,
+      initialEscrow: initialEscrow ?? this.initialEscrow,
       otherFees: otherFees ?? this.otherFees,
+    );
+  }
+
+  Map<LeSection, double> get bySection => {
+    LeSection.a: totalLoanCharges,
+    LeSection.b: totalServices,
+    LeSection.c: titleInsuranceLender + settlementFee,
+    LeSection.e: recordingFees + transferTaxes,
+    LeSection.f: totalPrepaids,
+    LeSection.g: initialEscrow,
+    LeSection.h: titleInsuranceOwner + otherFees,
+  };
+
+  /// Reg Z 1026.4 finance charges paid at closing.
+  double get prepaidFinanceCharges =>
+      totalLoanCharges + settlementFee + prepaidInterest;
+
+  double apr({
+    required double loanAmount,
+    required double interestRate,
+    required double termYears,
+  }) =>
+      // ponytail: monthly MI (and FHA UFMIP/MIP) is not in the APR payment
+      // stream; add it if MLOs compare APR against LOS output.
+      AdvancedCalculations.calculateAPR(
+        loanAmount: loanAmount,
+        interestRate: interestRate,
+        termYears: termYears,
+        loanFees: prepaidFinanceCharges,
+        points: 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'originationFee': originationFee,
+    'discountPoints': discountPoints,
+    'processingFee': processingFee,
+    'underwritingFee': underwritingFee,
+    'appraisalFee': appraisalFee,
+    'creditReportFee': creditReportFee,
+    'floodCertificationFee': floodCertificationFee,
+    'titleInsuranceLender': titleInsuranceLender,
+    'titleInsuranceOwner': titleInsuranceOwner,
+    'settlementFee': settlementFee,
+    'recordingFees': recordingFees,
+    'transferTaxes': transferTaxes,
+    'prepaidInterest': prepaidInterest,
+    'prepaidHomeInsurance': prepaidHomeInsurance,
+    'prepaidPropertyTaxes': prepaidPropertyTaxes,
+    'initialEscrow': initialEscrow,
+    'otherFees': otherFees,
+  };
+
+  factory ClosingCosts.fromJson(Map<String, dynamic> j) {
+    double d(String k) => (j[k] as num?)?.toDouble() ?? 0;
+    return ClosingCosts(
+      originationFee: d('originationFee'),
+      discountPoints: d('discountPoints'),
+      processingFee: d('processingFee'),
+      underwritingFee: d('underwritingFee'),
+      appraisalFee: d('appraisalFee'),
+      creditReportFee: d('creditReportFee'),
+      floodCertificationFee: d('floodCertificationFee'),
+      titleInsuranceLender: d('titleInsuranceLender'),
+      titleInsuranceOwner: d('titleInsuranceOwner'),
+      settlementFee: d('settlementFee'),
+      recordingFees: d('recordingFees'),
+      transferTaxes: d('transferTaxes'),
+      prepaidInterest: d('prepaidInterest'),
+      prepaidHomeInsurance: d('prepaidHomeInsurance'),
+      prepaidPropertyTaxes: d('prepaidPropertyTaxes'),
+      initialEscrow: d('initialEscrow'),
+      otherFees: d('otherFees'),
     );
   }
 

@@ -10,9 +10,7 @@ class WorkspaceDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pinnedFeatures = FeatureCatalog.primaryFeatures
-        .where((FeatureCatalogEntry entry) => entry.pinned)
-        .toList();
+    final pinnedFeatures = FeatureCatalog.pinnedFeatures;
 
     // totalCount is projected alongside the top-3 list so the hero badge
     // (which shows the full history count) updates when entries are added/removed

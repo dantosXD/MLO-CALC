@@ -169,7 +169,7 @@ const List<ShareTemplate> _defaultTemplates = <ShareTemplate>[
     name: 'SMS - With Breakdown',
     subject: null,
     body:
-        'Estimate: {{loan_amount}} @ {{interest_rate}} ({{term_years}})\nP&I: {{pi_payment}}\nTax: {{monthly_tax}} Ins: {{monthly_insurance}} MI: {{monthly_mi}} HOA: {{monthly_hoa}}\nPITI: {{piti_payment}}\n{{mlo_name}} {{mlo_nmls}}\n{{disclaimer}}',
+        'Estimate: {{loan_amount}} @ {{interest_rate}} ({{term_years}})\nP&I: {{pi_payment}}\nTax: {{monthly_tax}} Ins: {{monthly_insurance}} MI: {{monthly_mi}} HOA: {{monthly_hoa}}\nPITI: {{piti_payment}}\n{{mlo_name}} {{mlo_nmls}}\n{{apply_line}}\n{{disclaimer}}',
     isDefault: true,
   ),
   ShareTemplate(
@@ -177,7 +177,7 @@ const List<ShareTemplate> _defaultTemplates = <ShareTemplate>[
     name: 'Email - Detailed Quote',
     subject: 'Mortgage estimate - {{scenario_name}}',
     body:
-        'Hi {{borrower_name}},\n\nHere is an estimated mortgage quote based on the details below:\n\nScenario: {{scenario_name}}\nLoan: {{loan_amount}}\nRate: {{interest_rate}}\nTerm: {{term_years}}\n\nP&I: {{pi_payment}}\nEstimated PITI: {{piti_payment}}\n\nEstimated cash to close: {{cash_to_close}}\n\n{{mlo_name}}\n{{mlo_nmls}}\n{{mlo_company}}\n{{mlo_phone}}\n{{mlo_email}}\n\n{{disclaimer}}',
+        'Hi {{borrower_name}},\n\nHere is an estimated mortgage quote based on the details below:\n\nScenario: {{scenario_name}}\nLoan: {{loan_amount}}\nRate: {{interest_rate}}\nTerm: {{term_years}}\n\nP&I: {{pi_payment}}\nEstimated PITI: {{piti_payment}}\n\nEstimated cash to close: {{cash_to_close}}\n\n{{mlo_name}}\n{{mlo_nmls}}\n{{mlo_company}}\n{{mlo_phone}}\n{{mlo_email}}\n{{apply_line}}\n\n{{disclaimer}}',
     isDefault: true,
   ),
   ShareTemplate(
@@ -185,7 +185,7 @@ const List<ShareTemplate> _defaultTemplates = <ShareTemplate>[
     name: 'Share/Copy - Standard Quote',
     subject: 'Mortgage estimate',
     body:
-        'Scenario: {{scenario_name}}\nLoan: {{loan_amount}} | Rate: {{interest_rate}} | Term: {{term_years}}\nP&I: {{pi_payment}} | Est PITI: {{piti_payment}}\nCash to close (est): {{cash_to_close}}\n\n{{mlo_name}} | {{mlo_nmls}} | {{mlo_phone}}\n\n{{disclaimer}}',
+        'Scenario: {{scenario_name}}\nLoan: {{loan_amount}} | Rate: {{interest_rate}} | Term: {{term_years}}\nP&I: {{pi_payment}} | Est PITI: {{piti_payment}}\nCash to close (est): {{cash_to_close}}\n\n{{mlo_name}} | {{mlo_nmls}} | {{mlo_phone}}\n{{apply_line}}\n\n{{disclaimer}}',
     isDefault: true,
   ),
 ];

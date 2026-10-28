@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:loan_ranger/src/core/math/government_fees.dart';
 import 'package:loan_ranger/src/core/models/qualifying_ratio.dart';
 
 /// Represents a loan program with specific qualification parameters
@@ -228,7 +229,7 @@ class DefaultLoanPrograms {
       housingRatio: 28,
       debtRatio: 36,
       minDownPaymentPercent: 3,
-      maxLoanAmount: 766550, // 2024 conforming limit
+      maxLoanAmount: LoanLimits2026.conformingBaseline,
       miConfig: const MortgageInsuranceConfig(
         annualPercent: 0.5, // Varies by LTV/credit
         cancelationLtvThreshold: 80,
@@ -245,7 +246,7 @@ class DefaultLoanPrograms {
       housingRatio: 28,
       debtRatio: 36,
       minDownPaymentPercent: 3,
-      maxLoanAmount: 766550,
+      maxLoanAmount: LoanLimits2026.conformingBaseline,
       miConfig: const MortgageInsuranceConfig(
         annualPercent: 0.4,
         cancelationLtvThreshold: 80,
@@ -262,10 +263,10 @@ class DefaultLoanPrograms {
       housingRatio: 31,
       debtRatio: 43,
       minDownPaymentPercent: 3.5,
-      maxLoanAmount: 472030, // Standard FHA limit 2024
+      maxLoanAmount: LoanLimits2026.fhaFloor,
       miConfig: const MortgageInsuranceConfig(
         upfrontPercent: 1.75, // UFMIP
-        annualPercent: 0.85, // Annual MIP
+        annualPercent: 0.55, // Annual MIP
         autoCalculate: true,
       ),
       isBuiltIn: true,
