@@ -17,6 +17,8 @@ import 'package:loan_ranger/src/features/calculator/domain/services/amortization
 import 'package:loan_ranger/src/features/calculator/domain/services/core_calculation_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/persistence_service.dart';
 import 'package:loan_ranger/src/features/calculator/domain/services/qualification_service.dart';
+import 'package:loan_ranger/src/features/loan_programs/domain/models/loan_program.dart';
+import 'package:loan_ranger/src/features/loan_programs/domain/services/program_cost_service.dart';
 import 'package:loan_ranger/src/features/nlp/domain/services/nlp_calculator_service.dart';
 
 export 'package:loan_ranger/src/features/calculator/application/states/loan_quote_state.dart'
@@ -333,6 +335,26 @@ class CalculatorProvider
 
   void seedDevData() {
     _historyController.replaceFromJson(DevSeederService.generateJsonString());
+  }
+
+  /// Sets loan amount (incl. financed upfront fee) and annual MI from [program].
+  void applyLoanProgram(
+    LoanProgram program, {
+    BorrowerEligibility eligibility = const BorrowerEligibility(),
+  }) {
+    final p = price;
+    if (p == null) return;
+    final dp = downPayment ?? 0;
+    final costs = const ProgramCostService().compute(
+      program: program,
+      price: p,
+      downPayment: dp < 100 ? p * dp / 100 : dp, // <100 means percent
+      termYears: termYears ?? 30,
+      eligibility: eligibility,
+    );
+    setLoanAmount(value: costs.totalLoan);
+    setMortgageInsurance(value: costs.annualMi);
+    _loanQuoteController.calculate();
   }
 
   Future<String> applyNlpRequest(CalculationRequest request) async {

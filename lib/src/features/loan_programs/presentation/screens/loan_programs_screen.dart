@@ -52,6 +52,7 @@ class LoanProgramsScreen extends StatelessWidget {
                   program: p,
                   isSelected: p.id == provider.selectedProgram?.id,
                   onSelect: () => _selectProgram(context, provider, p),
+                  onUse: () => _useInCalculator(context, provider, p),
                   onDuplicate: () => _duplicateProgram(context, provider, p),
                   onEdit: null, // Can't edit built-in
                   onDelete: null, // Can't delete built-in
@@ -73,6 +74,7 @@ class LoanProgramsScreen extends StatelessWidget {
                     program: p,
                     isSelected: p.id == provider.selectedProgram?.id,
                     onSelect: () => _selectProgram(context, provider, p),
+                    onUse: () => _useInCalculator(context, provider, p),
                     onDuplicate: () => _duplicateProgram(context, provider, p),
                     onEdit: () => _showProgramEditor(context, p),
                     onDelete: () => _deleteProgram(context, provider, p),
@@ -119,6 +121,16 @@ class LoanProgramsScreen extends StatelessWidget {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  void _useInCalculator(
+    BuildContext context,
+    LoanProgramsProvider provider,
+    LoanProgram program,
+  ) {
+    _selectProgram(context, provider, program);
+    context.read<CalculatorProvider>().applyLoanProgram(program);
+    Navigator.of(context).maybePop();
   }
 
   Future<void> _duplicateProgram(
@@ -287,6 +299,7 @@ class _ProgramCard extends StatelessWidget {
   final LoanProgram program;
   final bool isSelected;
   final VoidCallback onSelect;
+  final VoidCallback onUse;
   final VoidCallback? onDuplicate;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -295,6 +308,7 @@ class _ProgramCard extends StatelessWidget {
     required this.program,
     required this.isSelected,
     required this.onSelect,
+    required this.onUse,
     this.onDuplicate,
     this.onEdit,
     this.onDelete,
@@ -383,6 +397,9 @@ class _ProgramCard extends StatelessWidget {
                     case 'select':
                       onSelect();
                       break;
+                    case 'use':
+                      onUse();
+                      break;
                     case 'duplicate':
                       onDuplicate?.call();
                       break;
@@ -400,6 +417,14 @@ class _ProgramCard extends StatelessWidget {
                     child: ListTile(
                       leading: Icon(Icons.check),
                       title: Text('Select'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'use',
+                    child: ListTile(
+                      leading: Icon(Icons.calculate),
+                      title: Text('Use in calculator'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
