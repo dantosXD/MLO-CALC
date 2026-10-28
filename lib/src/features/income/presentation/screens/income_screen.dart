@@ -20,11 +20,18 @@ class IncomeScreen extends StatefulWidget {
 
 class _IncomeScreenState extends State<IncomeScreen> {
   static const _calc = IncomeCalculator();
-  static const _keys = [
-    'se_prior',
-    'se_recent',
-    'se_addbacks',
-    'se_nonrec',
+  static const _seFields = [
+    ('net', 'Net profit'),
+    ('dep', 'Depreciation'),
+    ('depl', 'Depletion'),
+    ('home', 'Business use of home'),
+    ('amort', 'Amortization/casualty'),
+    ('nonrec', 'Nonrecurring income'),
+  ];
+  static final _keys = [
+    for (final y in ['p', 'r']) ...[
+      for (final f in _seFields) 'se_${y}_${f.$1}',
+    ],
     'var_prior',
     'var_recent',
     'var_ytd',
@@ -79,6 +86,21 @@ class _IncomeScreenState extends State<IncomeScreen> {
     ),
   );
 
+  Widget _seField(String y, (String, String) f, String yr) => TextField(
+    key: Key('inc_se_${y}_${f.$1}'),
+    controller: _c['se_${y}_${f.$1}'],
+    keyboardType: const TextInputType.numberWithOptions(
+      decimal: true,
+      signed: true,
+    ),
+    decoration: InputDecoration(
+      labelText: '$yr: ${f.$2}',
+      border: const OutlineInputBorder(),
+      isDense: true,
+    ),
+    onChanged: (_) => setState(() {}),
+  );
+
   Widget _section(String title, List<Widget> children) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Column(
@@ -93,14 +115,17 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Add-backs/nonrecurring are entered once and applied to the recent year.
+    ScheduleCYear year(String y) => ScheduleCYear(
+      netProfit: _v('se_${y}_net'),
+      depreciation: _v('se_${y}_dep'),
+      depletion: _v('se_${y}_depl'),
+      businessUseOfHome: _v('se_${y}_home'),
+      amortization: _v('se_${y}_amort'),
+      nonrecurring: _v('se_${y}_nonrec'),
+    );
     final se = _calc.selfEmployedMonthly(
-      priorYear: ScheduleCYear(netProfit: _v('se_prior')),
-      recentYear: ScheduleCYear(
-        netProfit: _v('se_recent'),
-        depreciation: _v('se_addbacks'),
-        nonrecurring: _v('se_nonrec'),
-      ),
+      priorYear: year('p'),
+      recentYear: year('r'),
     );
     final variable = _calc.variableMonthly(
       priorYear: _v('var_prior'),
@@ -126,12 +151,22 @@ class _IncomeScreenState extends State<IncomeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _section('Self-employed (Schedule C, annual)', [
-            _field('se_prior', 'Prior Yr Net Profit'),
-            _field('se_recent', 'Recent Yr Net Profit'),
-            _field('se_addbacks', 'Recent Add-backs'),
-            _field('se_nonrec', 'Recent Nonrecurring'),
-          ]),
+          Text(
+            'Self-employed (Schedule C, annual)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          for (final f in _seFields)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(child: _seField('p', f, 'Prior')),
+                  const SizedBox(width: 12),
+                  Expanded(child: _seField('r', f, 'Recent')),
+                ],
+              ),
+            ),
           Text('Self-employed monthly: ${_money(se)}'),
           const SizedBox(height: 16),
           _section('Variable (bonus / commission / overtime)', [
