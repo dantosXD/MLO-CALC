@@ -11,8 +11,14 @@ import 'package:pdf/widgets.dart' as pw;
 class OptionsReportService {
   static final _currency = NumberFormat.simpleCurrency();
 
-  static String _money(double? v) =>
-      (v == null || !v.isFinite) ? '—' : _currency.format(v);
+  /// ASCII placeholder: the offline fallback PDF font lacks the em dash.
+  static String pdfMoney(double? v) =>
+      (v == null || !v.isFinite) ? 'n/a' : _currency.format(v);
+
+  static String pdfPercent(double? v, int digits) =>
+      (v == null || !v.isFinite) ? 'n/a' : '${v.toStringAsFixed(digits)}%';
+
+  static String _money(double? v) => pdfMoney(v);
 
   static Future<Uint8List> generate({
     required List<LoanOption> options,
@@ -24,15 +30,12 @@ class OptionsReportService {
     final rows = <String, String Function(LoanOption)>{
       'Loan amount': (o) => _money(o.loanAmount),
       'Down payment': (o) => _money(o.downPayment),
-      'Rate': (o) => o.rate.isFinite ? '${o.rate.toStringAsFixed(3)}%' : '—',
+      'Rate': (o) => pdfPercent(o.rate, 3),
       'P&I': (o) => _money(o.principalAndInterest),
       'MI': (o) => _money(o.monthlyMi),
       'PITI': (o) => _money(o.piti),
       'Cash to close': (o) => _money(o.cashToClose),
-      'DTI': (o) {
-        final d = o.backEndDti;
-        return (d == null || !d.isFinite) ? '—' : '${d.toStringAsFixed(1)}%';
-      },
+      'DTI': (o) => pdfPercent(o.backEndDti, 1),
       'Notes': (o) => o.flags.isEmpty ? '' : o.flags.join(', '),
     };
     final doc = pw.Document();

@@ -5,6 +5,7 @@ import 'package:loan_ranger/src/features/reporting/domain/services/brand_header.
 import 'package:loan_ranger/src/features/reporting/domain/services/options_report_service.dart';
 
 void main() {
+  pdfPlaceholderTests();
   const member = MemberProfile(
     price: 400000,
     cashAvailable: 60000,
@@ -48,4 +49,14 @@ void main() {
       expect(bytes, isNotEmpty);
     });
   }
+}
+
+void pdfPlaceholderTests() {
+  test('pdf placeholders are ASCII n/a', () {
+    for (final v in [null, double.nan, double.infinity]) {
+      expect(OptionsReportService.pdfMoney(v), 'n/a');
+      expect(OptionsReportService.pdfPercent(v, 1), 'n/a');
+    }
+    expect(OptionsReportService.pdfPercent(12.34, 1), '12.3%');
+  });
 }

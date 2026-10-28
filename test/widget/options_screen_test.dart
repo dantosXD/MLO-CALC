@@ -4,6 +4,8 @@ import 'package:loan_ranger/src/core/di/service_locator.dart';
 import 'package:loan_ranger/src/core/persistence/preference_store.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/options/application/rate_sheet_store.dart';
+import 'package:loan_ranger/src/features/options/domain/models/member_profile.dart';
+import 'package:loan_ranger/src/features/options/domain/services/options_builder.dart';
 import 'package:loan_ranger/src/features/options/presentation/screens/options_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -79,5 +81,50 @@ void main() {
     await t.tap(saveBtn);
     await t.pumpAndSettle();
     expect(calc.historyController.entries.length, 2);
+  });
+
+  testWidgets('save converts MI to annual and sets term', (t) async {
+    final calc = await pump(t);
+    await _fill(t, {
+      'opt_price': '400000',
+      'opt_cash': '90000',
+      'opt_income': '120000',
+      'opt_rate_fha_30': '6.25',
+      'opt_rate_conventional_15': '5.75',
+    });
+    for (final id in ['fha_30', 'conventional_15']) {
+      final sel = find.byWidgetPredicate(
+        (w) =>
+            w is Checkbox &&
+            w.key.toString().contains('opt_sel_') &&
+            w.key.toString().contains(id),
+      );
+      expect(sel, findsWidgets, reason: id);
+      await t.tap(sel.first);
+    }
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('opt_save')));
+    await t.pumpAndSettle();
+    final es = calc.historyController.entries;
+    expect(es.length, 2);
+    final fha = es.firstWhere((e) => e.notes!.contains('FHA'));
+    expect(fha.inputs.termYears, 30);
+    final expected = const OptionsBuilder()
+        .build(
+          const MemberProfile(
+            price: 400000,
+            cashAvailable: 90000,
+            annualIncome: 120000,
+          ),
+          const RateSheet({'fha_30': 6.25, 'conventional_15': 5.75}),
+        )
+        .firstWhere((o) => o.programId == 'fha_30');
+    expect(expected.monthlyMi, greaterThan(0));
+    expect(
+      fha.inputs.mortgageInsurance,
+      closeTo(expected.monthlyMi * 12, 0.001),
+    );
+    final c15 = es.firstWhere((e) => e.inputs.termYears == 15);
+    expect(c15.inputs.interestRate, 5.75);
   });
 }
