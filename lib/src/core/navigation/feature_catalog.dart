@@ -203,6 +203,9 @@ class FeatureCatalog {
         ),
       ];
 
+  static List<FeatureCatalogEntry> get pinnedFeatures =>
+      workspaceFeatures.where((entry) => entry.pinned).toList();
+
   const FeatureCatalog();
 
   FeatureCatalogEntry? byId(String id) {

@@ -110,7 +110,7 @@ class LoanQuoteState {
       monthlyExpenses != null;
 
   double get cashToClose {
-    var total = closingCosts.total;
+    var total = closingCosts.total + closingCosts.initialEscrow;
     if (price != null && downPayment != null) {
       if (downPayment! < 100) {
         total += price! * (downPayment! / 100);
