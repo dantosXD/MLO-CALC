@@ -92,4 +92,45 @@ void main() {
     }
     expect(o.map((e) => e.id).toSet().length, o.length);
   });
+
+  test('piggyback first lien over conforming limit is flagged', () {
+    final o = _build(
+      const MemberProfile(price: 1200000, cashAvailable: 500000),
+    );
+    expect(_id(o, 'piggyback_80_10_10').flags, contains('Exceeds loan limit'));
+  });
+
+  test('non-positive rates are skipped', () {
+    var o = _build(
+      base,
+      const RateSheet({'fha_30': 0, 'conventional_30': 6.5}),
+    );
+    expect(o.any((e) => e.programId == 'fha_30'), isFalse);
+    o = _build(base, const RateSheet({'conventional_30': 0}));
+    expect(o, isEmpty);
+  });
+
+  test('pinned dollar amounts: FHA', () {
+    final f = _id(_build(base), 'fha_30');
+    expect(f.loanAmount, closeTo(392755, 0.01));
+    expect(f.principalAndInterest, closeTo(2418.2601, 0.01));
+    expect(f.cashToClose, closeTo(26000, 0.01));
+  });
+
+  test('pinned dollar amounts: VA', () {
+    final v = _id(
+      _build(
+        const MemberProfile(
+          price: 400000,
+          cashAvailable: 100000,
+          isVeteran: true,
+        ),
+      ),
+      'va_30',
+    );
+    expect(v.loanAmount, closeTo(408600, 0.01));
+    expect(v.principalAndInterest, closeTo(2449.7634, 0.01));
+    expect(v.monthlyMi, 0);
+    expect(v.cashToClose, closeTo(12000, 0.01));
+  });
 }

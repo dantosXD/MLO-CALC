@@ -73,7 +73,7 @@ class OptionsBuilder {
       bool buydown = false,
     }) {
       final rate = r.ratesByProgramId[id];
-      if (rate == null) return null;
+      if (rate == null || rate <= 0) return null;
       final down = m.price * downPct / 100;
       final c = const ProgramCostService().compute(
         program: progs[id]!,
@@ -162,7 +162,7 @@ class OptionsBuilder {
       );
 
     final convRate = r.ratesByProgramId['conventional_30'];
-    if (convRate != null) {
+    if (convRate != null && convRate > 0) {
       final pb = const SecondLienCalculator().piggyback(
         price: m.price,
         firstLtv: 80,
@@ -184,7 +184,9 @@ class OptionsBuilder {
           rate: convRate,
           pi: pb.combinedPayment,
           monthlyMi: 0,
-          exceedsLimit: false,
+          exceedsLimit:
+              pb.firstLoan >
+              (progs['conventional_30']!.maxLoanAmount ?? double.infinity),
         ),
       );
     }
