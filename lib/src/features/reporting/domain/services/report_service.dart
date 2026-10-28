@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/models/amortization_entry.dart';
 import 'package:loan_ranger/src/core/models/loan_parameters_read_model.dart';
 import 'package:loan_ranger/src/core/utils/formatters.dart';
+import 'package:loan_ranger/src/features/reporting/domain/services/brand_header.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -13,16 +14,28 @@ class ReportService {
   static Future<Uint8List> generateLoanReport({
     required LoanParametersReadModel provider,
     String? clientName,
+    BrandInfo? brand,
   }) async {
     final doc = pw.Document();
-    final font = await PdfGoogleFonts.nunitoExtraLight();
+    // Google font needs network; fall back to the built-in font offline/tests.
+    pw.Font? font;
+    try {
+      font = await PdfGoogleFonts.nunitoExtraLight().timeout(
+        const Duration(seconds: 3),
+      );
+    } catch (_) {}
 
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        theme: pw.ThemeData.withFont(base: font),
+        theme: font == null ? null : pw.ThemeData.withFont(base: font),
+        footer: brand == null ? null : (_) => buildBrandFooter(brand),
         build: (context) => [
-          _buildHeader(clientName),
+          brand == null
+              ? _buildHeader(clientName)
+              : buildBrandHeader(brand, title: 'Loan Estimate Report'),
+          if (brand != null && clientName != null)
+            pw.Text('Prepared for: $clientName'),
           pw.SizedBox(height: 20),
           _buildLoanSummary(provider),
           pw.SizedBox(height: 20),

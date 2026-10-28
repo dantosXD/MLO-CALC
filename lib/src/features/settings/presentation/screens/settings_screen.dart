@@ -102,6 +102,8 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
   final _companyCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _applyCtrl = TextEditingController();
+  final _logoUrlCtrl = TextEditingController();
   bool _dirty = false;
   bool _initialized = false;
 
@@ -116,6 +118,8 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
     _companyCtrl.text = p.mloCompany;
     _phoneCtrl.text = p.mloPhone;
     _emailCtrl.text = p.mloEmail;
+    _applyCtrl.text = p.applyUrl;
+    _logoUrlCtrl.text = p.logoUrl;
   }
 
   @override
@@ -125,6 +129,8 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
     _companyCtrl.dispose();
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
+    _applyCtrl.dispose();
+    _logoUrlCtrl.dispose();
     super.dispose();
   }
 
@@ -155,12 +161,38 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
       email: _emailCtrl.text.trim(),
     );
     if (!mounted) return;
+    await context.read<MloProfileProvider>().saveBranding(
+      applyUrl: _applyCtrl.text.trim(),
+      logoUrl: _logoUrlCtrl.text.trim(),
+    );
+    if (!mounted) return;
     setState(() => _dirty = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Profile saved'),
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _fetchLogo() async {
+    final p = context.read<MloProfileProvider>();
+    await p.saveBranding(
+      applyUrl: _applyCtrl.text.trim(),
+      logoUrl: _logoUrlCtrl.text.trim(),
+    );
+    final ok = await p.refreshLogo();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? 'Logo updated'
+              : 'Could not fetch logo (check the URL; max 500 KB)',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -220,6 +252,33 @@ class _MloProfileSectionState extends State<_MloProfileSection> {
                 icon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 onChanged: (_) => _markDirty(),
+              ),
+              const SizedBox(height: 10),
+              _SettingsTextField(
+                controller: _applyCtrl,
+                label: 'Apply link',
+                hint: 'https://apply.acmemortgage.com',
+                icon: Icons.link,
+                keyboardType: TextInputType.url,
+                onChanged: (_) => _markDirty(),
+              ),
+              const SizedBox(height: 10),
+              _SettingsTextField(
+                controller: _logoUrlCtrl,
+                label: 'Logo URL',
+                hint: 'https://acmemortgage.com/logo.png',
+                icon: Icons.image_outlined,
+                keyboardType: TextInputType.url,
+                onChanged: (_) => _markDirty(),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _fetchLogo,
+                  icon: const Icon(Icons.download_outlined),
+                  label: const Text('Fetch logo'),
+                ),
               ),
               const SizedBox(height: 14),
               SizedBox(
