@@ -29,6 +29,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     ('nonrec', 'Nonrecurring income'),
   ];
   static final _keys = [
+    'base',
     for (final y in ['p', 'r']) ...[
       for (final f in _seFields) 'se_${y}_${f.$1}',
     ],
@@ -142,7 +143,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
       balance: _v('sl_balance'),
       reportedPayment: _v('sl_payment'),
     );
-    final income = se + variable + (rental > 0 ? rental : 0);
+    final income = _v('base') + se + variable + (rental > 0 ? rental : 0);
     final debts = student + (rental < 0 ? -rental : 0) + _v('other_debt');
     final provider = Provider.of<CalculatorProvider?>(context, listen: false);
 
@@ -151,6 +152,10 @@ class _IncomeScreenState extends State<IncomeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _section('Base income', [
+            _field('base', 'Other / base monthly income'),
+          ]),
+          const SizedBox(height: 8),
           Text(
             'Self-employed (Schedule C, annual)',
             style: Theme.of(context).textTheme.titleMedium,

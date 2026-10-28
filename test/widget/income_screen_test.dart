@@ -47,6 +47,26 @@ void main() {
     expect(provider.monthlyDebt, 500); // 100 other + 400 fannie student loan
   });
 
+  testWidgets('Send to Qualification includes base monthly income', (
+    tester,
+  ) async {
+    bigView(tester);
+    final provider = buildCalculatorProvider();
+    await tester.pumpWidget(
+      ChangeNotifierProvider<CalculatorProvider>.value(
+        value: provider,
+        child: const MaterialApp(home: IncomeScreen()),
+      ),
+    );
+    await tester.enterText(find.byKey(const Key('inc_base')), '5000');
+    await tester.enterText(find.byKey(const Key('inc_var_prior')), '12000');
+    await tester.enterText(find.byKey(const Key('inc_var_recent')), '12000');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send to Qualification'));
+    await tester.pumpAndSettle();
+    expect(provider.annualIncome, (5000 + 1000) * 12);
+  });
+
   testWidgets('button disabled without provider; no NaN', (tester) async {
     bigView(tester);
     await tester.pumpWidget(const MaterialApp(home: IncomeScreen()));
