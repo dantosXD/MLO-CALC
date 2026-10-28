@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 
 import '../../domain/services/second_lien_calculator.dart';
-
-final NumberFormat _currency = NumberFormat.simpleCurrency();
-
-String _money(double? v) =>
-    (v == null || !v.isFinite) ? '—' : _currency.format(v);
-
-String _pct(double? v) =>
-    (v == null || !v.isFinite) ? '—' : '${v.toStringAsFixed(1)}%';
 
 class SecondLienScreen extends StatelessWidget {
   const SecondLienScreen({super.key});
@@ -147,13 +139,15 @@ class _PiggybackTabState extends State<_PiggybackTab>
           ],
         ),
         const SizedBox(height: 16),
-        Text('First loan: ${_money(r?.firstLoan)}'),
-        Text('Second loan: ${_money(r?.secondLoan)}'),
-        Text('First payment: ${_money(r?.firstPayment)}'),
-        Text('Second payment: ${_money(r?.secondPayment)}'),
-        Text('Combined payment: ${_money(r?.combinedPayment)}'),
-        Text('Single loan + MI payment: ${_money(r?.singleLoanPaymentWithMi)}'),
-        Text('Monthly difference: ${_money(diff)}$note'),
+        Text('First loan: ${formatMoneyOrDash(r?.firstLoan)}'),
+        Text('Second loan: ${formatMoneyOrDash(r?.secondLoan)}'),
+        Text('First payment: ${formatMoneyOrDash(r?.firstPayment)}'),
+        Text('Second payment: ${formatMoneyOrDash(r?.secondPayment)}'),
+        Text('Combined payment: ${formatMoneyOrDash(r?.combinedPayment)}'),
+        Text(
+          'Single loan + MI payment: ${formatMoneyOrDash(r?.singleLoanPaymentWithMi)}',
+        ),
+        Text('Monthly difference: ${formatMoneyOrDash(diff)}$note'),
       ],
     );
   }
@@ -228,10 +222,14 @@ class _HelocTabState extends State<_HelocTab>
           ],
         ),
         const SizedBox(height: 16),
-        Text('Max line: ${_money(r?.maxLine)}'),
-        Text('CLTV: ${_pct(r?.cltv)}'),
-        Text('Interest-only payment: ${_money(r?.interestOnlyPayment)}'),
-        Text('Fully amortizing payment: ${_money(r?.fullyAmortizingPayment)}'),
+        Text('Max line: ${formatMoneyOrDash(r?.maxLine)}'),
+        Text('CLTV: ${formatPercentOrDash(r?.cltv)}'),
+        Text(
+          'Interest-only payment: ${formatMoneyOrDash(r?.interestOnlyPayment)}',
+        ),
+        Text(
+          'Fully amortizing payment: ${formatMoneyOrDash(r?.fullyAmortizingPayment)}',
+        ),
         if (r != null && draw! > r.maxLine)
           Padding(
             padding: const EdgeInsets.only(top: 8),

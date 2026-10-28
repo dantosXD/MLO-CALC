@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/options/domain/models/loan_option.dart';
-
-final _currency = NumberFormat.simpleCurrency();
-
-String optMoney(double? v) =>
-    (v == null || !v.isFinite) ? '—' : _currency.format(v);
-
-String _pct(double? v, int digits) =>
-    (v == null || !v.isFinite) ? '—' : '${v.toStringAsFixed(digits)}%';
 
 class OptionCard extends StatelessWidget {
   const OptionCard({
@@ -47,14 +39,14 @@ class OptionCard extends StatelessWidget {
               ],
             ),
             Text(
-              '${optMoney(option.piti)}/mo PITI',
+              '${formatMoneyOrDash(option.piti)}/mo PITI',
               style: theme.textTheme.headlineSmall,
             ),
             Text(
-              'Cash to close ${optMoney(option.cashToClose)}  |  Rate '
-              '${_pct(option.rate, 3)}  |  MI '
-              '${optMoney(option.monthlyMi)}/mo  |  DTI '
-              '${_pct(option.backEndDti, 1)}',
+              'Cash to close ${formatMoneyOrDash(option.cashToClose)}  |  Rate '
+              '${formatPercentOrDash(option.rate, digits: 3)}  |  MI '
+              '${formatMoneyOrDash(option.monthlyMi)}/mo  |  DTI '
+              '${formatPercentOrDash(option.backEndDti, digits: 1)}',
             ),
             if (option.flags.isNotEmpty)
               Wrap(

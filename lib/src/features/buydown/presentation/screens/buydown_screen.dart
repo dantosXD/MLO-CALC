@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/models/buydown.dart';
 import '../../domain/services/buydown_calculator.dart';
-
-final NumberFormat _currency = NumberFormat.simpleCurrency();
-
-String _money(double? v) =>
-    (v == null || !v.isFinite) ? '—' : _currency.format(v);
 
 class BuydownScreen extends StatefulWidget {
   const BuydownScreen({super.key});
@@ -116,7 +111,7 @@ class _BuydownScreenState extends State<BuydownScreen> {
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             )
           else ...[
-            Text('Note payment: ${_money(result?.notePayment)}'),
+            Text('Note payment: ${formatMoneyOrDash(result?.notePayment)}'),
             const SizedBox(height: 8),
             DataTable(
               columns: const [
@@ -141,8 +136,8 @@ class _BuydownScreenState extends State<BuydownScreen> {
                       cells: [
                         DataCell(Text('${y.year}')),
                         DataCell(Text('${y.rate.toStringAsFixed(3)}%')),
-                        DataCell(Text(_money(y.payment))),
-                        DataCell(Text(_money(y.monthlySubsidy))),
+                        DataCell(Text(formatMoneyOrDash(y.payment))),
+                        DataCell(Text(formatMoneyOrDash(y.monthlySubsidy))),
                       ],
                     ),
               ],
@@ -152,14 +147,14 @@ class _BuydownScreenState extends State<BuydownScreen> {
               child: ListTile(
                 title: const Text('Total subsidy'),
                 trailing: Text(
-                  _money(result?.totalSubsidy),
+                  formatMoneyOrDash(result?.totalSubsidy),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Seller/builder credit needed: ${_money(result?.totalSubsidy)}',
+              'Seller/builder credit needed: ${formatMoneyOrDash(result?.totalSubsidy)}',
             ),
           ],
         ],

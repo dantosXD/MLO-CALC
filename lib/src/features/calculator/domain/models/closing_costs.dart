@@ -135,8 +135,8 @@ class ClosingCosts {
     required double interestRate,
     required double termYears,
   }) =>
-      // ponytail: monthly MI is not in the APR payment stream; add it if MLOs
-      // compare APR against LOS output.
+      // ponytail: monthly MI (and FHA UFMIP/MIP) is not in the APR payment
+      // stream; add it if MLOs compare APR against LOS output.
       AdvancedCalculations.calculateAPR(
         loanAmount: loanAmount,
         interestRate: interestRate,

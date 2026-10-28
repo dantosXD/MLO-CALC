@@ -142,7 +142,16 @@ class MloProfileProvider with ChangeNotifier {
           .timeout(const Duration(seconds: 10));
       final n = res.bodyBytes.length;
       if (res.statusCode != 200 || n == 0 || n > 500 * 1024) return false;
-      logoBytesBase64 = base64Encode(res.bodyBytes);
+      final b = res.bodyBytes;
+      final isPng =
+          n >= 4 &&
+          b[0] == 0x89 &&
+          b[1] == 0x50 &&
+          b[2] == 0x4E &&
+          b[3] == 0x47;
+      final isJpeg = n >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF;
+      if (!isPng && !isJpeg) return false;
+      logoBytesBase64 = base64Encode(b);
       notifyListeners();
       await _prefs.setString(_keyLogoB64, logoBytesBase64);
       return true;

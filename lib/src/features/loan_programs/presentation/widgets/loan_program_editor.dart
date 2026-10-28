@@ -305,7 +305,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
                       controller: _annualMiController,
                       decoration: const InputDecoration(
                         labelText: 'Annual MI (%)',
-                        hintText: '0.85',
+                        hintText: '0.55',
                         border: OutlineInputBorder(),
                         helperText: 'Annual MIP',
                       ),
@@ -374,7 +374,7 @@ class _LoanProgramEditorState extends State<LoanProgramEditor> {
         );
         _hasMiConfig = true;
         _upfrontMiController.text = '1.75';
-        _annualMiController.text = '0.85';
+        _annualMiController.text = '0.55';
         break;
       case LoanProgramType.va:
         _housingRatioController.text = '41';

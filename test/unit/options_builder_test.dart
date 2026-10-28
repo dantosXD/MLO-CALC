@@ -120,7 +120,10 @@ void main() {
     final o = _build(
       const MemberProfile(price: 1200000, cashAvailable: 500000),
     );
-    expect(_id(o, 'piggyback_80_10_10').flags, contains('Exceeds baseline limit (check county)'));
+    expect(
+      _id(o, 'piggyback_80_10_10').flags,
+      contains('Exceeds baseline limit (check county)'),
+    );
   });
 
   test('piggyback uses explicit second-lien rate else conv30 + 2', () {
@@ -134,7 +137,10 @@ void main() {
       _build(base, const RateSheet({...conv, 'piggyback_second': 10})),
       'piggyback_80_10_10',
     );
-    expect(same.principalAndInterest, closeTo(dflt.principalAndInterest, 0.001));
+    expect(
+      same.principalAndInterest,
+      closeTo(dflt.principalAndInterest, 0.001),
+    );
     expect(higher.principalAndInterest, greaterThan(dflt.principalAndInterest));
     expect(const OptionsBuilder().secondLienRate(const RateSheet(conv)), 8.5);
     expect(

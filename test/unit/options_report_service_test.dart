@@ -60,7 +60,10 @@ void pdfPlaceholderTests() {
     final lines = optionsAssumptions(opts, 3, 8.5);
     expect(lines.first, contains('closing costs of 3% of price'));
     expect(lines.any((l) => l.contains('requires \$')), isTrue);
-    expect(lines.any((l) => l.contains('Piggyback second lien at 8.5% / 15 yr')), isTrue);
+    expect(
+      lines.any((l) => l.contains('Piggyback second lien at 8.5% / 15 yr')),
+      isTrue,
+    );
     for (final l in lines) {
       expect(l.codeUnits.every((c) => c < 128), isTrue, reason: l);
     }

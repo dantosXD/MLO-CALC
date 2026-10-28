@@ -67,6 +67,18 @@ void main() {
     expect(ok, isFalse);
   });
 
+  test('non-image body rejected and old bytes kept', () async {
+    final p = await _build();
+    await p.refreshLogo(
+      client: MockClient((_) async => http.Response.bytes(png, 200)),
+    );
+    final ok = await p.refreshLogo(
+      client: MockClient((_) async => http.Response('<html>login</html>', 200)),
+    );
+    expect(ok, isFalse);
+    expect(p.logoBytesBase64, base64Encode(png));
+  });
+
   test('oversize body rejected', () async {
     final p = await _build();
     final ok = await p.refreshLogo(

@@ -170,3 +170,20 @@ class CurrencyFormatter {
     }
   }
 }
+
+final Map<int, NumberFormat> _moneyCache = <int, NumberFormat>{};
+
+/// Currency with [decimals] places, or an em dash for null/NaN/infinite.
+String formatMoneyOrDash(double? v, {int decimals = 2}) {
+  if (v == null || !v.isFinite) return '—';
+  return _moneyCache
+      .putIfAbsent(
+        decimals,
+        () => NumberFormat.simpleCurrency(decimalDigits: decimals),
+      )
+      .format(v);
+}
+
+/// Percent with [digits] places, or an em dash for null/NaN/infinite.
+String formatPercentOrDash(double? v, {int digits = 1}) =>
+    (v == null || !v.isFinite) ? '—' : '${v.toStringAsFixed(digits)}%';

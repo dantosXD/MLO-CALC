@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:loan_ranger/src/core/models/calculation_history.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/models/refinance.dart';
 import '../../domain/services/refinance_analyzer.dart';
-
-final NumberFormat _currency = NumberFormat.simpleCurrency();
-
-String _money(double? v) =>
-    (v == null || !v.isFinite) ? '—' : _currency.format(v);
 
 class RefinanceScreen extends StatefulWidget {
   const RefinanceScreen({super.key});
@@ -85,7 +80,7 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
       termYears: i.newTermYears,
       payment: r.newPayment,
       notes:
-          'Refi: ${i.program.label}, saves ${_money(r.monthlySavings)}/mo, '
+          'Refi: ${i.program.label}, saves ${formatMoneyOrDash(r.monthlySavings)}/mo, '
           'break-even ${be == null ? 'never' : '${be.toStringAsFixed(1)} mo'}',
     );
     ScaffoldMessenger.of(
@@ -163,9 +158,9 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
             onSelectionChanged: (s) => setState(() => _program = s.first),
           ),
           const SizedBox(height: 16),
-          Text('Current payment: ${_money(r?.currentPayment)}'),
-          Text('New payment: ${_money(r?.newPayment)}'),
-          Text('Monthly savings: ${_money(r?.monthlySavings)}'),
+          Text('Current payment: ${formatMoneyOrDash(r?.currentPayment)}'),
+          Text('New payment: ${formatMoneyOrDash(r?.newPayment)}'),
+          Text('Monthly savings: ${formatMoneyOrDash(r?.monthlySavings)}'),
           Text(
             'Break-even: ${r == null
                 ? '—'
@@ -174,7 +169,7 @@ class _RefinanceScreenState extends State<RefinanceScreen> {
                 : '${be.toStringAsFixed(1)} months'}',
           ),
           Text(
-            'Lifetime interest change: ${_money(r?.lifetimeInterestChange)}',
+            'Lifetime interest change: ${formatMoneyOrDash(r?.lifetimeInterestChange)}',
           ),
           if (ntbMet != null)
             Padding(

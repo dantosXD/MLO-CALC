@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:loan_ranger/src/features/qualification/domain/services/affordability_solver.dart';
 import 'package:provider/provider.dart';
@@ -70,9 +71,7 @@ class _MaxPriceCardState extends State<MaxPriceCard> {
     return r;
   }
 
-  static String _money(double? v) => v == null || !v.isFinite
-      ? '—'
-      : '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',')}';
+  static String _money(double? v) => formatMoneyOrDash(v, decimals: 0);
 
   Widget _field(String k, String label) => SizedBox(
     width: 150,

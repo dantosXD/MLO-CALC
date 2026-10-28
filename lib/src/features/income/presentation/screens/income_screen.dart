@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:loan_ranger/src/core/utils/formatters.dart';
 import 'package:loan_ranger/src/features/calculator/application/providers/calculator_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/models/income.dart';
 import '../../domain/services/income_calculator.dart';
-
-final NumberFormat _currency = NumberFormat.simpleCurrency();
-
-String _money(double? v) =>
-    (v == null || !v.isFinite) ? '—' : _currency.format(v);
 
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key});
@@ -172,7 +167,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                 ],
               ),
             ),
-          Text('Self-employed monthly: ${_money(se)}'),
+          Text('Self-employed monthly: ${formatMoneyOrDash(se)}'),
           const SizedBox(height: 16),
           _section('Variable (bonus / commission / overtime)', [
             _field('var_prior', 'Prior Yr Total'),
@@ -180,13 +175,13 @@ class _IncomeScreenState extends State<IncomeScreen> {
             _field('var_ytd', 'YTD Total'),
             _field('var_months', 'YTD Months'),
           ]),
-          Text('Variable monthly: ${_money(variable)}'),
+          Text('Variable monthly: ${formatMoneyOrDash(variable)}'),
           const SizedBox(height: 16),
           _section('Rental', [
             _field('rent', 'Gross Monthly Rent'),
             _field('pitia', 'Monthly PITIA'),
           ]),
-          Text('Net rental: ${_money(rental)}'),
+          Text('Net rental: ${formatMoneyOrDash(rental)}'),
           const SizedBox(height: 16),
           _section('Student loans', [
             DropdownButton<StudentLoanAgency>(
@@ -201,12 +196,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
             _field('sl_balance', 'Balance'),
             _field('sl_payment', 'Reported Payment'),
           ]),
-          Text('Student loan monthly: ${_money(student)}'),
+          Text('Student loan monthly: ${formatMoneyOrDash(student)}'),
           const SizedBox(height: 16),
           _section('Other', [_field('other_debt', 'Other Monthly Debts')]),
           const Divider(),
-          Text('Total monthly income: ${_money(income)}'),
-          Text('Total monthly debts: ${_money(debts)}'),
+          Text('Total monthly income: ${formatMoneyOrDash(income)}'),
+          Text('Total monthly debts: ${formatMoneyOrDash(debts)}'),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: provider == null
