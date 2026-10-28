@@ -32,6 +32,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
   final _prepaidInterestController = TextEditingController();
   final _prepaidInsuranceController = TextEditingController();
   final _prepaidTaxController = TextEditingController();
+  final _initialEscrowController = TextEditingController();
   final _otherFeesController = TextEditingController();
 
   bool _initialized = false;
@@ -63,6 +64,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
     _prepaidInsuranceController.text = costs.prepaidHomeInsurance
         .toStringAsFixed(2);
     _prepaidTaxController.text = costs.prepaidPropertyTaxes.toStringAsFixed(2);
+    _initialEscrowController.text = costs.initialEscrow.toStringAsFixed(2);
     _otherFeesController.text = costs.otherFees.toStringAsFixed(2);
   }
 
@@ -85,6 +87,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
       prepaidHomeInsurance:
           double.tryParse(_prepaidInsuranceController.text) ?? 0,
       prepaidPropertyTaxes: double.tryParse(_prepaidTaxController.text) ?? 0,
+      initialEscrow: double.tryParse(_initialEscrowController.text) ?? 0,
       otherFees: double.tryParse(_otherFeesController.text) ?? 0,
     );
     provider.updateClosingCosts(newCosts);
@@ -108,6 +111,7 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
     _prepaidInterestController.dispose();
     _prepaidInsuranceController.dispose();
     _prepaidTaxController.dispose();
+    _initialEscrowController.dispose();
     _otherFeesController.dispose();
     super.dispose();
   }
@@ -201,34 +205,46 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
                   controller: scrollController,
                   padding: const EdgeInsets.all(20),
                   children: [
-                    _buildSectionTitle(context, 'Loan Charges'),
+                    _buildSectionTitle(context, 'A. Origination Charges'),
                     _buildInput('Origination Fee', _originationController),
                     _buildInput('Discount Points (\$)', _pointsController),
                     _buildInput('Processing Fee', _processingController),
                     _buildInput('Underwriting Fee', _underwritingController),
+                    _buildSubtotal(LeSection.a),
 
                     const SizedBox(height: 16),
-                    _buildSectionTitle(context, 'Services'),
+                    _buildSectionTitle(
+                      context,
+                      'B. Services You Cannot Shop For',
+                    ),
                     _buildInput('Appraisal', _appraisalController),
                     _buildInput('Credit Report', _creditReportController),
                     _buildInput('Flood Certification', _floodCertController),
+                    _buildSubtotal(LeSection.b),
 
                     const SizedBox(height: 16),
-                    _buildSectionTitle(context, 'Title & Escrow'),
+                    _buildSectionTitle(context, 'C. Services You Can Shop For'),
                     _buildInput(
                       'Lender Title Insurance',
                       _titleLenderController,
                     ),
-                    _buildInput('Owner Title Insurance', _titleOwnerController),
                     _buildInput(
                       'Settlement/Closing Fee',
                       _settlementController,
                     ),
-                    _buildInput('Recording Fees', _recordingController),
-                    _buildInput('Transfer Taxes', _transferTaxController),
+                    _buildSubtotal(LeSection.c),
 
                     const SizedBox(height: 16),
-                    _buildSectionTitle(context, 'Prepaids & Reserves'),
+                    _buildSectionTitle(
+                      context,
+                      'E. Taxes and Other Government Fees',
+                    ),
+                    _buildInput('Recording Fees', _recordingController),
+                    _buildInput('Transfer Taxes', _transferTaxController),
+                    _buildSubtotal(LeSection.e),
+
+                    const SizedBox(height: 16),
+                    _buildSectionTitle(context, 'F. Prepaids'),
                     _buildInput('Prepaid Interest', _prepaidInterestController),
                     _buildInput(
                       'Prepaid Home Insurance',
@@ -238,10 +254,21 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
                       'Prepaid Property Taxes',
                       _prepaidTaxController,
                     ),
+                    _buildSubtotal(LeSection.f),
 
                     const SizedBox(height: 16),
-                    _buildSectionTitle(context, 'Other'),
+                    _buildSectionTitle(
+                      context,
+                      'G. Initial Escrow Payment at Closing',
+                    ),
+                    _buildInput('Initial Escrow', _initialEscrowController),
+                    _buildSubtotal(LeSection.g),
+
+                    const SizedBox(height: 16),
+                    _buildSectionTitle(context, 'H. Other'),
+                    _buildInput('Owner Title Insurance', _titleOwnerController),
                     _buildInput('Other Fees', _otherFeesController),
+                    _buildSubtotal(LeSection.h),
 
                     const SizedBox(height: 40),
                   ],
@@ -270,6 +297,8 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
                           closingCosts,
                         ),
                         const SizedBox(height: 8),
+                        _buildAprRow(context),
+                        const SizedBox(height: 8),
                         _buildSummaryRow(
                           context,
                           'Estimated Cash to Close',
@@ -285,6 +314,46 @@ class _ClosingCostsSheetState extends State<ClosingCostsSheet> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSubtotal(LeSection section) {
+    return Selector<CalculatorProvider, double>(
+      selector: (_, p) => p.closingCosts.bySection[section]!,
+      builder: (context, v, _) => Align(
+        alignment: Alignment.centerRight,
+        child: Text(
+          'Subtotal ${CurrencyFormatter.formatCurrency(v)}',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAprRow(BuildContext context) {
+    return Selector<CalculatorProvider, double?>(
+      selector: (_, p) {
+        final l = p.loanAmount, r = p.interestRate, t = p.termYears;
+        if (l == null || r == null || t == null || l <= 0 || r <= 0 || t <= 0) {
+          return null;
+        }
+        final apr = p.closingCosts.apr(
+          loanAmount: l,
+          interestRate: r,
+          termYears: t,
+        );
+        return apr.isFinite && apr > 0 ? apr : null;
+      },
+      builder: (context, apr, _) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('APR', style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            apr == null ? '—' : '${apr.toStringAsFixed(3)}%',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ],
+      ),
     );
   }
 
