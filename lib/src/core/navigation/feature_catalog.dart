@@ -4,6 +4,7 @@ import 'package:loan_ranger/src/features/analysis/presentation/screens/analysis_
 import 'package:loan_ranger/src/features/buydown/presentation/screens/buydown_screen.dart';
 import 'package:loan_ranger/src/features/calculator/presentation/screens/calculator_screen.dart';
 import 'package:loan_ranger/src/features/history/presentation/screens/history_screen.dart';
+import 'package:loan_ranger/src/features/income/presentation/screens/income_screen.dart';
 import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan_programs_screen.dart';
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
 import 'package:loan_ranger/src/features/refinance/presentation/screens/refinance_screen.dart';
@@ -61,6 +62,7 @@ class FeatureCatalog {
   static const String buydownId = 'buydown';
   static const String refinanceId = 'refinance';
   static const String secondLienId = 'second_lien';
+  static const String incomeId = 'income';
 
   static final List<FeatureCatalogEntry>
   primaryFeatures = <FeatureCatalogEntry>[
@@ -173,6 +175,17 @@ class FeatureCatalog {
           icon: const Icon(Icons.layers_outlined),
           selectedIcon: const Icon(Icons.layers),
           builder: (_) => const SecondLienScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: incomeId,
+          title: 'Income',
+          analyticsName: 'Income',
+          category: 'Qualify',
+          description:
+              'Self-employed, variable, rental income and student loans.',
+          icon: const Icon(Icons.payments_outlined),
+          selectedIcon: const Icon(Icons.payments),
+          builder: (_) => const IncomeScreen(),
         ),
       ];
 
