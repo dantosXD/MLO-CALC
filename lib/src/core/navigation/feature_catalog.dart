@@ -8,6 +8,7 @@ import 'package:loan_ranger/src/features/loan_programs/presentation/screens/loan
 import 'package:loan_ranger/src/features/qualification/presentation/screens/qualification_screen.dart';
 import 'package:loan_ranger/src/features/refinance/presentation/screens/refinance_screen.dart';
 import 'package:loan_ranger/src/features/rent_vs_buy/presentation/screens/rent_vs_buy_screen.dart';
+import 'package:loan_ranger/src/features/second_lien/presentation/screens/second_lien_screen.dart';
 
 class FeatureCatalogEntry {
   const FeatureCatalogEntry({
@@ -59,6 +60,7 @@ class FeatureCatalog {
   static const String rentVsBuyId = 'rent_vs_buy';
   static const String buydownId = 'buydown';
   static const String refinanceId = 'refinance';
+  static const String secondLienId = 'second_lien';
 
   static final List<FeatureCatalogEntry>
   primaryFeatures = <FeatureCatalogEntry>[
@@ -161,6 +163,16 @@ class FeatureCatalog {
           icon: const Icon(Icons.autorenew_outlined),
           selectedIcon: const Icon(Icons.autorenew),
           builder: (_) => const RefinanceScreen(),
+        ),
+        FeatureCatalogEntry(
+          id: secondLienId,
+          title: 'Second Lien',
+          analyticsName: 'Second Lien',
+          category: 'Quote',
+          description: 'Piggyback 80-10-10 comparison and HELOC capacity.',
+          icon: const Icon(Icons.layers_outlined),
+          selectedIcon: const Icon(Icons.layers),
+          builder: (_) => const SecondLienScreen(),
         ),
       ];
 
