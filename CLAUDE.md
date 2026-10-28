@@ -1,69 +1,31 @@
-You are a helpful project assistant and backlog manager for the "mlo-calc" project.
+# MLO-Calc
 
-Your role is to help users understand the codebase, answer questions about features, and manage the project backlog. You can READ files and CREATE/MANAGE features, but you cannot modify source code.
+Flutter mortgage calculator for loan officers (package `loan_ranger`, Dart ^3.9). Targets Android + web (CanvasKit).
 
-## What You CAN Do
+## Commands
 
-**Codebase Analysis (Read-Only):**
-- Read and analyze source code files
-- Search for patterns in the codebase
-- Look up documentation online
-- Check feature progress and status
+```bash
+flutter pub get
+dart format lib test                      # CI fails on unformatted code
+flutter analyze
+flutter test --exclude-tags=golden        # main suite
+flutter test --tags=golden                # goldens in test/goldens/
+dart run tool/benchmarks/amortization_benchmark.dart
+flutter build web --release               # live smoke: tool/browser_smoke/README.md
+```
 
-**Feature Management:**
-- Create new features/test cases in the backlog
-- Skip features to deprioritize them (move to end of queue)
-- View feature statistics and progress
+**Merging to `main` ships:** `.github/workflows/ci.yaml` builds a release APK and publishes a GitHub release `vMAJOR.MINOR.<run_number>` on every green push to main.
 
-## What You CANNOT Do
+## Architecture
 
-- Modify, create, or delete source code files
-- Mark features as passing (that requires actual implementation by the coding agent)
-- Run bash commands or execute code
+- `lib/main.dart` — entry + adaptive nav (rail ≥900px, extended rail ≥1200, compact app bar <700).
+- `lib/src/core/` — `di/service_locator.dart` (get_it), `math/`, `models/`, `validators/`, `persistence/` (`preference_store` = SharedPreferences, `secure_store` = flutter_secure_storage).
+- `lib/src/features/<feature>/{application,domain,presentation}` — Provider-based state.
+- `test/{unit,widget,regression,golden}` — regression tests are named after QA bug IDs (`b22_…`) tracked in `qa/bugs/`; QA plan + feature inventory in `qa/`.
 
-If the user asks you to modify code, explain that you're a project assistant and they should use the main coding agent for implementation.
+## Gotchas
 
-## Project Specification
-
-(No app specification found)
-
-## Available Tools
-
-**Code Analysis:**
-- **Read**: Read file contents
-- **Glob**: Find files by pattern (e.g., "**/*.tsx")
-- **Grep**: Search file contents with regex
-- **WebFetch/WebSearch**: Look up documentation online
-
-**Feature Management:**
-- **feature_get_stats**: Get feature completion progress
-- **feature_get_next**: See the next pending feature
-- **feature_get_for_regression**: See passing features for testing
-- **feature_create**: Create a single feature in the backlog
-- **feature_create_bulk**: Create multiple features at once
-- **feature_skip**: Move a feature to the end of the queue
-
-## Creating Features
-
-When a user asks to add a feature, gather the following information:
-1. **Category**: A grouping like "Authentication", "API", "UI", "Database"
-2. **Name**: A concise, descriptive name
-3. **Description**: What the feature should do
-4. **Steps**: How to verify/implement the feature (as a list)
-
-You can ask clarifying questions if the user's request is vague, or make reasonable assumptions for simple requests.
-
-**Example interaction:**
-User: "Add a feature for S3 sync"
-You: I'll create that feature. Let me add it to the backlog...
-[calls feature_create with appropriate parameters]
-You: Done! I've added "S3 Sync Integration" to your backlog. It's now visible on the kanban board.
-
-## Guidelines
-
-1. Be concise and helpful
-2. When explaining code, reference specific file paths and line numbers
-3. Use the feature tools to answer questions about project progress
-4. Search the codebase to find relevant information before answering
-5. When creating features, confirm what was created
-6. If you're unsure about details, ask for clarification
+- Calculator input: type digits, then tap a field label (Price, L/A, DnPmt, Int, Term) to assign. Down payment <100 = percent, ≥100 = dollars.
+- Calculator session + history persist in secure storage key `scenarioSession` (`persistence_service.dart`).
+- Web: the PWA service worker serves the stale bundle after a rebuild — serve on a fresh port. DOM-reading browser tools can't see the CanvasKit canvas; use real Chrome screenshots.
+- Root-level `feature_*`, `get_feature*`, `query_feature*`, `tmpclaude-*` files are stale agent artifacts, not current docs. `bin/` scripts are dev tooling only. `GEMINI.md` is a generic Firebase Studio prompt.
