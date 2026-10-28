@@ -22,6 +22,7 @@ flutter build web --release               # live smoke: tool/browser_smoke/READM
 - `lib/src/core/` — `di/service_locator.dart` (get_it), `math/`, `models/`, `validators/`, `persistence/` (`preference_store` = SharedPreferences, `secure_store` = flutter_secure_storage).
 - `lib/src/features/<feature>/{application,domain,presentation}` — Provider-based state.
 - `test/{unit,widget,regression,golden}` — regression tests are named after QA bug IDs (`b22_…`) tracked in `qa/bugs/`; QA plan + feature inventory in `qa/`.
+- Options Builder (`features/options`) composes the per-feature calculators; government fee tables live in `core/math/government_fees.dart` and must be re-verified yearly.
 
 ## Gotchas
 
